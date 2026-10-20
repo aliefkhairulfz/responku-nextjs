@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrig
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "@tanstack/react-form";
-import { ArrowDown, ArrowUp, Eye, Pencil, Plus, Trash, X } from "lucide-react";
+import { ArrowDown, ArrowUp, Coins, Eye, Pencil, Plus, Trash, X } from "lucide-react";
 import { useState } from "react";
 import z from "zod";
 
@@ -121,11 +121,13 @@ const errorText = (errors: unknown[]) =>
         .filter(Boolean)
         .join(", ");
 
-// MENU
+// Menu
 const menuItems = [
+    { label: "Alokasi Token", icon: Coins }, // ← BARU, posisi paling atas
     { label: "Editor", icon: Pencil },
     { label: "Preview", icon: Eye },
 ];
+
 function MenuList({ activeMenu, onMenuChange }: { activeMenu: string; onMenuChange: (label: string) => void }) {
     return (
         <ul className="flex flex-col gap-1">
@@ -149,7 +151,7 @@ function MenuList({ activeMenu, onMenuChange }: { activeMenu: string; onMenuChan
 
 // COMPONENTS
 export default function DaftarPertanyaanCard() {
-    const [activeMenu, setActiveMenu] = useState("Editor");
+    const [activeMenu, setActiveMenu] = useState("Alokasi Token"); // ← default ke menu baru
     const [defaultValues] = useState(() => ({
         identity: {
             title: "",
@@ -191,8 +193,10 @@ export default function DaftarPertanyaanCard() {
             </aside>
 
             {/* ================= CONTENT ================= */}
-            <section className="min-h-0 overflow-y-auto px-2 py-4 pb-16 md:pl-6">
-                {activeMenu === "Editor" ? (
+            <section className="min-h-0 overflow-y-auto py-4 pb-16 md:pl-4">
+                {activeMenu === "Alokasi Token" ? (
+                    <AlokasiTokenPanel />
+                ) : activeMenu === "Editor" ? (
                     <form
                         onSubmit={(e) => {
                             e.preventDefault();
@@ -671,7 +675,7 @@ export default function DaftarPertanyaanCard() {
     );
 }
 
-// ================= PREVIEW =================
+// PREVIEW PANEL
 function PreviewPanel({
     value,
 }: {
@@ -763,5 +767,246 @@ function PreviewPanel({
                 </Card.Card>
             ))}
         </div>
+    );
+}
+
+// ALOKASI TOKEN
+const alokasiTokenSchema = z
+    .object({
+        targetResponden: z
+            .number("Target responden harus berupa angka.")
+            .int("Target responden harus bilangan bulat.")
+            .min(1, "Minimal 1 responden.")
+            .max(10000, "Maksimal 10000 responden."),
+        batasWaktu: z.enum(["1", "3", "7", "14", "30"]),
+        tokenPerResponden: z
+            .number("Token per responden harus berupa angka.")
+            .int("Token per responden harus bilangan bulat.")
+            .min(1, "Minimal 1 token."),
+    })
+    .refine((d) => d.targetResponden * d.tokenPerResponden <= 1_000_000, {
+        message: "Total token melebihi batas maksimum (1.000.000).",
+        path: ["tokenPerResponden"],
+    });
+type AlokasiTokenValues = z.infer<typeof alokasiTokenSchema>;
+
+const batasWaktuOptions = [
+    { value: "1", label: "1 Hari (Kilat)" },
+    { value: "3", label: "3 Hari (Cepat)" },
+    { value: "7", label: "7 Hari (Standar Rekomendasi)" },
+    { value: "14", label: "14 Hari (Santai)" },
+    { value: "30", label: "30 Hari (Maksimal)" },
+];
+const formatIDR = (n: number) =>
+    new Intl.NumberFormat("id-ID", {
+        style: "currency",
+        currency: "IDR",
+        maximumFractionDigits: 0,
+    }).format(n);
+const TOKEN_TO_IDR = 1000; // 1 token = Rp1.000
+
+function AlokasiTokenPanel() {
+    const [defaultValues] = useState<AlokasiTokenValues>(() => ({
+        targetResponden: 50,
+        batasWaktu: "7",
+        tokenPerResponden: 1,
+    }));
+
+    const form = useForm({
+        defaultValues,
+        validators: {
+            onChange: alokasiTokenSchema,
+        },
+        onSubmit: async ({ value }) => {
+            const totalToken = value.targetResponden * value.tokenPerResponden;
+            const totalBiaya = totalToken * TOKEN_TO_IDR;
+            const poolReward = Math.round(totalBiaya * 0.8);
+            const biayaOps = totalBiaya - poolReward;
+
+            console.log({
+                targetResponden: value.targetResponden,
+                batasWaktu: value.batasWaktu,
+                tokenPerResponden: value.tokenPerResponden,
+                totalToken,
+                totalBiaya,
+                poolReward,
+                biayaOps,
+                rewardPerResponden: Math.round(poolReward / value.targetResponden),
+            });
+        },
+    });
+
+    return (
+        <form
+            onSubmit={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                form.handleSubmit();
+            }}
+            className="w-full space-y-6"
+        >
+            {/* ================= KONFIGURASI ================= */}
+            <Card.Card className="w-full">
+                <Card.CardHeader>
+                    <Card.CardTitle>Alokasi Token & Budget</Card.CardTitle>
+                    <Card.CardDescription>Tentukan target responden, batas waktu, dan token per responden.</Card.CardDescription>
+                </Card.CardHeader>
+
+                <Card.CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        {/* targetResponden */}
+                        <form.Field name="targetResponden">
+                            {(f) => (
+                                <div className="flex flex-col space-y-2">
+                                    <label className="text-sm font-medium">Target Jumlah Responden</label>
+                                    <Input
+                                        type="number"
+                                        min={1}
+                                        max={10000}
+                                        value={f.state.value}
+                                        onBlur={f.handleBlur}
+                                        onChange={(e) => f.handleChange(Number(e.target.value))}
+                                    />
+                                    {f.state.meta.isTouched && f.state.meta.errors.length > 0 && (
+                                        <p className="text-sm text-destructive">{errorText(f.state.meta.errors)}</p>
+                                    )}
+                                </div>
+                            )}
+                        </form.Field>
+
+                        {/* batasWaktu */}
+                        <form.Field name="batasWaktu">
+                            {(f) => (
+                                <div className="flex flex-col space-y-2">
+                                    <label className="text-sm font-medium">Batas Waktu Pengumpulan</label>
+                                    <Select
+                                        items={batasWaktuOptions}
+                                        value={f.state.value}
+                                        onValueChange={(val) => {
+                                            if (!val) return;
+                                            f.handleChange(val as typeof f.state.value);
+                                        }}
+                                    >
+                                        <SelectTrigger className="w-full">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectGroup>
+                                                <SelectLabel>Batas waktu</SelectLabel>
+                                                {batasWaktuOptions.map((opt) => (
+                                                    <SelectItem key={opt.value} value={opt.value}>
+                                                        {opt.label}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectGroup>
+                                        </SelectContent>
+                                    </Select>
+                                    {f.state.meta.isTouched && f.state.meta.errors.length > 0 && (
+                                        <p className="text-sm text-destructive">{errorText(f.state.meta.errors)}</p>
+                                    )}
+                                </div>
+                            )}
+                        </form.Field>
+                    </div>
+
+                    {/* tokenPerResponden */}
+                    <form.Field name="tokenPerResponden">
+                        {(f) => (
+                            <div className="flex flex-col space-y-2">
+                                <label className="text-sm font-medium">Token per Responden</label>
+                                <Input
+                                    type="number"
+                                    min={1}
+                                    value={f.state.value}
+                                    onBlur={f.handleBlur}
+                                    onChange={(e) => f.handleChange(Number(e.target.value))}
+                                />
+                                {f.state.meta.isTouched && f.state.meta.errors.length > 0 && (
+                                    <p className="text-sm text-destructive">{errorText(f.state.meta.errors)}</p>
+                                )}
+                            </div>
+                        )}
+                    </form.Field>
+                </Card.CardContent>
+            </Card.Card>
+
+            {/* ================= RINGKASAN BUDGET ================= */}
+            <form.Subscribe
+                selector={(s) => ({
+                    targetResponden: s.values.targetResponden,
+                    tokenPerResponden: s.values.tokenPerResponden,
+                })}
+            >
+                {({ targetResponden, tokenPerResponden }) => {
+                    const totalToken = targetResponden * tokenPerResponden;
+                    const totalBiaya = totalToken * TOKEN_TO_IDR;
+                    const poolReward = Math.round(totalBiaya * 0.8);
+                    const biayaOps = totalBiaya - poolReward;
+                    const rewardPerResponden = Math.round(poolReward / Math.max(targetResponden, 1));
+
+                    return (
+                        <Card.Card className="w-full">
+                            <Card.CardHeader>
+                                <Card.CardTitle>Ringkasan Alokasi</Card.CardTitle>
+                                <Card.CardDescription>
+                                    Dana token akan diamankan dalam escrow sistem. Kuota yang tidak terpenuhi akan otomatis dikembalikan ke saldo
+                                    dompet Anda.
+                                </Card.CardDescription>
+                            </Card.CardHeader>
+
+                            <Card.CardContent className="space-y-4">
+                                {/* Total highlight */}
+                                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                    <div className="rounded-lg border bg-muted/40 p-4">
+                                        <p className="text-sm text-muted-foreground">Total Kebutuhan Token</p>
+                                        <p className="text-2xl font-semibold">{totalToken.toLocaleString("id-ID")} Token</p>
+                                    </div>
+                                    <div className="rounded-lg border bg-muted/40 p-4">
+                                        <p className="text-sm text-muted-foreground">Estimasi Biaya</p>
+                                        <p className="text-2xl font-semibold">{formatIDR(totalBiaya)}</p>
+                                    </div>
+                                </div>
+
+                                <Separator />
+
+                                {/* Breakdown */}
+                                <div className="space-y-3">
+                                    <div className="flex items-center justify-between text-sm">
+                                        <span className="text-muted-foreground">Pool Reward Responden (80%)</span>
+                                        <span className="font-medium">{formatIDR(poolReward)}</span>
+                                    </div>
+                                    <div className="flex items-center justify-between text-sm">
+                                        <span className="text-muted-foreground">Biaya Operasional & QC (20%)</span>
+                                        <span className="font-medium">{formatIDR(biayaOps)}</span>
+                                    </div>
+                                    <Separator />
+                                    <div className="flex items-center justify-between text-sm">
+                                        <span className="text-muted-foreground">Reward per Responden</span>
+                                        <span className="font-medium">
+                                            {formatIDR(rewardPerResponden)} ({tokenPerResponden} Token)
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <p className="rounded-md bg-secondary p-3 text-xs text-muted-foreground">
+                                    Dana token akan diamankan dalam escrow sistem. Kuota yang tidak terpenuhi akan otomatis dikembalikan ke saldo
+                                    dompet Anda.
+                                </p>
+                            </Card.CardContent>
+
+                            <Card.CardFooter className="flex justify-end">
+                                <form.Subscribe selector={(s) => [s.canSubmit, s.isSubmitting] as const}>
+                                    {([canSubmit, isSubmitting]) => (
+                                        <Button type="submit" disabled={!canSubmit || totalToken <= 0}>
+                                            {isSubmitting ? "Memproses..." : "Konfirmasi Alokasi"}
+                                        </Button>
+                                    )}
+                                </form.Subscribe>
+                            </Card.CardFooter>
+                        </Card.Card>
+                    );
+                }}
+            </form.Subscribe>
+        </form>
     );
 }

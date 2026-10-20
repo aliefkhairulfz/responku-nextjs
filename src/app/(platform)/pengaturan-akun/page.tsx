@@ -67,7 +67,7 @@ export default function Page() {
                     <MenuList activeMenu={activeMenu} onMenuChange={setActiveMenu} />
                 </aside>
 
-                <section className="min-h-0 overflow-y-auto px-2 py-4 pb-16 md:pl-6">
+                <section className="min-h-0 overflow-y-auto px-2 py-4 pb-16 md:pl-4">
                     {activeMenu === "Umum" && <PengaturanUmum />}
                     {activeMenu === "Notifikasi" && <PengaturanNotifikasi />}
                     {activeMenu === "Privasi & Keamanan" && <PrivasiKeamanan />}
