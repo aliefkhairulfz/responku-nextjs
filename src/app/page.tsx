@@ -1,6 +1,6 @@
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import Link from "next/link";
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
 export default function Page() {
     return (
@@ -10,5 +10,5 @@ export default function Page() {
             <Input placeholder="Enter your name please" />
             <Link href="/about">About</Link>
         </div>
-    );
+    )
 }

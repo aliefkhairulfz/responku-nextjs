@@ -1,8 +1,8 @@
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import * as Card from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import * as Card from '@/components/ui/card'
+import { Progress } from '@/components/ui/progress'
+import { Separator } from '@/components/ui/separator'
 
 export default function JelajahSurveiCard() {
     return (
@@ -21,13 +21,11 @@ export default function JelajahSurveiCard() {
                 <Card.CardContent className="space-y-4">
                     <div className="space-y-2">
                         <h3 className="text-xl font-semibold leading-snug">
-                            Survei Preferensi Penggunaan Aplikasi Finansial &
-                            Dompet Digital 2026
+                            Survei Preferensi Penggunaan Aplikasi Finansial & Dompet Digital 2026
                         </h3>
                         <p className="leading-relaxed text-muted-foreground">
-                            Riset pola transaksi nontunai, fitur transfer
-                            instan, dan kebiasaan menabung generasi muda
-                            Indonesia untuk keperluan skripsi ekonomi.
+                            Riset pola transaksi nontunai, fitur transfer instan, dan kebiasaan
+                            menabung generasi muda Indonesia untuk keperluan skripsi ekonomi.
                         </p>
                     </div>
 
@@ -46,9 +44,7 @@ export default function JelajahSurveiCard() {
                     <div className="flex w-full flex-col gap-2">
                         <div className="flex flex-wrap items-center justify-between gap-2">
                             <Badge variant="ghost">Kuota Terkumpul</Badge>
-                            <span className="text-muted-foreground">
-                                82 / 100 Responden (82%)
-                            </span>
+                            <span className="text-muted-foreground">82 / 100 Responden (82%)</span>
                         </div>
                         <Progress value={82} className="w-full" />
                     </div>
@@ -57,5 +53,5 @@ export default function JelajahSurveiCard() {
                 </Card.CardFooter>
             </Card.Card>
         </div>
-    );
+    )
 }

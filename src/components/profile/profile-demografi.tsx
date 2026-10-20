@@ -1,110 +1,97 @@
-"use client";
+'use client'
 
-import { useForm } from "@tanstack/react-form";
-import { Info } from "lucide-react";
-import { z } from "zod";
-
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { useForm } from '@tanstack/react-form'
+import { Info } from 'lucide-react'
+import { z } from 'zod'
+import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
+} from '@/components/ui/select'
+import { Separator } from '@/components/ui/separator'
 
 const demographicSchema = z
     .object({
-        gender: z.enum(["male", "female"], {
-            error: "Pilih jenis kelamin.",
+        gender: z.enum(['male', 'female'], {
+            error: 'Pilih jenis kelamin.',
         }),
-        education: z.enum(
-            ["high_school", "diploma", "bachelor", "master", "doctorate"],
-            {
-                error: "Pilih pendidikan terakhir.",
-            },
-        ),
-        province: z.string().trim().min(1, "Provinsi wajib dipilih."),
-        city: z.string().trim().min(1, "Kota atau kabupaten wajib dipilih."),
-        occupation: z.string().trim().min(1, "Pekerjaan wajib diisi."),
+        education: z.enum(['high_school', 'diploma', 'bachelor', 'master', 'doctorate'], {
+            error: 'Pilih pendidikan terakhir.',
+        }),
+        province: z.string().trim().min(1, 'Provinsi wajib dipilih.'),
+        city: z.string().trim().min(1, 'Kota atau kabupaten wajib dipilih.'),
+        occupation: z.string().trim().min(1, 'Pekerjaan wajib diisi.'),
         religion: z
-            .enum([
-                "islam",
-                "protestant",
-                "catholic",
-                "hindu",
-                "buddhist",
-                "confucian",
-            ])
+            .enum(['islam', 'protestant', 'catholic', 'hindu', 'buddhist', 'confucian'])
             .optional(),
         religionConsent: z.boolean(),
     })
     .refine((data) => !data.religion || data.religionConsent, {
-        path: ["religionConsent"],
-        error: "Persetujuan diperlukan untuk memproses data agama.",
-    });
+        path: ['religionConsent'],
+        error: 'Persetujuan diperlukan untuk memproses data agama.',
+    })
 
-type DemographicFormValues = z.infer<typeof demographicSchema>;
+type DemographicFormValues = z.infer<typeof demographicSchema>
 type DemographicFormInput = {
-    gender: DemographicFormValues["gender"] | "";
-    education: DemographicFormValues["education"] | "";
-    province: string;
-    city: string;
-    occupation: string;
-    religion?: DemographicFormValues["religion"];
-    religionConsent: boolean;
-};
+    gender: DemographicFormValues['gender'] | ''
+    education: DemographicFormValues['education'] | ''
+    province: string
+    city: string
+    occupation: string
+    religion?: DemographicFormValues['religion']
+    religionConsent: boolean
+}
 
 const educationOptions = [
-    { value: "high_school", label: "SMA / SMK" },
-    { value: "diploma", label: "Diploma (D3)" },
-    { value: "bachelor", label: "S1 / Sarjana" },
-    { value: "master", label: "S2 / Magister" },
-    { value: "doctorate", label: "S3 / Doktoral" },
-] as const;
+    { value: 'high_school', label: 'SMA / SMK' },
+    { value: 'diploma', label: 'Diploma (D3)' },
+    { value: 'bachelor', label: 'S1 / Sarjana' },
+    { value: 'master', label: 'S2 / Magister' },
+    { value: 'doctorate', label: 'S3 / Doktoral' },
+] as const
 
 const religionOptions = [
-    { value: "islam", label: "Islam" },
-    { value: "protestant", label: "Kristen Protestan" },
-    { value: "catholic", label: "Katolik" },
-    { value: "hindu", label: "Hindu" },
-    { value: "buddhist", label: "Buddha" },
-    { value: "confucian", label: "Konghucu" },
-] as const;
+    { value: 'islam', label: 'Islam' },
+    { value: 'protestant', label: 'Kristen Protestan' },
+    { value: 'catholic', label: 'Katolik' },
+    { value: 'hindu', label: 'Hindu' },
+    { value: 'buddhist', label: 'Buddha' },
+    { value: 'confucian', label: 'Konghucu' },
+] as const
 
 function FieldErrors({ errors }: { errors: unknown[] }) {
-    if (errors.length === 0) return null;
+    if (errors.length === 0) return null
 
     return (
         <div className="space-y-1">
             {errors.map((error, index) => (
                 <p className="text-sm text-destructive" key={index}>
-                    {typeof error === "string"
+                    {typeof error === 'string'
                         ? error
-                        : error &&
-                            typeof error === "object" &&
-                            "message" in error
+                        : error && typeof error === 'object' && 'message' in error
                           ? String(error.message)
-                          : "Input tidak valid."}
+                          : 'Input tidak valid.'}
                 </p>
             ))}
         </div>
-    );
+    )
 }
 
 export default function ProfilDemografi() {
     const form = useForm({
         defaultValues: {
-            gender: "",
-            education: "",
-            province: "",
-            city: "",
-            occupation: "",
+            gender: '',
+            education: '',
+            province: '',
+            city: '',
+            occupation: '',
             religion: undefined,
             religionConsent: false,
         } satisfies DemographicFormInput as DemographicFormInput,
@@ -112,30 +99,29 @@ export default function ProfilDemografi() {
             onSubmit: demographicSchema,
         },
         onSubmit: async ({ value }) => {
-            // value bertipe DemographicFormInput, bukan hasil parse schema
-            const parsed = demographicSchema.parse(value);
-            console.log(parsed);
+            const parsed = demographicSchema.parse(value)
+            console.log(parsed)
         },
-    });
+    })
 
     return (
         <div>
             <div>
-                <h2 className="text-lg font-semibold">Profil Demografi</h2>
-                <p className="text-muted-foreground">
-                    Data digunakan untuk mencocokkan survei secara anonim tanpa
-                    membuka identitas ke peneliti.
+                <h3 className="text-xl font-semibold leading-snug">Profil Demografi</h3>
+                <p className="leading-relaxed text-muted-foreground">
+                    Data digunakan untuk mencocokkan survei secara anonim tanpa membuka identitas ke
+                    peneliti.
                 </p>
             </div>
 
             <Separator className="my-4" />
 
             <form
-                className="space-y-4"
+                className="space-y-6"
                 onSubmit={(event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    form.handleSubmit();
+                    event.preventDefault()
+                    event.stopPropagation()
+                    form.handleSubmit()
                 }}
             >
                 <form.Field name="gender">
@@ -146,30 +132,18 @@ export default function ProfilDemografi() {
                             <RadioGroup
                                 value={field.state.value}
                                 onValueChange={(value) =>
-                                    field.handleChange(
-                                        value as "male" | "female",
-                                    )
+                                    field.handleChange(value as 'male' | 'female')
                                 }
                                 onBlur={field.handleBlur}
                             >
                                 <div className="flex items-center gap-2">
-                                    <RadioGroupItem
-                                        value="male"
-                                        id="gender-male"
-                                    />
-                                    <Label htmlFor="gender-male">
-                                        Laki-laki
-                                    </Label>
+                                    <RadioGroupItem value="male" id="gender-male" />
+                                    <Label htmlFor="gender-male">Laki-laki</Label>
                                 </div>
 
                                 <div className="flex items-center gap-2">
-                                    <RadioGroupItem
-                                        value="female"
-                                        id="gender-female"
-                                    />
-                                    <Label htmlFor="gender-female">
-                                        Perempuan
-                                    </Label>
+                                    <RadioGroupItem value="female" id="gender-female" />
+                                    <Label htmlFor="gender-female">Perempuan</Label>
                                 </div>
                             </RadioGroup>
 
@@ -181,31 +155,21 @@ export default function ProfilDemografi() {
                 <form.Field name="education">
                     {(field) => (
                         <div className="space-y-2">
-                            <Label htmlFor="education">
-                                Pendidikan Terakhir
-                            </Label>
+                            <Label htmlFor="education">Pendidikan Terakhir</Label>
 
                             <Select
                                 value={field.state.value}
                                 onValueChange={(value) =>
-                                    field.handleChange(
-                                        value as DemographicFormValues["education"],
-                                    )
+                                    field.handleChange(value as DemographicFormValues['education'])
                                 }
                             >
-                                <SelectTrigger
-                                    id="education"
-                                    className="w-full"
-                                >
+                                <SelectTrigger id="education" className="w-full">
                                     <SelectValue placeholder="Pilih pendidikan terakhir" />
                                 </SelectTrigger>
 
                                 <SelectContent>
                                     {educationOptions.map((option) => (
-                                        <SelectItem
-                                            key={option.value}
-                                            value={option.value}
-                                        >
+                                        <SelectItem key={option.value} value={option.value}>
                                             {option.label}
                                         </SelectItem>
                                     ))}
@@ -227,9 +191,7 @@ export default function ProfilDemografi() {
                                 name={field.name}
                                 value={field.state.value}
                                 onBlur={field.handleBlur}
-                                onChange={(event) =>
-                                    field.handleChange(event.target.value)
-                                }
+                                onChange={(event) => field.handleChange(event.target.value)}
                                 placeholder="Masukkan provinsi"
                             />
 
@@ -248,9 +210,7 @@ export default function ProfilDemografi() {
                                 name={field.name}
                                 value={field.state.value}
                                 onBlur={field.handleBlur}
-                                onChange={(event) =>
-                                    field.handleChange(event.target.value)
-                                }
+                                onChange={(event) => field.handleChange(event.target.value)}
                                 placeholder="Masukkan kota atau kabupaten"
                             />
 
@@ -262,18 +222,14 @@ export default function ProfilDemografi() {
                 <form.Field name="occupation">
                     {(field) => (
                         <div className="space-y-2">
-                            <Label htmlFor="occupation">
-                                Pekerjaan / Bidang
-                            </Label>
+                            <Label htmlFor="occupation">Pekerjaan / Bidang</Label>
 
                             <Input
                                 id="occupation"
                                 name={field.name}
                                 value={field.state.value}
                                 onBlur={field.handleBlur}
-                                onChange={(event) =>
-                                    field.handleChange(event.target.value)
-                                }
+                                onChange={(event) => field.handleChange(event.target.value)}
                                 placeholder="Masukkan pekerjaan atau bidang"
                             />
 
@@ -291,8 +247,8 @@ export default function ProfilDemografi() {
                     </h3>
 
                     <p className="text-sm text-muted-foreground">
-                        Data agama bersifat opsional. Hanya digunakan untuk
-                        algoritma matching riset keagamaan.
+                        Data agama bersifat opsional. Hanya digunakan untuk algoritma matching riset
+                        keagamaan.
                     </p>
                 </div>
 
@@ -302,22 +258,14 @@ export default function ProfilDemografi() {
                             <Label htmlFor="religion">Agama (Opsional)</Label>
 
                             <Select
-                                value={field.state.value ?? ""}
+                                value={field.state.value ?? ''}
                                 onValueChange={(value) => {
-                                    field.handleChange(
-                                        value as DemographicFormValues["religion"],
-                                    );
+                                    field.handleChange(value as DemographicFormValues['religion'])
 
                                     if (value) {
-                                        form.setFieldValue(
-                                            "religionConsent",
-                                            false,
-                                        );
+                                        form.setFieldValue('religionConsent', false)
                                     } else {
-                                        form.setFieldValue(
-                                            "religionConsent",
-                                            false,
-                                        );
+                                        form.setFieldValue('religionConsent', false)
                                     }
                                 }}
                             >
@@ -327,10 +275,7 @@ export default function ProfilDemografi() {
 
                                 <SelectContent>
                                     {religionOptions.map((option) => (
-                                        <SelectItem
-                                            key={option.value}
-                                            value={option.value}
-                                        >
+                                        <SelectItem key={option.value} value={option.value}>
                                             {option.label}
                                         </SelectItem>
                                     ))}
@@ -356,9 +301,8 @@ export default function ProfilDemografi() {
                                     htmlFor="religionConsent"
                                     className="font-normal leading-relaxed"
                                 >
-                                    Saya memberikan persetujuan eksplisit untuk
-                                    pemrosesan data agama dalam penapisan riset
-                                    ilmiah.
+                                    Saya memberikan persetujuan eksplisit untuk pemrosesan data
+                                    agama dalam penapisan riset ilmiah.
                                 </Label>
                             </div>
 
@@ -369,19 +313,14 @@ export default function ProfilDemografi() {
 
                 <Separator className="my-4" />
 
-                <form.Subscribe
-                    selector={(state) => [state.canSubmit, state.isSubmitting]}
-                >
+                <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
                     {([canSubmit, isSubmitting]) => (
-                        <Button
-                            type="submit"
-                            disabled={!canSubmit || isSubmitting}
-                        >
-                            {isSubmitting ? "Menyimpan..." : "Simpan Perubahan"}
+                        <Button type="submit" disabled={!canSubmit || isSubmitting}>
+                            {isSubmitting ? 'Menyimpan...' : 'Simpan Perubahan'}
                         </Button>
                     )}
                 </form.Subscribe>
             </form>
         </div>
-    );
+    )
 }

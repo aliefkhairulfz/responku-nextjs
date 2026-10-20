@@ -1,3 +1,5 @@
+import DaftarPertanyaanCard from "@/lib/editor-engine/daftar-pertanyaan-card";
+
 export default function Page() {
-    return <div>Page</div>;
+    return <DaftarPertanyaanCard />;
 }

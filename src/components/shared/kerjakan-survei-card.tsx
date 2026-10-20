@@ -1,8 +1,8 @@
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import * as Card from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import * as Card from '@/components/ui/card'
+import { Progress } from '@/components/ui/progress'
+import { Separator } from '@/components/ui/separator'
 
 export default function KerjakanSurveiCard() {
     return (
@@ -11,8 +11,7 @@ export default function KerjakanSurveiCard() {
                 <Card.CardHeader className="flex flex-col gap-4">
                     <div className="flex items-start justify-between">
                         <h3 className="text-xl font-semibold leading-snug">
-                            Survei Kebiasaan Belanja Online Mingguan Produk
-                            Kebutuhan Rumah
+                            Survei Kebiasaan Belanja Online Mingguan Produk Kebutuhan Rumah
                         </h3>
                         <Badge variant="default">Konsumen & Retail</Badge>
                     </div>
@@ -28,9 +27,7 @@ export default function KerjakanSurveiCard() {
                     <div className="flex w-full flex-col gap-2">
                         <div className="flex flex-wrap items-center justify-between gap-2">
                             <Badge variant="ghost">Kuota Terisi</Badge>
-                            <span className="text-muted-foreground">
-                                38/50 (76%)
-                            </span>
+                            <span className="text-muted-foreground">38/50 (76%)</span>
                         </div>
                         <Progress value={82} className="w-full" />
                     </div>
@@ -44,5 +41,5 @@ export default function KerjakanSurveiCard() {
                 </Card.CardFooter>
             </Card.Card>
         </div>
-    );
+    )
 }

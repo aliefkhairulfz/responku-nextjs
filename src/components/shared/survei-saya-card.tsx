@@ -1,9 +1,9 @@
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import * as Card from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
-import { FileSpreadsheet } from "lucide-react";
+import { FileSpreadsheet } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import * as Card from '@/components/ui/card'
+import { Progress } from '@/components/ui/progress'
+import { Separator } from '@/components/ui/separator'
 
 export default function SurveiSayaCard() {
     return (
@@ -14,24 +14,15 @@ export default function SurveiSayaCard() {
                         <h3 className="text-xl font-semibold leading-snug">
                             Survei Preferensi Penggunaan E-Wallet di Jabodetabek
                         </h3>
-                        <p className="text-muted-foreground">
-                            Dibuat 2 Sep 2026
-                        </p>
+                        <p className="text-muted-foreground">Dibuat 2 Sep 2026</p>
                     </div>
-                    <Badge
-                        variant="outline"
-                        className="shrink-0 border-green-200 bg-green-50 text-green-600"
-                    >
-                        Recruiting
-                    </Badge>
+                    <Badge>Recruiting</Badge>
                 </Card.CardHeader>
 
                 <Card.CardContent className="space-y-4">
                     <div className="space-y-2">
                         <div className="flex flex-wrap items-center justify-between gap-2">
-                            <span className="text-muted-foreground">
-                                Responden terkumpul
-                            </span>
+                            <span className="text-muted-foreground">Responden terkumpul</span>
                             <span className="font-semibold">68/100 (68%)</span>
                         </div>
                         <Progress value={68} className="w-full" />
@@ -55,5 +46,5 @@ export default function SurveiSayaCard() {
                 </Card.CardFooter>
             </Card.Card>
         </div>
-    );
+    )
 }

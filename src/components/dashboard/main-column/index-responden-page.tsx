@@ -1,13 +1,13 @@
-"use client";
+'use client'
 
-import JelajahSurveiCard from "@/components/shared/jelajah-survei-card";
-import SaldoDompetAnda from "@/components/shared/saldo-dompet-anda";
-import StatistikBasicCard from "@/components/shared/statistik-basic-card";
-import TntResponden from "@/components/shared/tnt-responden";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { ArrowRightIcon } from "lucide-react";
-import Link from "next/link";
+import { ArrowRightIcon } from 'lucide-react'
+import Link from 'next/link'
+import JelajahSurveiCard from '@/components/shared/jelajah-survei-card'
+import SaldoDompetAndaCard from '@/components/shared/saldo-dompet-anda-card'
+import StatistikBasicCard from '@/components/shared/statistik-basic-card'
+import TntResponden from '@/components/shared/tnt-responden'
+import { Badge } from '@/components/ui/badge'
+import { Separator } from '@/components/ui/separator'
 
 export default function DashboardMainColumnIndexRespondendPage() {
     return (
@@ -15,12 +15,9 @@ export default function DashboardMainColumnIndexRespondendPage() {
             {/*hello*/}
             <div className="space-y-4">
                 <div>
-                    <h3 className="text-xl font-semibold leading-snug">
-                        Selamat Malam Bulan
-                    </h3>
+                    <h3 className="text-xl font-semibold leading-snug">Selamat Malam Bulan</h3>
                     <p className="leading-relaxed text-muted-foreground">
-                        Yuk lihat survei yang bisa kamu kerjakan hari ini dan
-                        dapatkan reward!
+                        Yuk lihat survei yang bisa kamu kerjakan hari ini dan dapatkan reward!
                     </p>
                 </div>
 
@@ -55,9 +52,7 @@ export default function DashboardMainColumnIndexRespondendPage() {
                 <div className="space-y-4">
                     <div className="flex justify-between">
                         <div>
-                            <h3 className="text-xl font-semibold leading-snug">
-                                Survei Tersedia
-                            </h3>
+                            <h3 className="text-xl font-semibold leading-snug">Survei Tersedia</h3>
                             <p className="leading-relaxed text-muted-foreground">
                                 4 Survei cocok dengan profilmu
                             </p>
@@ -98,10 +93,10 @@ export default function DashboardMainColumnIndexRespondendPage() {
                 </div>
 
                 <div className="hidden lg:block sticky -top-3 self-start space-y-4">
-                    <SaldoDompetAnda />
+                    <SaldoDompetAndaCard />
                     <TntResponden />
                 </div>
             </div>
         </div>
-    );
+    )
 }
