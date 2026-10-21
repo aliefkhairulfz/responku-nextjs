@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 import {
     ArrowUpRightIcon,
@@ -11,88 +11,78 @@ import {
     UserCheckIcon,
     Wallet,
     XIcon,
-} from 'lucide-react'
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { type ReactNode, useState } from 'react'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
-import { Switch } from '@/components/ui/switch'
-import { DashboardStoreProvider, useDashboardStore } from '@/lib/stores/dashboard-store-provider'
-import { cn } from '@/lib/utils'
+} from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { type ReactNode, useState } from "react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { DashboardStoreProvider, useDashboardStore } from "@/lib/stores/dashboard-store-provider";
+import { cn } from "@/lib/utils";
 
 type MenuItem = {
-    label: string
-    icon: LucideIcon
-    highlight?: boolean
-    url: string
-}
+    label: string;
+    icon: LucideIcon;
+    highlight?: boolean;
+    url: string;
+};
 
 const menus: MenuItem[] = [
-    { label: 'Dashboard', icon: LayoutDashboardIcon, url: 'dashboard' },
+    { label: "Dashboard", icon: LayoutDashboardIcon, url: "dashboard" },
     {
-        label: 'Profil & Verifikasi',
+        label: "Profil & Verifikasi",
         icon: UserCheckIcon,
         highlight: true,
-        url: 'profil',
+        url: "profile",
     },
     {
-        label: 'Saldo Dompet',
+        label: "Saldo Dompet",
         icon: Wallet,
-        url: 'dashboard/saldo-dompet',
+        url: "dashboard/wallet-balance",
     },
     {
-        label: 'Buat Riset',
+        label: "Buat Riset",
         icon: Microscope,
         highlight: true,
-        url: 'buat-riset',
+        url: "create-research",
     },
-]
+];
 
 const menus2nd: MenuItem[] = [
     {
-        label: 'Pengaturan Akun',
+        label: "Pengaturan Akun",
         icon: SettingsIcon,
         highlight: true,
-        url: 'pengaturan-akun',
+        url: "account-settings",
     },
     {
-        label: 'Pusat Bantuan',
+        label: "Pusat Bantuan",
         icon: CircleHelpIcon,
         highlight: true,
-        url: 'pusat-bantuan',
+        url: "help-center",
     },
-]
+];
 
 const user = {
-    name: 'John Doe',
-    image: '',
-}
+    name: "John Doe",
+    image: "",
+};
 
-function MenuList({
-    items,
-    open,
-    onItemClick,
-    pathnames,
-}: {
-    items: MenuItem[]
-    open: boolean
-    onItemClick?: () => void
-    pathnames: string[]
-}) {
-    const hideOnCollapse = open ? 'opacity-100' : 'md:opacity-0'
+function MenuList({ items, open, onItemClick, pathnames }: { items: MenuItem[]; open: boolean; onItemClick?: () => void; pathnames: string[] }) {
+    const hideOnCollapse = open ? "opacity-100" : "md:opacity-0";
     return (
         <ul className="flex flex-col gap-1">
             {items.map(({ label, icon: Icon, highlight, url }) => {
-                const urls = url.split('/').filter((c) => c !== '')
-                const isActive = urls.every((c) => pathnames.includes(c))
+                const urls = url.split("/").filter((c) => c !== "");
+                const isActive = urls.every((c) => pathnames.includes(c));
 
                 return (
                     <Link
                         href={`/${url}`}
                         key={label}
-                        className={`${isActive && urls.length === pathnames.length ? 'bg-primary text-white rounded-md' : ''}`}
+                        className={`${isActive && urls.length === pathnames.length ? "bg-primary text-white rounded-md" : ""}`}
                     >
                         <button
                             type="button"
@@ -101,26 +91,20 @@ function MenuList({
                             className={`w-full h-10 flex items-center gap-3 px-3 text-sm transition-colors`}
                         >
                             <Icon className="size-5 shrink-0" />
-                            <span
-                                className={`whitespace-nowrap transition-opacity duration-200 font-medium ${hideOnCollapse}`}
-                            >
-                                {label}
-                            </span>
+                            <span className={`whitespace-nowrap transition-opacity duration-200 font-medium ${hideOnCollapse}`}>{label}</span>
                             {highlight && (
-                                <ArrowUpRightIcon
-                                    className={`size-4 shrink-0 ml-auto transition-opacity duration-200 ${hideOnCollapse}`}
-                                />
+                                <ArrowUpRightIcon className={`size-4 shrink-0 ml-auto transition-opacity duration-200 ${hideOnCollapse}`} />
                             )}
                         </button>
                     </Link>
-                )
+                );
             })}
         </ul>
-    )
+    );
 }
 
 export default function Layout({ children }: { children: ReactNode }) {
-    const pathname = usePathname()
+    const pathname = usePathname();
 
     return (
         <DashboardStoreProvider>
@@ -128,72 +112,57 @@ export default function Layout({ children }: { children: ReactNode }) {
                 <div className="w-full p-6 overflow-auto">{children}</div>
             </LayoutChildren>
         </DashboardStoreProvider>
-    )
+    );
 }
 
 function LayoutChildren({ pathname, children }: { pathname: string; children: ReactNode }) {
-    const [open, setOpen] = useState(true)
-    const [mobileOpen, setMobileOpen] = useState(false)
+    const [open, setOpen] = useState(true);
+    const [mobileOpen, setMobileOpen] = useState(false);
 
     // stores
-    const userMode = useDashboardStore((s) => s.userMode)
-    const setMode = useDashboardStore((s) => s.setMode)
+    const userMode = useDashboardStore((s) => s.userMode);
+    const setMode = useDashboardStore((s) => s.setMode);
 
     return (
         <div className="w-full h-dvh flex md:divide-x overflow-hidden">
             {/* aside */}
             <aside
                 className={cn(
-                    'fixed inset-x-0 top-0 z-50 h-dvh bg-background flex flex-col transition-transform duration-200 ease-in-out',
-                    mobileOpen ? 'translate-y-0' : '-translate-y-full',
-                    'md:static md:z-auto md:h-full md:shrink-0 md:translate-y-0 md:overflow-hidden md:transition-all',
-                    open ? 'md:w-64' : 'md:w-15',
+                    "fixed inset-x-0 top-0 z-50 h-dvh bg-background flex flex-col transition-transform duration-200 ease-in-out",
+                    mobileOpen ? "translate-y-0" : "-translate-y-full",
+                    "md:static md:z-auto md:h-full md:shrink-0 md:translate-y-0 md:overflow-hidden md:transition-all",
+                    open ? "md:w-64" : "md:w-15",
                 )}
             >
                 {/* title */}
                 <div className="h-15 shrink-0 flex items-center justify-between px-6">
-                    <span
-                        className={`text-lg font-bold whitespace-nowrap transition-opacity duration-200 ${open ? 'opacity-100' : 'md:opacity-0'}`}
-                    >
-                        {mobileOpen ? 'R' : 'Responku'}
+                    <span className={`text-lg font-bold whitespace-nowrap transition-opacity duration-200 ${open ? "opacity-100" : "md:opacity-0"}`}>
+                        {mobileOpen ? "R" : "Responku"}
                     </span>
 
                     <div className="flex items-center space-x-2">
-                        <div className={`items-center space-x-2 ${mobileOpen ? 'flex' : 'hidden'}`}>
+                        <div className={`items-center space-x-2 ${mobileOpen ? "flex" : "hidden"}`}>
                             <Switch
                                 id="user-mode"
-                                checked={userMode === 'peneliti'}
-                                onCheckedChange={(checked) =>
-                                    setMode(checked ? 'peneliti' : 'responden')
-                                }
+                                checked={userMode === "peneliti"}
+                                onCheckedChange={(checked) => setMode(checked ? "peneliti" : "responden")}
                             />
                             <Label htmlFor="user-mode">Mode Peneliti</Label>
                         </div>
 
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="md:hidden"
-                            onClick={() => setMobileOpen(false)}
-                            aria-label="Tutup menu"
-                        >
+                        <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setMobileOpen(false)} aria-label="Tutup menu">
                             <XIcon />
                         </Button>
                     </div>
                 </div>
 
                 {/* menu */}
-                <nav
-                    className={cn(
-                        'flex-1 overflow-y-auto px-4 py-4 transition-all duration-200',
-                        !open && 'md:px-2',
-                    )}
-                >
+                <nav className={cn("flex-1 overflow-y-auto px-4 py-4 transition-all duration-200", !open && "md:px-2")}>
                     <MenuList
                         items={menus}
                         open={open}
                         onItemClick={() => setMobileOpen(false)}
-                        pathnames={pathname.split('/').filter((c) => c !== '')}
+                        pathnames={pathname.split("/").filter((c) => c !== "")}
                     />
 
                     {/* separator */}
@@ -203,7 +172,7 @@ function LayoutChildren({ pathname, children }: { pathname: string; children: Re
                         items={menus2nd}
                         open={open}
                         onItemClick={() => setMobileOpen(false)}
-                        pathnames={pathname.split('/').filter((c) => c !== '')}
+                        pathnames={pathname.split("/").filter((c) => c !== "")}
                     />
                 </nav>
 
@@ -215,7 +184,7 @@ function LayoutChildren({ pathname, children }: { pathname: string; children: Re
                             <AvatarFallback>{user.name.charAt(0).toUpperCase()}</AvatarFallback>
                         </Avatar>
                         <span
-                            className={`text-sm font-medium whitespace-nowrap transition-opacity duration-200 ${open ? 'opacity-100' : 'md:opacity-0'}`}
+                            className={`text-sm font-medium whitespace-nowrap transition-opacity duration-200 ${open ? "opacity-100" : "md:opacity-0"}`}
                         >
                             {user.name}
                         </span>
@@ -228,13 +197,7 @@ function LayoutChildren({ pathname, children }: { pathname: string; children: Re
                 {/* head */}
                 <div className="h-15 shrink-0 w-full flex items-center gap-3 px-4">
                     {/* toggle mobile */}
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="md:hidden"
-                        onClick={() => setMobileOpen(true)}
-                        aria-label="Buka menu"
-                    >
+                    <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setMobileOpen(true)} aria-label="Buka menu">
                         <MenuIcon />
                     </Button>
 
@@ -264,10 +227,8 @@ function LayoutChildren({ pathname, children }: { pathname: string; children: Re
                         <div className={`hidden lg:flex items-center space-x-2`}>
                             <Switch
                                 id="user-mode"
-                                checked={userMode === 'peneliti'}
-                                onCheckedChange={(checked) =>
-                                    setMode(checked ? 'peneliti' : 'responden')
-                                }
+                                checked={userMode === "peneliti"}
+                                onCheckedChange={(checked) => setMode(checked ? "peneliti" : "responden")}
                             />
                             <Label htmlFor="user-mode">Mode Peneliti</Label>
                         </div>
@@ -301,12 +262,7 @@ function LayoutChildren({ pathname, children }: { pathname: string; children: Re
                         </Popover>*/}
 
                         {/* user */}
-                        <Link
-                            href="/profil"
-                            title="Pengaturan profil"
-                            aria-label="Pengaturan profil"
-                            className="rounded-full"
-                        >
+                        <Link href="/profile" title="Pengaturan profil" aria-label="Pengaturan profil" className="rounded-full">
                             <Avatar className="size-9">
                                 <AvatarImage src={user.image} alt={user.name} />
                                 <AvatarFallback>{user.name.charAt(0).toUpperCase()}</AvatarFallback>
@@ -319,5 +275,5 @@ function LayoutChildren({ pathname, children }: { pathname: string; children: Re
                 {children}
             </div>
         </div>
-    )
+    );
 }
