@@ -29,7 +29,7 @@ export default function ResearchEditorPreview({ researchEditorForm: { form } }: 
                 const totalToken = allocationToken.targetResponden * allocationToken.tokenPerResponden;
 
                 return (
-                    <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 pb-8">
+                    <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 mb-10">
                         {/* HEADER */}
                         <div className="space-y-1">
                             <h2 className="text-2xl font-bold tracking-tight">Pratinjau Kuesioner</h2>

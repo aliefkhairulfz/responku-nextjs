@@ -15,7 +15,7 @@ import * as AlertDialog from "@/components/ui/alert-dialog";
 const menuItems = [
     { label: "Editor Kuesioner", icon: PencilLine },
     { label: "Preview Kuesioner", icon: Eye },
-    { label: "Publish Kuesioner", icon: Send },
+    // { label: "Publish Kuesioner", icon: Send },
 ];
 
 type MenuListProps = {
@@ -92,7 +92,7 @@ export default function Page() {
                 </section>
             </main>
 
-            <AlertDialog.AlertDialog open={publishDialogOpen} onOpenChange={setPublishDialogOpen}>
+            {/*<AlertDialog.AlertDialog open={publishDialogOpen} onOpenChange={setPublishDialogOpen}>
                 <AlertDialog.AlertDialogContent>
                     <AlertDialog.AlertDialogHeader>
                         <AlertDialog.AlertDialogTitle>Publish Kuesioner?</AlertDialog.AlertDialogTitle>
@@ -112,7 +112,7 @@ export default function Page() {
                         </AlertDialog.AlertDialogAction>
                     </AlertDialog.AlertDialogFooter>
                 </AlertDialog.AlertDialogContent>
-            </AlertDialog.AlertDialog>
+            </AlertDialog.AlertDialog>*/}
         </div>
     );
 }

@@ -25,6 +25,5 @@ export default async function Page({ params }: { params: Promise<{ researchId: s
     const research = await getResearch(researchId);
 
     if (!research) notFound();
-
     return <ResearchDetailView research={research} />;
 }

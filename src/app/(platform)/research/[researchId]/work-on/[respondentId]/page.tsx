@@ -10,8 +10,9 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { MailCheck } from "lucide-react";
+import Link from "next/link";
 
-/** Jumlah pertanyaan per halaman (1–5) */
 const PAGE_SIZE = 5;
 type Choice = { id: string; pos: number; n: string; choiceText: string };
 type Question = {
@@ -24,7 +25,6 @@ type Question = {
 };
 type Answer = { questionId: string; selected: string[]; text: string };
 
-/** DUMMY DATA */
 const questions: Question[] = [
     {
         id: "32476abc-e346-4d5b-bcee-3f70c42d99a0",
@@ -72,14 +72,9 @@ const questions: Question[] = [
     },
 ];
 
-/** ZOD: schema per pertanyaan, mengikuti tipe dan mustFill */
-const REQUIRED_MSG = "Pertanyaan ini wajib dijawab.";
-
 function getFieldSchema(q: Question) {
-    if (q.questionType === "essay-answer") {
-        return q.mustFill ? z.string().trim().min(1, REQUIRED_MSG) : z.string();
-    }
-    return q.mustFill ? z.array(z.string()).min(1, REQUIRED_MSG) : z.array(z.string());
+    if (q.questionType === "essay-answer") return q.mustFill ? z.string().trim().min(1, "Pertanyaan ini wajib dijawab.") : z.string();
+    return q.mustFill ? z.array(z.string()).min(1, "Pertanyaan ini wajib dijawab.") : z.array(z.string());
 }
 
 function FieldError({ errors }: { errors: unknown[] }) {
@@ -92,7 +87,6 @@ function FieldError({ errors }: { errors: unknown[] }) {
 export default function Page() {
     const [page, setPage] = useState(0);
     const [result, setResult] = useState<Answer[] | null>(null);
-
     const form = useForm({
         defaultValues: {
             answers: questions.map((q): Answer => ({ questionId: q.id, selected: [], text: "" })),
@@ -108,7 +102,6 @@ export default function Page() {
     const pageQuestions = questions.slice(start, start + PAGE_SIZE);
     const isLast = page === totalPages - 1;
 
-    /** Validasi hanya field di halaman yang tampil (lewat validator Zod di tiap field) */
     async function validatePage() {
         let valid = true;
         for (let i = 0; i < pageQuestions.length; i++) {
@@ -136,14 +129,21 @@ export default function Page() {
 
     if (result) {
         return (
-            <main className="mx-auto w-full max-w-2xl px-4 py-10 mt-10">
-                <Card.Card>
-                    <Card.CardHeader>
-                        <h1 className="text-xl font-semibold">Jawaban terkirim</h1>
+            <main className="flex mt-15 w-full items-center justify-center p-4">
+                <Card.Card className="w-full max-w-lg">
+                    <Card.CardHeader className="flex flex-col items-center gap-3 px-6 pt-10 text-center sm:px-10">
+                        <span className="text-sm font-medium text-primary">Survei Selesai</span>
+                        <Card.CardTitle className="text-2xl font-semibold tracking-tight">Jawaban kamu sudah dikirim!</Card.CardTitle>
+                        <Card.CardDescription className="max-w-sm text-sm leading-6">
+                            Terima kasih sudah berpartisipasi. Salinan jawaban yang kamu kirim dapat kamu lihat melalui email.
+                        </Card.CardDescription>
                     </Card.CardHeader>
-                    <Card.CardContent>
-                        <pre className="bg-muted overflow-x-auto rounded-md p-3 text-xs">{JSON.stringify(result, null, 2)}</pre>
-                    </Card.CardContent>
+
+                    <Card.CardFooter className="justify-center px-6 pb-10 pt-4 sm:px-10">
+                        <Button className="w-full sm:w-auto">
+                            <Link href="/dashboard">Kembali</Link>
+                        </Button>
+                    </Card.CardFooter>
                 </Card.Card>
             </main>
         );

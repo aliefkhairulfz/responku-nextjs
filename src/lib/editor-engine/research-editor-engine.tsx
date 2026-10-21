@@ -92,7 +92,7 @@ export default function RisetEditorEngine({ researchEditorForm: { form } }: Rise
 
     return (
         <form
-            className="flex flex-col gap-6"
+            className="flex flex-col gap-6 mb-10"
             onSubmit={(e) => {
                 e.preventDefault();
                 form.handleSubmit();
@@ -576,14 +576,21 @@ export default function RisetEditorEngine({ researchEditorForm: { form } }: Rise
                 }}
             </form.Field>
 
-            {/* SUBMIT */}
-            <form.Subscribe selector={(s) => [s.canSubmit, s.isSubmitting, s.isDirty] as const}>
-                {([canSubmit, isSubmitting, isDirty]) => (
-                    <Button type="submit" disabled={!canSubmit || isSubmitting || !isDirty}>
-                        {isSubmitting ? "Menyimpan..." : "Simpan Kuesioner Sebagai Draft"}
-                    </Button>
-                )}
-            </form.Subscribe>
+            <div className="flex justify-end space-x-2">
+                <form.Subscribe selector={(s) => s.isSubmitting}>
+                    {(isSubmitting) => (
+                        <>
+                            <Button type="button" variant="outline" disabled={isSubmitting} onClick={() => form.handleSubmit({ action: "draft" })}>
+                                Simpan sebagai Draft
+                            </Button>
+
+                            <Button type="button" disabled={isSubmitting} onClick={() => form.handleSubmit({ action: "publish" })}>
+                                {isSubmitting ? "Menyimpan..." : "Publish Kuesioner"}
+                            </Button>
+                        </>
+                    )}
+                </form.Subscribe>
+            </div>
         </form>
     );
 }

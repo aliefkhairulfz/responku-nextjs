@@ -159,9 +159,11 @@ function useResearchEditorForm() {
                 questions: questionSchema,
             }),
         },
-        onSubmit: async ({ value }) => {
-            console.log({ value });
-            return { value };
+        onSubmit: async ({ value, meta }) => {
+            const action = meta as "publish" | "draft";
+
+            if (action === "publish") console.log("PUBLISH", value);
+            else console.log("DRAFT", value);
         },
     });
 
