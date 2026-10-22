@@ -1622,6 +1622,7 @@ export const UserProfileScalarFieldEnum = {
   domicileVerifiedAt: 'domicileVerifiedAt',
   education: 'education',
   occupation: 'occupation',
+  phoneNumber: 'phoneNumber',
   dataShareConsentAt: 'dataShareConsentAt',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
@@ -1933,7 +1934,8 @@ export const UserProfileOrderByRelevanceFieldEnum = {
   domicileProvince: 'domicileProvince',
   domicileCity: 'domicileCity',
   education: 'education',
-  occupation: 'occupation'
+  occupation: 'occupation',
+  phoneNumber: 'phoneNumber'
 } as const
 
 export type UserProfileOrderByRelevanceFieldEnum = (typeof UserProfileOrderByRelevanceFieldEnum)[keyof typeof UserProfileOrderByRelevanceFieldEnum]

@@ -55,8 +55,11 @@ model UserProfile {
   domicileLng        Decimal   @db.Decimal(10, 7)
   domicileVerifiedAt DateTime? @db.DateTime(3)
 
-  education String @db.VarChar(100)
+  education  String @db.VarChar(100)
   occupation String @db.VarChar(100)
+
+  // Nomor WhatsApp/telepon, dipakai untuk verifikasi & notifikasi
+  phoneNumber String? @map("phone_number") @db.VarChar(20)
 
   dataShareConsentAt DateTime? @db.DateTime(3)
 

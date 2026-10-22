@@ -1,304 +1,481 @@
-'use client'
+"use client"
 
-import { useForm } from '@tanstack/react-form'
-import { Camera, CheckCircle2, ClipboardList, ShieldCheck, Star, Trash2 } from 'lucide-react'
-import { useRef, useState } from 'react'
-import { z } from 'zod'
+import { useForm } from "@tanstack/react-form"
+import { BadgeCheck, CalendarDays, ClipboardList, Loader2, Mail, Save, ShieldCheck, Star, TriangleAlert } from "lucide-react"
+import { useState } from "react"
+import { z } from "zod"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { FieldError } from "@/components/ui/field"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { OTP_LENGTH, OtpInput } from "@/components/ui/otp-input"
+import { Separator } from "@/components/ui/separator"
+import { toast } from "@/components/ui/toast"
+import { patchJson, postJson } from "@/lib/api-client"
+import type { CurrentUser, UserProfile } from "@/lib/api-types"
+import { hasFieldError, toFieldErrors } from "@/lib/form-error"
+import { PHONE_MAX_LENGTH, isPhoneNumber } from "@/lib/profile-schema"
 
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Separator } from '@/components/ui/separator'
+/* ========== Helper ========== */
 
-const identitySchema = z.object({
-    name: z.string().trim().min(1, 'Nama lengkap wajib diisi.'),
-    email: z.string().trim().email('Alamat email tidak valid.'),
-    phone: z.string().trim().min(1, 'Nomor telepon wajib diisi.'),
-})
+const ROLE_LABELS: Record<string, string> = { researcher: "Peneliti", respondent: "Responden", admin: "Admin" }
 
-type IdentityFormValues = z.infer<typeof identitySchema>
-
-const MAX_FILE_SIZE = 2 * 1024 * 1024
-const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp']
-
-function FieldErrors({ errors }: { errors: unknown[] }) {
-    if (errors.length === 0) return null
-
-    return (
-        <div className="space-y-1">
-            {errors.map((error, index) => (
-                <p key={index} className="text-sm text-destructive">
-                    {typeof error === 'string'
-                        ? error
-                        : error && typeof error === 'object' && 'message' in error
-                          ? String(error.message)
-                          : 'Input tidak valid.'}
-                </p>
-            ))}
-        </div>
-    )
+function roleLabel(roles: string[]) {
+    return roles.map((role) => ROLE_LABELS[role] ?? role).join(", ") || "—"
 }
 
-export default function IdentityForm() {
-    const fileInputRef = useRef<HTMLInputElement>(null)
-    const [photo, setPhoto] = useState<string | null>(null)
-    const [photoError, setPhotoError] = useState('')
+function joinedAt(createdAt: string) {
+    return new Date(createdAt).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })
+}
 
-    // Contoh statistik; nantinya ganti dengan data dari API.
-    const stats = {
-        qualityScore: 98,
-        completedSurveys: 24,
-        verificationStatus: 'Terverifikasi',
-    }
+/* ========== Ganti email ========== */
+
+const requestSchema = z.object({
+    email: z.string().trim().pipe(z.email("Masukkan alamat email yang valid.")),
+    password: z.string().min(1, "Kata sandi wajib diisi."),
+})
+
+type RequestValues = z.infer<typeof requestSchema>
+
+/** An empty value clears the number, which is why it is allowed through here. */
+const phoneSchema = z.object({
+    phoneNumber: z
+        .string()
+        .trim()
+        .max(PHONE_MAX_LENGTH, `Maksimal ${PHONE_MAX_LENGTH} karakter.`)
+        .refine((value) => value === "" || isPhoneNumber(value), "Nomor WhatsApp tidak valid. Contoh: 081234567890."),
+})
+
+type PhoneValues = z.infer<typeof phoneSchema>
+
+/**
+ * Changes the account email, which is a two-step flow on the API: the new address
+ * has to prove it is reachable before it replaces the old one, because changing an
+ * email is enough to take an account over.
+ */
+function EmailChangeDialog({ user, onUserUpdated }: { user: CurrentUser; onUserUpdated: (user: CurrentUser) => void }) {
+    const [open, setOpen] = useState(false)
+    const [pendingEmail, setPendingEmail] = useState("")
+    const [code, setCode] = useState("")
+    const [step, setStep] = useState<"request" | "confirm">("request")
+    const [formError, setFormError] = useState<string | null>(null)
+    const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
 
     const form = useForm({
-        defaultValues: {
-            name: '',
-            email: '',
-            phone: '',
-        } as IdentityFormValues,
-        validators: {
-            onSubmit: identitySchema,
-        },
+        defaultValues: { email: "", password: "" } as RequestValues,
+        validators: { onSubmit: requestSchema },
         onSubmit: async ({ value }) => {
-            console.log(value)
-            // Kirim data dan file foto ke backend di sini.
+            setFormError(null)
+            setFieldErrors({})
+
+            const email = value.email.trim()
+            const result = await postJson<{ email: string }>("/api/auth/change-email", { email, password: value.password })
+
+            if (!result.ok) {
+                if (result.statusCode === 401) {
+                    setFormError("Kata sandi salah.")
+                    return
+                }
+
+                if (result.statusCode === 409) {
+                    setFieldErrors({ email: "Email ini sudah dipakai akun lain." })
+                    return
+                }
+
+                setFormError(result.message)
+                setFieldErrors(result.errors)
+                return
+            }
+
+            setPendingEmail(email)
+            setStep("confirm")
         },
     })
 
-    const handlePhotoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0]
-        if (!file) return
-
-        setPhotoError('')
-
-        if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
-            setPhotoError('Gunakan foto berformat JPG, PNG, atau WebP.')
-            event.target.value = ''
-            return
+    /** Closing the dialog always starts the flow over, so no stale code survives it. */
+    function reset(nextOpen: boolean) {
+        setOpen(nextOpen)
+        if (!nextOpen) {
+            setStep("request")
+            setPendingEmail("")
+            setCode("")
+            setFormError(null)
+            setFieldErrors({})
+            form.reset()
         }
-
-        if (file.size > MAX_FILE_SIZE) {
-            setPhotoError('Ukuran foto maksimal 2 MB.')
-            event.target.value = ''
-            return
-        }
-
-        const reader = new FileReader()
-
-        reader.onload = () => {
-            if (typeof reader.result === 'string') {
-                setPhoto(reader.result)
-            }
-        }
-
-        reader.readAsDataURL(file)
     }
 
-    const handleRemovePhoto = () => {
-        setPhoto(null)
-        setPhotoError('')
+    async function confirmCode() {
+        setFormError(null)
 
-        if (fileInputRef.current) {
-            fileInputRef.current.value = ''
+        const result = await postJson<{ user: { email: string } }>("/api/auth/confirm-email-change", { code })
+
+        if (!result.ok) {
+            if (result.statusCode === 429) {
+                // The code is discarded once its attempts run out; the flow has to restart.
+                setCode("")
+                setFormError("Percobaan terlalu banyak. Mulai ulang prosesnya.")
+                return
+            }
+
+            setFormError("Kode salah atau sudah kedaluwarsa.")
+            return
         }
+
+        onUserUpdated({ ...user, email: result.data?.user.email ?? pendingEmail, verifiedAt: new Date().toISOString() })
+        toast.add({
+            type: "success",
+            title: "Email diperbarui",
+            description: `Alamat masuk kamu sekarang ${result.data?.user.email ?? pendingEmail}.`,
+        })
+        reset(false)
     }
 
     return (
-        <div>
-            <div>
-                <h3 className="text-xl font-semibold leading-snug">Informasi Dasar</h3>
-                <p className="leading-relaxed text-muted-foreground">
-                    Kelola foto, identitas, dan informasi akun Anda.
-                </p>
-            </div>
+        <Dialog open={open} onOpenChange={reset}>
+            <Button type="button" variant="outline" size="sm" onClick={() => reset(true)}>
+                <Mail />
+                Ganti Email
+            </Button>
 
-            <Separator className="my-4" />
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>{step === "request" ? "Ganti alamat email" : "Masukkan kode verifikasi"}</DialogTitle>
+                    <DialogDescription>
+                        {step === "request"
+                            ? `Kode verifikasi akan dikirim ke email baru, agar alamatnya terbukti bisa diakses.`
+                            : `Kami mengirim 6 digit kode ke ${pendingEmail}.`}
+                    </DialogDescription>
+                </DialogHeader>
 
-            <div className="space-y-6">
-                {/* Foto profil */}
-                <section className="space-y-3">
-                    <p className="leading-relaxed text-muted-foreground">Foto Profil</p>
+                {/* Failures stay inside the dialog: the toast layer sits below the modal
+                    overlay, so a toast here would be invisible until the dialog closes. */}
+                {formError && (
+                    <p role="alert" className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                        {formError}
+                    </p>
+                )}
 
-                    <div className="flex flex-wrap items-center gap-4">
-                        <div className="flex size-24 shrink-0 items-center justify-center overflow-hidden rounded-full border bg-muted">
-                            {photo ? (
-                                // eslint-disable-next-line @next/next/no-img-element
-                                <img
-                                    src={photo}
-                                    alt="Preview foto profil"
-                                    className="size-full object-cover"
-                                />
-                            ) : (
-                                <span className="text-2xl font-semibold text-muted-foreground">
-                                    BS
-                                </span>
-                            )}
-                        </div>
+                {step === "request" ? (
+                    <form
+                        className="space-y-4"
+                        noValidate
+                        onSubmit={(event) => {
+                            event.preventDefault()
+                            event.stopPropagation()
+                            form.handleSubmit()
+                        }}
+                    >
+                        <form.Field name="email">
+                            {(field) => {
+                                const messages = [...field.state.meta.errors, fieldErrors.email]
 
-                        <div className="space-y-2">
-                            <div className="flex flex-wrap gap-2">
-                                <input
-                                    ref={fileInputRef}
-                                    type="file"
-                                    accept="image/jpeg,image/png,image/webp"
-                                    className="hidden"
-                                    onChange={handlePhotoChange}
-                                />
+                                return (
+                                    <div className="space-y-2">
+                                        <Label htmlFor="new-email">Email Baru</Label>
+                                        <Input
+                                            id="new-email"
+                                            name={field.name}
+                                            type="email"
+                                            inputMode="email"
+                                            autoComplete="email"
+                                            placeholder="nama@email.com"
+                                            value={field.state.value}
+                                            onBlur={field.handleBlur}
+                                            onChange={(event) => field.handleChange(event.target.value)}
+                                            aria-invalid={hasFieldError(messages)}
+                                        />
+                                        <FieldError errors={toFieldErrors(messages)} />
+                                    </div>
+                                )
+                            }}
+                        </form.Field>
 
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    onClick={() => fileInputRef.current?.click()}
-                                >
-                                    <Camera />
-                                    {photo ? 'Ganti Foto' : 'Upload Foto'}
-                                </Button>
+                        <form.Field name="password">
+                            {(field) => {
+                                const messages = [...field.state.meta.errors, fieldErrors.password]
 
-                                {photo && (
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        onClick={handleRemovePhoto}
-                                    >
-                                        <Trash2 />
-                                        Hapus
+                                return (
+                                    <div className="space-y-2">
+                                        <Label htmlFor="confirm-password">Kata Sandi Saat Ini</Label>
+                                        <Input
+                                            id="confirm-password"
+                                            name={field.name}
+                                            type="password"
+                                            autoComplete="current-password"
+                                            value={field.state.value}
+                                            onBlur={field.handleBlur}
+                                            onChange={(event) => field.handleChange(event.target.value)}
+                                            aria-invalid={hasFieldError(messages)}
+                                        />
+                                        <FieldError errors={toFieldErrors(messages)} />
+                                    </div>
+                                )
+                            }}
+                        </form.Field>
+
+                        <DialogFooter>
+                            <Button type="button" variant="outline" onClick={() => reset(false)}>
+                                Batal
+                            </Button>
+
+                            <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting] as const}>
+                                {([canSubmit, isSubmitting]) => (
+                                    <Button type="submit" disabled={!canSubmit || isSubmitting}>
+                                        {isSubmitting ? (
+                                            <>
+                                                <Loader2 className="animate-spin" />
+                                                Mengirim…
+                                            </>
+                                        ) : (
+                                            "Kirim Kode"
+                                        )}
                                     </Button>
                                 )}
-                            </div>
-
-                            <p className="text-xs text-muted-foreground">
-                                JPG, PNG, atau WebP. Maksimal 2 MB.
-                            </p>
-
-                            {photoError && <p className="text-sm text-destructive">{photoError}</p>}
+                            </form.Subscribe>
+                        </DialogFooter>
+                    </form>
+                ) : (
+                    <div className="space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="email-change-code">Kode verifikasi</Label>
+                            <OtpInput id="email-change-code" value={code} onChange={setCode} invalid={formError !== null} />
                         </div>
+
+                        <DialogFooter>
+                            <Button type="button" variant="outline" onClick={() => setStep("request")}>
+                                Kembali
+                            </Button>
+
+                            <Button type="button" disabled={code.length !== OTP_LENGTH} onClick={confirmCode}>
+                                Simpan Email
+                            </Button>
+                        </DialogFooter>
                     </div>
-                </section>
+                )}
+            </DialogContent>
+        </Dialog>
+    )
+}
 
-                <Separator />
+/* ========== Halaman ========== */
 
-                {/* Statistik responden */}
-                <section className="space-y-3">
-                    <p className="leading-relaxed text-muted-foreground">Statistik Responden</p>
+export default function IdentityData({
+    user,
+    profile,
+    onUserUpdated,
+    onProfileUpdated,
+}: {
+    user: CurrentUser
+    profile: UserProfile | null
+    onUserUpdated: (user: CurrentUser) => void
+    onProfileUpdated: (profile: UserProfile) => void
+}) {
+    const initials = user.name.trim().charAt(0).toUpperCase() || "?"
+    const verified = user.verifiedAt !== null
 
-                    <div className="grid gap-3 sm:grid-cols-3">
-                        <div className="space-y-2 rounded-lg border p-4">
-                            <div className="flex items-center gap-2 text-muted-foreground">
-                                <Star className="size-4" />
-                                <span className="text-sm">Skor Kualitas</span>
-                            </div>
+    // The phone number lives on the profile, and the API only creates that from a
+    // complete demographic payload — so there has to be a profile before it can be saved.
+    const canSavePhone = profile !== null
 
-                            <p className="text-2xl font-semibold">{stats.qualityScore}%</p>
+    /** Field-level rejection from the API, shown under the input instead of as a toast. */
+    const [phoneFieldError, setPhoneFieldError] = useState<string | null>(null)
 
-                            <p className="text-xs text-muted-foreground">Sangat Baik</p>
-                        </div>
+    const form = useForm({
+        defaultValues: { phoneNumber: profile?.phoneNumber ?? "" } as PhoneValues,
+        validators: { onSubmit: phoneSchema },
+        onSubmit: async ({ value }) => {
+            setPhoneFieldError(null)
 
-                        <div className="space-y-2 rounded-lg border p-4">
-                            <div className="flex items-center gap-2 text-muted-foreground">
-                                <ClipboardList className="size-4" />
-                                <span className="text-sm">Survei Selesai</span>
-                            </div>
+            const phoneNumber = value.phoneNumber.trim()
+            const result = await patchJson<{ profile: UserProfile }>("/api/user/profile", {
+                phoneNumber: phoneNumber === "" ? null : phoneNumber,
+            })
 
-                            <p className="text-2xl font-semibold">{stats.completedSurveys}</p>
+            if (!result.ok) {
+                // A rejected value is worth pointing at; anything else is worth a toast.
+                if (result.errors.phoneNumber) {
+                    setPhoneFieldError(result.errors.phoneNumber)
+                    return
+                }
 
-                            <p className="text-xs text-muted-foreground">Total survei</p>
-                        </div>
+                toast.add({ type: "error", title: "Nomor gagal disimpan", description: result.message })
+                return
+            }
 
-                        <div className="space-y-2 rounded-lg border p-4">
-                            <div className="flex items-center gap-2 text-muted-foreground">
-                                <ShieldCheck className="size-4" />
-                                <span className="text-sm">Status Akun</span>
-                            </div>
+            toast.add({
+                type: "success",
+                title: phoneNumber === "" ? "Nomor dihapus" : "Nomor tersimpan",
+                description: phoneNumber === "" ? "Nomor WhatsApp sudah dilepas dari profil." : "Nomor WhatsApp sudah diperbarui.",
+            })
 
-                            <p className="flex items-center gap-1.5 text-sm font-semibold">
-                                <CheckCircle2 className="size-4 text-green-600" />
-                                {stats.verificationStatus}
-                            </p>
+            if (result.data?.profile) onProfileUpdated(result.data.profile)
+        },
+    })
 
-                            <p className="text-xs text-muted-foreground">
-                                Identitas telah diverifikasi
-                            </p>
-                        </div>
-                    </div>
-                </section>
+    const summary = [
+        {
+            icon: ShieldCheck,
+            label: "Status Akun",
+            value: verified ? "Terverifikasi" : "Belum terverifikasi",
+            note: verified ? `Sejak ${joinedAt(user.verifiedAt as string)}` : "Cek email untuk kode verifikasi",
+            highlight: verified,
+        },
+        { icon: ClipboardList, label: "Peran", value: roleLabel(user.roles), note: "Peran aktif di Responku", highlight: false },
+        { icon: CalendarDays, label: "Bergabung", value: joinedAt(user.createdAt), note: "Tanggal akun dibuat", highlight: false },
+    ]
+
+    return (
+        <div className="space-y-6">
+            <div>
+                <h3 className="text-xl leading-snug font-semibold">Informasi Dasar</h3>
+                <p className="leading-relaxed text-muted-foreground">Kelola foto, identitas, dan informasi akun Anda.</p>
             </div>
 
-            <Separator className="my-4" />
+            <Separator />
 
-            {/* Form identitas */}
-            <form
-                className="space-y-6"
-                onSubmit={(event) => {
-                    event.preventDefault()
-                    event.stopPropagation()
-                    form.handleSubmit()
-                }}
-            >
-                <form.Field name="name">
-                    {(field) => (
-                        <div className="space-y-2">
-                            <Label htmlFor={field.name}>Nama Lengkap</Label>
-                            <Input
-                                id={field.name}
-                                name={field.name}
-                                value={field.state.value}
-                                onBlur={field.handleBlur}
-                                onChange={(event) => field.handleChange(event.target.value)}
-                            />
-                            <FieldErrors errors={field.state.meta.errors} />
-                        </div>
-                    )}
-                </form.Field>
+            <section className="space-y-3">
+                <p className="leading-relaxed text-muted-foreground">Foto Profil</p>
 
-                <form.Field name="email">
-                    {(field) => (
-                        <div className="space-y-2">
-                            <Label htmlFor={field.name}>Alamat Email</Label>
-                            <Input
-                                id={field.name}
-                                name={field.name}
-                                type="email"
-                                value={field.state.value}
-                                onBlur={field.handleBlur}
-                                onChange={(event) => field.handleChange(event.target.value)}
-                            />
+                <div className="flex flex-wrap items-center gap-4">
+                    <Avatar className="size-24">
+                        <AvatarImage src={user.image ?? undefined} alt={user.name} />
+                        <AvatarFallback className="text-2xl font-semibold">{initials}</AvatarFallback>
+                    </Avatar>
 
-                            <p className="flex items-center gap-1 text-sm text-muted-foreground">
-                                <CheckCircle2 className="size-4 shrink-0" />
-                                Email telah diverifikasi. Hubungi bantuan jika perlu mengganti.
+                    <p className="max-w-sm text-sm text-muted-foreground">
+                        Unggah foto belum tersedia — belum ada endpoint penyimpanan berkas, jadi foto akun masih kosong.
+                    </p>
+                </div>
+            </section>
+
+            <Separator />
+
+            <section className="space-y-3">
+                <p className="leading-relaxed text-muted-foreground">Ringkasan Akun</p>
+
+                <div className="grid gap-3 sm:grid-cols-3">
+                    {summary.map(({ icon: Icon, label, value, note, highlight }) => (
+                        <div key={label} className="space-y-2 rounded-lg border p-4">
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                                <Icon className="size-4" />
+                                <span className="text-sm">{label}</span>
+                            </div>
+
+                            <p className={`text-base font-semibold ${highlight ? "flex items-center gap-1.5 text-emerald-600" : ""}`}>
+                                {highlight && <BadgeCheck className="size-4" />}
+                                {value}
                             </p>
 
-                            <FieldErrors errors={field.state.meta.errors} />
+                            <p className="text-xs text-muted-foreground">{note}</p>
                         </div>
-                    )}
-                </form.Field>
+                    ))}
+                </div>
+            </section>
 
-                <form.Field name="phone">
-                    {(field) => (
-                        <div className="space-y-2">
-                            <Label htmlFor={field.name}>Nomor WhatsApp / Telepon</Label>
-                            <Input
-                                id={field.name}
-                                name={field.name}
-                                type="tel"
-                                value={field.state.value}
-                                onBlur={field.handleBlur}
-                                onChange={(event) => field.handleChange(event.target.value)}
-                            />
-                            <FieldErrors errors={field.state.meta.errors} />
-                        </div>
-                    )}
-                </form.Field>
+            <Separator />
 
-                <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
-                    {([canSubmit, isSubmitting]) => (
-                        <Button type="submit" disabled={!canSubmit || isSubmitting}>
-                            {isSubmitting ? 'Menyimpan...' : 'Simpan Perubahan'}
-                        </Button>
+            <section className="space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <p className="font-medium">Alamat Email</p>
+                        <p className="text-sm text-muted-foreground">Email ini dipakai untuk masuk dan menerima kode verifikasi.</p>
+                    </div>
+
+                    <EmailChangeDialog user={user} onUserUpdated={onUserUpdated} />
+                </div>
+
+                <div className="flex items-center gap-2 rounded-md border bg-muted/40 px-3 py-2">
+                    <Mail className="size-4 shrink-0 text-muted-foreground" />
+                    <span className="text-sm font-medium">{user.email}</span>
+                    {verified ? (
+                        <span className="ml-auto inline-flex items-center gap-1.5 text-sm text-emerald-600">
+                            <BadgeCheck className="size-4" />
+                            Terverifikasi
+                        </span>
+                    ) : (
+                        <span className="ml-auto inline-flex items-center gap-1.5 text-sm text-muted-foreground">
+                            <TriangleAlert className="size-4" />
+                            Belum terverifikasi
+                        </span>
                     )}
-                </form.Subscribe>
-            </form>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                        <Label htmlFor="identity-name">Nama Lengkap</Label>
+                        <Input id="identity-name" value={user.name} readOnly disabled />
+                        <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
+                            <Star className="mt-0.5 size-3.5 shrink-0" />
+                            Perubahan nama belum tersedia lewat API.
+                        </p>
+                    </div>
+
+                    <form
+                        className="space-y-2"
+                        noValidate
+                        onSubmit={(event) => {
+                            event.preventDefault()
+                            event.stopPropagation()
+                            form.handleSubmit()
+                        }}
+                    >
+                        <Label htmlFor="phoneNumber">Nomor WhatsApp / Telepon</Label>
+
+                        <form.Field name="phoneNumber">
+                            {(field) => {
+                                const messages = [...field.state.meta.errors, phoneFieldError]
+
+                                return (
+                                    <>
+                                        <Input
+                                            id="phoneNumber"
+                                            name={field.name}
+                                            type="tel"
+                                            inputMode="tel"
+                                            autoComplete="tel"
+                                            placeholder="081234567890"
+                                            disabled={!canSavePhone}
+                                            value={field.state.value}
+                                            onBlur={field.handleBlur}
+                                            onChange={(event) => field.handleChange(event.target.value)}
+                                            aria-invalid={hasFieldError(messages)}
+                                        />
+                                        <FieldError errors={toFieldErrors(messages)} />
+                                    </>
+                                )
+                            }}
+                        </form.Field>
+
+                        {canSavePhone ? (
+                            <form.Subscribe selector={(state) => state.isSubmitting}>
+                                {(isSubmitting) => (
+                                    <Button type="submit" size="sm" disabled={isSubmitting}>
+                                        {isSubmitting ? (
+                                            <>
+                                                <Loader2 className="animate-spin" />
+                                                Menyimpan…
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Save />
+                                                Simpan Nomor
+                                            </>
+                                        )}
+                                    </Button>
+                                )}
+                            </form.Subscribe>
+                        ) : (
+                            <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
+                                <Star className="mt-0.5 size-3.5 shrink-0" />
+                                Lengkapi tab Demografi &amp; UU dulu — profilnya belum ada, jadi nomornya belum bisa disimpan.
+                            </p>
+                        )}
+                    </form>
+                </div>
+            </section>
         </div>
     )
 }

@@ -348,27 +348,52 @@ Mengembalikan user yang sedang login. Butuh session.
 
 ## User
 
+### `GET /api/user/profile`
+
+Profil demografi milik user yang login. Butuh login.
+
+`profile` bernilai `null` bila user belum pernah mengisi profil — registrasi tidak membuatnya, jadi
+"belum ada profil" adalah keadaan normal, bukan `404`. Bentuk objeknya sama persis dengan response
+`PATCH` di bawah.
+
+**Response `200`**
+
+```json
+{
+    "ok": true,
+    "statusCode": 200,
+    "message": "Profile",
+    "data": { "profile": null }
+}
+```
+
+**Error:** `401`.
+
+---
+
 ### `PATCH /api/user/profile`
 
 Membuat atau memperbarui profil demografi milik user yang login.
 
 - Profil dibuat saat penulisan **pertama** (registrasi tidak membuat profil).
 - Kolom demografi bersifat NOT NULL, jadi **penulisan pertama harus lengkap**; setelah itu boleh sebagian.
-- Field yang tidak dikirim tidak diubah. Hanya `religion` yang boleh `null` (untuk mengosongkan).
+- Field yang tidak dikirim tidak diubah. Hanya `religion` dan `phoneNumber` yang boleh `null` (untuk
+  mengosongkan).
 
 **Request**
 
-| Field             | Aturan                             |
-| ----------------- | ---------------------------------- |
-| `gender`          | opsional, enum                     |
-| `education`       | opsional, enum                     |
-| `province`        | opsional, 1–100 karakter (di-trim) |
-| `city`            | opsional, 1–100 karakter           |
-| `latitude`        | opsional, −90 s/d 90               |
-| `longitude`       | opsional, −180 s/d 180             |
-| `occupation`      | opsional, 1–100 karakter           |
-| `religion`        | opsional, enum **atau** `null`     |
-| `religionConsent` | opsional, boolean                  |
+| Field             | Aturan                                                                   |
+| ----------------- | ------------------------------------------------------------------------ |
+| `gender`          | opsional, enum                                                           |
+| `education`       | opsional, enum                                                           |
+| `province`        | opsional, 1–100 karakter (di-trim)                                       |
+| `city`            | opsional, 1–100 karakter                                                 |
+| `latitude`        | opsional, −90 s/d 90                                                     |
+| `longitude`       | opsional, −180 s/d 180                                                   |
+| `occupation`      | opsional, 1–100 karakter                                                 |
+| `phoneNumber`     | opsional, 7–20 karakter, digit dengan spasi/`+`/`-`/`()` **atau** `null` |
+| `religion`        | opsional, enum **atau** `null`                                           |
+| `religionConsent` | opsional, boolean                                                        |
 
 ```json
 {
@@ -379,14 +404,16 @@ Membuat atau memperbarui profil demografi milik user yang login.
     "latitude": -6.261493,
     "longitude": 106.8106,
     "occupation": "Researcher",
+    "phoneNumber": "081234567890",
     "religion": "islam",
     "religionConsent": true
 }
 ```
 
 **Membuat profil (belum punya profil):** wajib mengirim `gender`, `education`, `province`, `city`,
-`latitude`, `longitude`, dan `occupation` sekaligus. Kalau tidak, `422` dengan error per-field yang
-menyebut field mana yang kurang.
+`latitude`, `longitude`, dan `occupation` sekaligus. `phoneNumber` tidak termasuk — nomornya boleh
+diisi belakangan. Kalau field wajibnya kurang, `422` dengan error per-field yang menyebut field mana
+yang kurang.
 
 **Aturan consent (UU PDP):** agama termasuk data sensitif.
 
@@ -412,6 +439,7 @@ menyebut field mana yang kurang.
             "latitude": -6.261493,
             "longitude": 106.8106,
             "occupation": "Researcher",
+            "phoneNumber": "081234567890",
             "religion": "islam",
             "religionConsent": true,
             "religionConsentAt": "2026-10-22T…",
@@ -915,9 +943,10 @@ token (top-up, reserve, dan release).
 
 **Yang belum ada:**
 
-- **Verifikasi nomor telepon (`PHONE_VERIFICATION`)** — sudah ada di enum `VerificationType`, tapi belum
-  ada endpoint-nya, karena dua hal belum tersedia: kolom nomor telepon di schema (tidak ada sama
-  sekali) dan penyedia SMS/WhatsApp (baru Resend untuk email).
+- **Verifikasi nomor telepon (`PHONE_VERIFICATION`)** — sudah ada di enum `VerificationType`, dan
+  nomornya kini tersimpan di `UserProfile.phoneNumber` (bisa diubah lewat `PATCH /api/user/profile`),
+  tapi belum ada endpoint verifikasinya karena belum ada penyedia SMS/WhatsApp (baru Resend untuk
+  email).
 - **Endpoint untuk mengubah `roles`** (promote ke admin) — masih manual lewat database.
 - **Sisa alur token** — top-up (`TOPUP`), reserve (`RESERVE`), dan pelepasan sisa reservasi (`RELEASE`,
   lewat `close` maupun archive) sudah jalan; **pembayaran responden** (`REWARD`/`CONSUME`) belum,
@@ -933,6 +962,9 @@ token (top-up, reserve, dan release).
   `CONTENT_REPORT_SLA_HOURS`, dan `QUALITY_HOLD_RELEASE_HOURS` — nilainya sudah terpusat, tapi belum
   ada alur yang memakainya.
 - **List riset** (`GET /api/research`) dan **unpublish** belum ada.
+- **Akun yang belum bisa diubah dari UI profil** — belum ada endpoint untuk mengganti `User.name`,
+  mengunggah foto (`User.image`), mengganti kata sandi (walau `PASSWORD_RESET` sudah ada di enum),
+  maupun ekspor/hapus akun untuk UU PDP.
 - **UI untuk tipe pertanyaan `NUMBER`** — sudah valid di schema dan API, tapi editor belum
   menawarkannya (baru 4 tipe: `SINGLE_CHOICE`, `MULTIPLE_CHOICE`, `TEXT`, `SCALE`), dan halaman
   responden belum merender input angkanya.

@@ -49,6 +49,7 @@ export type UserProfileMinAggregateOutputType = {
   domicileVerifiedAt: Date | null
   education: string | null
   occupation: string | null
+  phoneNumber: string | null
   dataShareConsentAt: Date | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -68,6 +69,7 @@ export type UserProfileMaxAggregateOutputType = {
   domicileVerifiedAt: Date | null
   education: string | null
   occupation: string | null
+  phoneNumber: string | null
   dataShareConsentAt: Date | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -87,6 +89,7 @@ export type UserProfileCountAggregateOutputType = {
   domicileVerifiedAt: number
   education: number
   occupation: number
+  phoneNumber: number
   dataShareConsentAt: number
   createdAt: number
   updatedAt: number
@@ -118,6 +121,7 @@ export type UserProfileMinAggregateInputType = {
   domicileVerifiedAt?: true
   education?: true
   occupation?: true
+  phoneNumber?: true
   dataShareConsentAt?: true
   createdAt?: true
   updatedAt?: true
@@ -137,6 +141,7 @@ export type UserProfileMaxAggregateInputType = {
   domicileVerifiedAt?: true
   education?: true
   occupation?: true
+  phoneNumber?: true
   dataShareConsentAt?: true
   createdAt?: true
   updatedAt?: true
@@ -156,6 +161,7 @@ export type UserProfileCountAggregateInputType = {
   domicileVerifiedAt?: true
   education?: true
   occupation?: true
+  phoneNumber?: true
   dataShareConsentAt?: true
   createdAt?: true
   updatedAt?: true
@@ -262,6 +268,7 @@ export type UserProfileGroupByOutputType = {
   domicileVerifiedAt: Date | null
   education: string
   occupation: string
+  phoneNumber: string | null
   dataShareConsentAt: Date | null
   createdAt: Date
   updatedAt: Date
@@ -304,6 +311,7 @@ export type UserProfileWhereInput = {
   domicileVerifiedAt?: Prisma.DateTimeNullableFilter<"UserProfile"> | Date | string | null
   education?: Prisma.StringFilter<"UserProfile"> | string
   occupation?: Prisma.StringFilter<"UserProfile"> | string
+  phoneNumber?: Prisma.StringNullableFilter<"UserProfile"> | string | null
   dataShareConsentAt?: Prisma.DateTimeNullableFilter<"UserProfile"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"UserProfile"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"UserProfile"> | Date | string
@@ -324,6 +332,7 @@ export type UserProfileOrderByWithRelationInput = {
   domicileVerifiedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   education?: Prisma.SortOrder
   occupation?: Prisma.SortOrder
+  phoneNumber?: Prisma.SortOrderInput | Prisma.SortOrder
   dataShareConsentAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -348,6 +357,7 @@ export type UserProfileWhereUniqueInput = Prisma.AtLeast<{
   domicileVerifiedAt?: Prisma.DateTimeNullableFilter<"UserProfile"> | Date | string | null
   education?: Prisma.StringFilter<"UserProfile"> | string
   occupation?: Prisma.StringFilter<"UserProfile"> | string
+  phoneNumber?: Prisma.StringNullableFilter<"UserProfile"> | string | null
   dataShareConsentAt?: Prisma.DateTimeNullableFilter<"UserProfile"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"UserProfile"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"UserProfile"> | Date | string
@@ -368,6 +378,7 @@ export type UserProfileOrderByWithAggregationInput = {
   domicileVerifiedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   education?: Prisma.SortOrder
   occupation?: Prisma.SortOrder
+  phoneNumber?: Prisma.SortOrderInput | Prisma.SortOrder
   dataShareConsentAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -395,6 +406,7 @@ export type UserProfileScalarWhereWithAggregatesInput = {
   domicileVerifiedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"UserProfile"> | Date | string | null
   education?: Prisma.StringWithAggregatesFilter<"UserProfile"> | string
   occupation?: Prisma.StringWithAggregatesFilter<"UserProfile"> | string
+  phoneNumber?: Prisma.StringNullableWithAggregatesFilter<"UserProfile"> | string | null
   dataShareConsentAt?: Prisma.DateTimeNullableWithAggregatesFilter<"UserProfile"> | Date | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"UserProfile"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"UserProfile"> | Date | string
@@ -413,6 +425,7 @@ export type UserProfileCreateInput = {
   domicileVerifiedAt?: Date | string | null
   education: string
   occupation: string
+  phoneNumber?: string | null
   dataShareConsentAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -433,6 +446,7 @@ export type UserProfileUncheckedCreateInput = {
   domicileVerifiedAt?: Date | string | null
   education: string
   occupation: string
+  phoneNumber?: string | null
   dataShareConsentAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -451,6 +465,7 @@ export type UserProfileUpdateInput = {
   domicileVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   education?: Prisma.StringFieldUpdateOperationsInput | string
   occupation?: Prisma.StringFieldUpdateOperationsInput | string
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dataShareConsentAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -471,6 +486,7 @@ export type UserProfileUncheckedUpdateInput = {
   domicileVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   education?: Prisma.StringFieldUpdateOperationsInput | string
   occupation?: Prisma.StringFieldUpdateOperationsInput | string
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dataShareConsentAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -490,6 +506,7 @@ export type UserProfileCreateManyInput = {
   domicileVerifiedAt?: Date | string | null
   education: string
   occupation: string
+  phoneNumber?: string | null
   dataShareConsentAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -508,6 +525,7 @@ export type UserProfileUpdateManyMutationInput = {
   domicileVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   education?: Prisma.StringFieldUpdateOperationsInput | string
   occupation?: Prisma.StringFieldUpdateOperationsInput | string
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dataShareConsentAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -527,6 +545,7 @@ export type UserProfileUncheckedUpdateManyInput = {
   domicileVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   education?: Prisma.StringFieldUpdateOperationsInput | string
   occupation?: Prisma.StringFieldUpdateOperationsInput | string
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dataShareConsentAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -557,6 +576,7 @@ export type UserProfileCountOrderByAggregateInput = {
   domicileVerifiedAt?: Prisma.SortOrder
   education?: Prisma.SortOrder
   occupation?: Prisma.SortOrder
+  phoneNumber?: Prisma.SortOrder
   dataShareConsentAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -581,6 +601,7 @@ export type UserProfileMaxOrderByAggregateInput = {
   domicileVerifiedAt?: Prisma.SortOrder
   education?: Prisma.SortOrder
   occupation?: Prisma.SortOrder
+  phoneNumber?: Prisma.SortOrder
   dataShareConsentAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -600,6 +621,7 @@ export type UserProfileMinOrderByAggregateInput = {
   domicileVerifiedAt?: Prisma.SortOrder
   education?: Prisma.SortOrder
   occupation?: Prisma.SortOrder
+  phoneNumber?: Prisma.SortOrder
   dataShareConsentAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -663,6 +685,7 @@ export type UserProfileCreateWithoutUserInput = {
   domicileVerifiedAt?: Date | string | null
   education: string
   occupation: string
+  phoneNumber?: string | null
   dataShareConsentAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -681,6 +704,7 @@ export type UserProfileUncheckedCreateWithoutUserInput = {
   domicileVerifiedAt?: Date | string | null
   education: string
   occupation: string
+  phoneNumber?: string | null
   dataShareConsentAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -715,6 +739,7 @@ export type UserProfileUpdateWithoutUserInput = {
   domicileVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   education?: Prisma.StringFieldUpdateOperationsInput | string
   occupation?: Prisma.StringFieldUpdateOperationsInput | string
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dataShareConsentAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -733,6 +758,7 @@ export type UserProfileUncheckedUpdateWithoutUserInput = {
   domicileVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   education?: Prisma.StringFieldUpdateOperationsInput | string
   occupation?: Prisma.StringFieldUpdateOperationsInput | string
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dataShareConsentAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -754,6 +780,7 @@ export type UserProfileSelect<ExtArgs extends runtime.Types.Extensions.InternalA
   domicileVerifiedAt?: boolean
   education?: boolean
   occupation?: boolean
+  phoneNumber?: boolean
   dataShareConsentAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -776,13 +803,14 @@ export type UserProfileSelectScalar = {
   domicileVerifiedAt?: boolean
   education?: boolean
   occupation?: boolean
+  phoneNumber?: boolean
   dataShareConsentAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   deletedAt?: boolean
 }
 
-export type UserProfileOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "gender" | "religion" | "religionConsentAt" | "domicileProvince" | "domicileCity" | "domicileLat" | "domicileLng" | "domicileVerifiedAt" | "education" | "occupation" | "dataShareConsentAt" | "createdAt" | "updatedAt" | "deletedAt", ExtArgs["result"]["userProfile"]>
+export type UserProfileOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "gender" | "religion" | "religionConsentAt" | "domicileProvince" | "domicileCity" | "domicileLat" | "domicileLng" | "domicileVerifiedAt" | "education" | "occupation" | "phoneNumber" | "dataShareConsentAt" | "createdAt" | "updatedAt" | "deletedAt", ExtArgs["result"]["userProfile"]>
 export type UserProfileInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }
@@ -805,6 +833,7 @@ export type $UserProfilePayload<ExtArgs extends runtime.Types.Extensions.Interna
     domicileVerifiedAt: Date | null
     education: string
     occupation: string
+    phoneNumber: string | null
     dataShareConsentAt: Date | null
     createdAt: Date
     updatedAt: Date
@@ -1191,6 +1220,7 @@ export interface UserProfileFieldRefs {
   readonly domicileVerifiedAt: Prisma.FieldRef<"UserProfile", 'DateTime'>
   readonly education: Prisma.FieldRef<"UserProfile", 'String'>
   readonly occupation: Prisma.FieldRef<"UserProfile", 'String'>
+  readonly phoneNumber: Prisma.FieldRef<"UserProfile", 'String'>
   readonly dataShareConsentAt: Prisma.FieldRef<"UserProfile", 'DateTime'>
   readonly createdAt: Prisma.FieldRef<"UserProfile", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"UserProfile", 'DateTime'>

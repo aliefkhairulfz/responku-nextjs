@@ -1,17 +1,7 @@
+import type { Education, Gender, Religion } from "@/lib/profile-vocabulary"
 import { BadRequestException } from "@/lib/server/http-exception"
 import type { UserProfileModel } from "@/prisma/generated/prisma/models/UserProfile"
 import { prisma } from "@/prisma/prisma"
-
-/* ========== Kosakata domain ========== */
-
-/** Values the profile UI offers, kept here so request and stored data agree. */
-export const GENDERS = ["male", "female"] as const
-export const EDUCATIONS = ["high_school", "diploma", "bachelor", "master", "doctorate"] as const
-export const RELIGIONS = ["islam", "protestant", "catholic", "hindu", "buddhist", "confucian"] as const
-
-export type Gender = (typeof GENDERS)[number]
-export type Education = (typeof EDUCATIONS)[number]
-export type Religion = (typeof RELIGIONS)[number]
 
 /**
  * Stored in the NOT NULL `religion` column when the user has not disclosed one.
@@ -40,6 +30,8 @@ export type UpdateUserProfileInput = {
     latitude?: number
     longitude?: number
     occupation?: string
+    /** `null` clears the number. */
+    phoneNumber?: string | null
     /** `null` clears the disclosed religion and its consent. */
     religion?: Religion | null
     religionConsent?: boolean
@@ -144,6 +136,7 @@ type ProfileColumns<T extends UpdateUserProfileInput> = {
     domicileLat: T["latitude"]
     domicileLng: T["longitude"]
     occupation: T["occupation"]
+    phoneNumber: T["phoneNumber"]
 }
 
 function toProfileColumns<T extends UpdateUserProfileInput>(input: T): ProfileColumns<T> {
@@ -155,6 +148,7 @@ function toProfileColumns<T extends UpdateUserProfileInput>(input: T): ProfileCo
         domicileLat: input.latitude,
         domicileLng: input.longitude,
         occupation: input.occupation,
+        phoneNumber: input.phoneNumber,
     }
 }
 
@@ -171,6 +165,7 @@ function toUserProfileResponse(profile: UserProfileModel) {
         latitude: Number(profile.domicileLat),
         longitude: Number(profile.domicileLng),
         occupation: profile.occupation,
+        phoneNumber: profile.phoneNumber,
         religion: profile.religion === UNDISCLOSED_RELIGION ? null : profile.religion,
         religionConsent: profile.religionConsentAt !== null,
         religionConsentAt: profile.religionConsentAt,
@@ -178,6 +173,20 @@ function toUserProfileResponse(profile: UserProfileModel) {
         domicileVerifiedAt: profile.domicileVerifiedAt,
         updatedAt: profile.updatedAt,
     }
+}
+
+/* ========== Read profile ========== */
+
+/**
+ * Reads the profile of `userId`, or `null` when it has not been filled in yet.
+ *
+ * Registration does not create a profile, so "no profile" is a normal state and
+ * not a 404 — a client uses it to tell an empty form from a prefilled one.
+ */
+export async function getUserProfileService({ userId }: { userId: string }) {
+    const profile = await prisma.userProfile.findUnique({ where: { userId } })
+
+    return profile === null ? null : toUserProfileResponse(profile)
 }
 
 /* ========== Update profile ========== */
