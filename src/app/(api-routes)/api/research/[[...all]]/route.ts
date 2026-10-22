@@ -2,6 +2,7 @@ import type { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 import { RESEARCH_CATEGORIES } from "@/lib/research-category"
 import { QUESTION_TYPES } from "@/lib/research-question"
+import { RESEARCH_STATUSES } from "@/lib/research-status"
 import { exceptionResponse, handleRouteError, parseBody, readJsonBody, successResponse } from "@/lib/server/api"
 import { requireRole } from "@/lib/server/roles"
 import { requireSession, type Session } from "@/service/auth"
@@ -12,6 +13,8 @@ import {
     createResearchDraftService,
     deleteResearchService,
     getResearchService,
+    listAvailableResearchService,
+    listResearchesService,
     publishResearchService,
     replaceResearchCriteriaService,
     replaceResearchQuestionsService,
@@ -109,6 +112,21 @@ const createCriteriaSchema = z.object({
     criteria: z.array(criterionSchema),
 })
 
+/**
+ * Query string of the research list, validated with the same helper as a request
+ * body: a bad `status` or `take` comes back as a 422 naming the key.
+ */
+const listResearchesQuerySchema = z.object({
+    status: z.enum(RESEARCH_STATUSES).optional(),
+    take: z.coerce.number().int().min(1).max(100).optional(),
+})
+
+/** Query string of the respondent feed: which category to browse, and how many rows. */
+const listAvailableQuerySchema = z.object({
+    category: z.enum(RESEARCH_CATEGORIES).optional(),
+    take: z.coerce.number().int().min(1).max(100).optional(),
+})
+
 /* ========== Helper ========== */
 
 /** The action path that creates a draft, as opposed to addressing one by id. */
@@ -125,6 +143,9 @@ const PUBLISH_PATH = "publish"
 
 /** The action path a published research is closed through. */
 const CLOSE_PATH = "close"
+
+/** The action path that lists research a respondent can take, rather than owning it. */
+const AVAILABLE_PATH = "available"
 
 /**
  * Whether a segment addresses a research rather than being an action name. Ids are
@@ -182,6 +203,14 @@ async function createResearchHandler(user: Session["user"]) {
     const research = await createResearchDraftService({ researcherId: user.id })
 
     return successResponse({ message: "Research draft created", statusCode: 201, data: { research } })
+}
+
+/** get the caller's researches */
+async function listResearchesHandler(user: Session["user"], req: NextRequest) {
+    const query = parseBody(listResearchesQuerySchema, Object.fromEntries(req.nextUrl.searchParams))
+    const researches = await listResearchesService({ researcherId: user.id, ...query })
+
+    return successResponse({ message: "Researches", data: { researches } })
 }
 
 /** get one research owned by the caller, with its criteria and questionnaire */
@@ -251,11 +280,40 @@ export const POST = withResearcherGuard(async (user, req) => {
     return notFound()
 })
 
-export const GET = withResearcherGuard(async (user, req) => {
+/** The researcher's own list, and one of their researches by id. */
+const getOwnResearch = withResearcherGuard(async (user, req) => {
+    // The bare collection is the list; anything else addresses one research by id.
+    if (getResearchPath(req) === "") return listResearchesHandler(user, req)
+
     const id = getResearchId(req)
 
     return id === null ? notFound() : getResearchHandler(user, id)
 })
+
+/**
+ * The respondent feed.
+ *
+ * It lives on the same route because it is the same resource seen from the other side,
+ * but it is served before the researcher guard: browsing other people's published
+ * research only needs a session, not the role that managing research needs.
+ */
+async function availableResearchHandler(req: NextRequest) {
+    try {
+        const { user } = await requireSession()
+        const query = parseBody(listAvailableQuerySchema, Object.fromEntries(req.nextUrl.searchParams))
+        const researches = await listAvailableResearchService({ respondentId: user.id, ...query })
+
+        return successResponse({ message: "Available research", data: { researches } })
+    } catch (error) {
+        return handleRouteError(error)
+    }
+}
+
+export async function GET(req: NextRequest) {
+    if (getResearchPath(req) === AVAILABLE_PATH) return availableResearchHandler(req)
+
+    return getOwnResearch(req)
+}
 
 export const PATCH = withResearcherGuard(async (user, req) => {
     const id = getResearchId(req)

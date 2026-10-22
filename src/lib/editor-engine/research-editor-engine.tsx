@@ -68,9 +68,17 @@ type Option = { value: string; label: string }
 /** MAIN COMPONENT */
 type RisetEditorEngineProps = {
     researchEditorForm: UseResearchEditorForm
+    /**
+     * True while the research is locked.
+     *
+     * The `<fieldset disabled>` around the editor covers the native inputs, but the
+     * Base UI composites (switches, selects) work off their own `disabled` prop — and
+     * style themselves with `data-disabled` — so they have to be told as well.
+     */
+    disabled?: boolean
 }
 
-export default function RisetEditorEngine({ researchEditorForm: { form } }: RisetEditorEngineProps) {
+export default function RisetEditorEngine({ researchEditorForm: { form }, disabled = false }: RisetEditorEngineProps) {
     const genderItems: Option[] = [
         { value: "all", label: "Semua" },
         { value: "male", label: "Laki-laki" },
@@ -135,6 +143,7 @@ export default function RisetEditorEngine({ researchEditorForm: { form } }: Rise
                             <FieldWrapper label="Batas Waktu">
                                 <Select.Select
                                     items={timeLimitOptions}
+                                    disabled={disabled}
                                     value={field.state.value}
                                     onValueChange={(v) => field.handleChange(v as typeof field.state.value)}
                                 >
@@ -217,6 +226,7 @@ export default function RisetEditorEngine({ researchEditorForm: { form } }: Rise
                             <FieldWrapper label="Kategori Topik">
                                 <Select.Select
                                     items={categoryItems}
+                                    disabled={disabled}
                                     value={field.state.value}
                                     onValueChange={(v) => field.handleChange(v as typeof field.state.value)}
                                 >
@@ -302,6 +312,7 @@ export default function RisetEditorEngine({ researchEditorForm: { form } }: Rise
                             <FieldWrapper label="Jenis Kelamin">
                                 <Select.Select
                                     items={genderItems}
+                                    disabled={disabled}
                                     value={field.state.value}
                                     onValueChange={(v) => field.handleChange(v as typeof field.state.value)}
                                 >
@@ -327,6 +338,7 @@ export default function RisetEditorEngine({ researchEditorForm: { form } }: Rise
                             <FieldWrapper label="Wilayah / Domisili">
                                 <Select.Select
                                     items={regionItems}
+                                    disabled={disabled}
                                     value={field.state.value}
                                     onValueChange={(v) => field.handleChange(v as typeof field.state.value)}
                                 >
@@ -421,6 +433,7 @@ export default function RisetEditorEngine({ researchEditorForm: { form } }: Rise
                                                 {(field) => (
                                                     <Select.Select
                                                         items={questionTypeItems}
+                                                        disabled={disabled}
                                                         value={field.state.value}
                                                         onValueChange={(next) => {
                                                             if (!next || next === field.state.value) return
@@ -543,6 +556,7 @@ export default function RisetEditorEngine({ researchEditorForm: { form } }: Rise
                                                         <Label htmlFor={field.name}>Wajib dijawab</Label>
                                                         <Switch
                                                             id={field.name}
+                                                            disabled={disabled}
                                                             checked={field.state.value}
                                                             onCheckedChange={(checked) => field.handleChange(checked)}
                                                         />

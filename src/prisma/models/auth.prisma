@@ -20,6 +20,9 @@ model User {
   sessions Session[]
   verifications Verification[]
 
+  // account settings
+  setting UserSetting?
+
   // research
   researches Research[] @relation("ResearcherResearches")
 
@@ -37,6 +40,10 @@ model User {
   reviewedQualityChecks  QualityCheck[]  @relation("QualityCheckReviewer")
   reportedContents       ContentReport[] @relation("ContentReportReporter")
   reviewedContentReports ContentReport[] @relation("ContentReportReviewer")
+
+  // support
+  supportTickets         SupportTicket[] @relation("SupportTicketRequester")
+  reviewedSupportTickets SupportTicket[] @relation("SupportTicketReviewer")
 
   @@map("users")
 }

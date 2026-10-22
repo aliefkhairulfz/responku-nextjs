@@ -562,6 +562,40 @@ export type EnumRewardStatusWithAggregatesFilter<$PrismaModel = never> = {
   _max?: Prisma.NestedEnumRewardStatusFilter<$PrismaModel>
 }
 
+export type EnumTicketCategoryFilter<$PrismaModel = never> = {
+  equals?: $Enums.TicketCategory | Prisma.EnumTicketCategoryFieldRefInput<$PrismaModel>
+  in?: $Enums.TicketCategory[]
+  notIn?: $Enums.TicketCategory[]
+  not?: Prisma.NestedEnumTicketCategoryFilter<$PrismaModel> | $Enums.TicketCategory
+}
+
+export type EnumTicketStatusFilter<$PrismaModel = never> = {
+  equals?: $Enums.TicketStatus | Prisma.EnumTicketStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.TicketStatus[]
+  notIn?: $Enums.TicketStatus[]
+  not?: Prisma.NestedEnumTicketStatusFilter<$PrismaModel> | $Enums.TicketStatus
+}
+
+export type EnumTicketCategoryWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.TicketCategory | Prisma.EnumTicketCategoryFieldRefInput<$PrismaModel>
+  in?: $Enums.TicketCategory[]
+  notIn?: $Enums.TicketCategory[]
+  not?: Prisma.NestedEnumTicketCategoryWithAggregatesFilter<$PrismaModel> | $Enums.TicketCategory
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumTicketCategoryFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumTicketCategoryFilter<$PrismaModel>
+}
+
+export type EnumTicketStatusWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.TicketStatus | Prisma.EnumTicketStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.TicketStatus[]
+  notIn?: $Enums.TicketStatus[]
+  not?: Prisma.NestedEnumTicketStatusWithAggregatesFilter<$PrismaModel> | $Enums.TicketStatus
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumTicketStatusFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumTicketStatusFilter<$PrismaModel>
+}
+
 export type EnumTokenTransactionTypeFilter<$PrismaModel = never> = {
   equals?: $Enums.TokenTransactionType | Prisma.EnumTokenTransactionTypeFieldRefInput<$PrismaModel>
   in?: $Enums.TokenTransactionType[]
@@ -1088,6 +1122,40 @@ export type NestedEnumRewardStatusWithAggregatesFilter<$PrismaModel = never> = {
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumRewardStatusFilter<$PrismaModel>
   _max?: Prisma.NestedEnumRewardStatusFilter<$PrismaModel>
+}
+
+export type NestedEnumTicketCategoryFilter<$PrismaModel = never> = {
+  equals?: $Enums.TicketCategory | Prisma.EnumTicketCategoryFieldRefInput<$PrismaModel>
+  in?: $Enums.TicketCategory[]
+  notIn?: $Enums.TicketCategory[]
+  not?: Prisma.NestedEnumTicketCategoryFilter<$PrismaModel> | $Enums.TicketCategory
+}
+
+export type NestedEnumTicketStatusFilter<$PrismaModel = never> = {
+  equals?: $Enums.TicketStatus | Prisma.EnumTicketStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.TicketStatus[]
+  notIn?: $Enums.TicketStatus[]
+  not?: Prisma.NestedEnumTicketStatusFilter<$PrismaModel> | $Enums.TicketStatus
+}
+
+export type NestedEnumTicketCategoryWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.TicketCategory | Prisma.EnumTicketCategoryFieldRefInput<$PrismaModel>
+  in?: $Enums.TicketCategory[]
+  notIn?: $Enums.TicketCategory[]
+  not?: Prisma.NestedEnumTicketCategoryWithAggregatesFilter<$PrismaModel> | $Enums.TicketCategory
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumTicketCategoryFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumTicketCategoryFilter<$PrismaModel>
+}
+
+export type NestedEnumTicketStatusWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.TicketStatus | Prisma.EnumTicketStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.TicketStatus[]
+  notIn?: $Enums.TicketStatus[]
+  not?: Prisma.NestedEnumTicketStatusWithAggregatesFilter<$PrismaModel> | $Enums.TicketStatus
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumTicketStatusFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumTicketStatusFilter<$PrismaModel>
 }
 
 export type NestedEnumTokenTransactionTypeFilter<$PrismaModel = never> = {

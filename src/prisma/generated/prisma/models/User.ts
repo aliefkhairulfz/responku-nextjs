@@ -214,6 +214,7 @@ export type UserWhereInput = {
   accounts?: Prisma.AccountListRelationFilter
   sessions?: Prisma.SessionListRelationFilter
   verifications?: Prisma.VerificationListRelationFilter
+  setting?: Prisma.XOR<Prisma.UserSettingNullableScalarRelationFilter, Prisma.UserSettingWhereInput> | null
   researches?: Prisma.ResearchListRelationFilter
   participations?: Prisma.RespondentParticipationListRelationFilter
   reviewedParticipations?: Prisma.RespondentParticipationListRelationFilter
@@ -222,6 +223,8 @@ export type UserWhereInput = {
   reviewedQualityChecks?: Prisma.QualityCheckListRelationFilter
   reportedContents?: Prisma.ContentReportListRelationFilter
   reviewedContentReports?: Prisma.ContentReportListRelationFilter
+  supportTickets?: Prisma.SupportTicketListRelationFilter
+  reviewedSupportTickets?: Prisma.SupportTicketListRelationFilter
 }
 
 export type UserOrderByWithRelationInput = {
@@ -238,6 +241,7 @@ export type UserOrderByWithRelationInput = {
   accounts?: Prisma.AccountOrderByRelationAggregateInput
   sessions?: Prisma.SessionOrderByRelationAggregateInput
   verifications?: Prisma.VerificationOrderByRelationAggregateInput
+  setting?: Prisma.UserSettingOrderByWithRelationInput
   researches?: Prisma.ResearchOrderByRelationAggregateInput
   participations?: Prisma.RespondentParticipationOrderByRelationAggregateInput
   reviewedParticipations?: Prisma.RespondentParticipationOrderByRelationAggregateInput
@@ -246,6 +250,8 @@ export type UserOrderByWithRelationInput = {
   reviewedQualityChecks?: Prisma.QualityCheckOrderByRelationAggregateInput
   reportedContents?: Prisma.ContentReportOrderByRelationAggregateInput
   reviewedContentReports?: Prisma.ContentReportOrderByRelationAggregateInput
+  supportTickets?: Prisma.SupportTicketOrderByRelationAggregateInput
+  reviewedSupportTickets?: Prisma.SupportTicketOrderByRelationAggregateInput
   _relevance?: Prisma.UserOrderByRelevanceInput
 }
 
@@ -266,6 +272,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   accounts?: Prisma.AccountListRelationFilter
   sessions?: Prisma.SessionListRelationFilter
   verifications?: Prisma.VerificationListRelationFilter
+  setting?: Prisma.XOR<Prisma.UserSettingNullableScalarRelationFilter, Prisma.UserSettingWhereInput> | null
   researches?: Prisma.ResearchListRelationFilter
   participations?: Prisma.RespondentParticipationListRelationFilter
   reviewedParticipations?: Prisma.RespondentParticipationListRelationFilter
@@ -274,6 +281,8 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   reviewedQualityChecks?: Prisma.QualityCheckListRelationFilter
   reportedContents?: Prisma.ContentReportListRelationFilter
   reviewedContentReports?: Prisma.ContentReportListRelationFilter
+  supportTickets?: Prisma.SupportTicketListRelationFilter
+  reviewedSupportTickets?: Prisma.SupportTicketListRelationFilter
 }, "id" | "email">
 
 export type UserOrderByWithAggregationInput = {
@@ -320,6 +329,7 @@ export type UserCreateInput = {
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
   verifications?: Prisma.VerificationCreateNestedManyWithoutUserInput
+  setting?: Prisma.UserSettingCreateNestedOneWithoutUserInput
   researches?: Prisma.ResearchCreateNestedManyWithoutResearcherInput
   participations?: Prisma.RespondentParticipationCreateNestedManyWithoutRespondentInput
   reviewedParticipations?: Prisma.RespondentParticipationCreateNestedManyWithoutAdminReviewerInput
@@ -328,6 +338,8 @@ export type UserCreateInput = {
   reviewedQualityChecks?: Prisma.QualityCheckCreateNestedManyWithoutReviewerInput
   reportedContents?: Prisma.ContentReportCreateNestedManyWithoutReporterInput
   reviewedContentReports?: Prisma.ContentReportCreateNestedManyWithoutReviewerInput
+  supportTickets?: Prisma.SupportTicketCreateNestedManyWithoutUserInput
+  reviewedSupportTickets?: Prisma.SupportTicketCreateNestedManyWithoutReviewerInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -344,6 +356,7 @@ export type UserUncheckedCreateInput = {
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
   verifications?: Prisma.VerificationUncheckedCreateNestedManyWithoutUserInput
+  setting?: Prisma.UserSettingUncheckedCreateNestedOneWithoutUserInput
   researches?: Prisma.ResearchUncheckedCreateNestedManyWithoutResearcherInput
   participations?: Prisma.RespondentParticipationUncheckedCreateNestedManyWithoutRespondentInput
   reviewedParticipations?: Prisma.RespondentParticipationUncheckedCreateNestedManyWithoutAdminReviewerInput
@@ -352,6 +365,8 @@ export type UserUncheckedCreateInput = {
   reviewedQualityChecks?: Prisma.QualityCheckUncheckedCreateNestedManyWithoutReviewerInput
   reportedContents?: Prisma.ContentReportUncheckedCreateNestedManyWithoutReporterInput
   reviewedContentReports?: Prisma.ContentReportUncheckedCreateNestedManyWithoutReviewerInput
+  supportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutUserInput
+  reviewedSupportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutReviewerInput
 }
 
 export type UserUpdateInput = {
@@ -368,6 +383,7 @@ export type UserUpdateInput = {
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
   verifications?: Prisma.VerificationUpdateManyWithoutUserNestedInput
+  setting?: Prisma.UserSettingUpdateOneWithoutUserNestedInput
   researches?: Prisma.ResearchUpdateManyWithoutResearcherNestedInput
   participations?: Prisma.RespondentParticipationUpdateManyWithoutRespondentNestedInput
   reviewedParticipations?: Prisma.RespondentParticipationUpdateManyWithoutAdminReviewerNestedInput
@@ -376,6 +392,8 @@ export type UserUpdateInput = {
   reviewedQualityChecks?: Prisma.QualityCheckUpdateManyWithoutReviewerNestedInput
   reportedContents?: Prisma.ContentReportUpdateManyWithoutReporterNestedInput
   reviewedContentReports?: Prisma.ContentReportUpdateManyWithoutReviewerNestedInput
+  supportTickets?: Prisma.SupportTicketUpdateManyWithoutUserNestedInput
+  reviewedSupportTickets?: Prisma.SupportTicketUpdateManyWithoutReviewerNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -392,6 +410,7 @@ export type UserUncheckedUpdateInput = {
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
   verifications?: Prisma.VerificationUncheckedUpdateManyWithoutUserNestedInput
+  setting?: Prisma.UserSettingUncheckedUpdateOneWithoutUserNestedInput
   researches?: Prisma.ResearchUncheckedUpdateManyWithoutResearcherNestedInput
   participations?: Prisma.RespondentParticipationUncheckedUpdateManyWithoutRespondentNestedInput
   reviewedParticipations?: Prisma.RespondentParticipationUncheckedUpdateManyWithoutAdminReviewerNestedInput
@@ -400,6 +419,8 @@ export type UserUncheckedUpdateInput = {
   reviewedQualityChecks?: Prisma.QualityCheckUncheckedUpdateManyWithoutReviewerNestedInput
   reportedContents?: Prisma.ContentReportUncheckedUpdateManyWithoutReporterNestedInput
   reviewedContentReports?: Prisma.ContentReportUncheckedUpdateManyWithoutReviewerNestedInput
+  supportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutUserNestedInput
+  reviewedSupportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutReviewerNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -664,6 +685,50 @@ export type UserUpdateOneRequiredWithoutResearchesNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutResearchesInput, Prisma.UserUpdateWithoutResearchesInput>, Prisma.UserUncheckedUpdateWithoutResearchesInput>
 }
 
+export type UserCreateNestedOneWithoutSettingInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutSettingInput, Prisma.UserUncheckedCreateWithoutSettingInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutSettingInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutSettingNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutSettingInput, Prisma.UserUncheckedCreateWithoutSettingInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutSettingInput
+  upsert?: Prisma.UserUpsertWithoutSettingInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutSettingInput, Prisma.UserUpdateWithoutSettingInput>, Prisma.UserUncheckedUpdateWithoutSettingInput>
+}
+
+export type UserCreateNestedOneWithoutSupportTicketsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutSupportTicketsInput, Prisma.UserUncheckedCreateWithoutSupportTicketsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutSupportTicketsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserCreateNestedOneWithoutReviewedSupportTicketsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutReviewedSupportTicketsInput, Prisma.UserUncheckedCreateWithoutReviewedSupportTicketsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutReviewedSupportTicketsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutSupportTicketsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutSupportTicketsInput, Prisma.UserUncheckedCreateWithoutSupportTicketsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutSupportTicketsInput
+  upsert?: Prisma.UserUpsertWithoutSupportTicketsInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutSupportTicketsInput, Prisma.UserUpdateWithoutSupportTicketsInput>, Prisma.UserUncheckedUpdateWithoutSupportTicketsInput>
+}
+
+export type UserUpdateOneWithoutReviewedSupportTicketsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutReviewedSupportTicketsInput, Prisma.UserUncheckedCreateWithoutReviewedSupportTicketsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutReviewedSupportTicketsInput
+  upsert?: Prisma.UserUpsertWithoutReviewedSupportTicketsInput
+  disconnect?: Prisma.UserWhereInput | boolean
+  delete?: Prisma.UserWhereInput | boolean
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutReviewedSupportTicketsInput, Prisma.UserUpdateWithoutReviewedSupportTicketsInput>, Prisma.UserUncheckedUpdateWithoutReviewedSupportTicketsInput>
+}
+
 export type UserCreateNestedOneWithoutTokenWalletInput = {
   create?: Prisma.XOR<Prisma.UserCreateWithoutTokenWalletInput, Prisma.UserUncheckedCreateWithoutTokenWalletInput>
   connectOrCreate?: Prisma.UserCreateOrConnectWithoutTokenWalletInput
@@ -691,6 +756,7 @@ export type UserCreateWithoutProfileInput = {
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
   verifications?: Prisma.VerificationCreateNestedManyWithoutUserInput
+  setting?: Prisma.UserSettingCreateNestedOneWithoutUserInput
   researches?: Prisma.ResearchCreateNestedManyWithoutResearcherInput
   participations?: Prisma.RespondentParticipationCreateNestedManyWithoutRespondentInput
   reviewedParticipations?: Prisma.RespondentParticipationCreateNestedManyWithoutAdminReviewerInput
@@ -699,6 +765,8 @@ export type UserCreateWithoutProfileInput = {
   reviewedQualityChecks?: Prisma.QualityCheckCreateNestedManyWithoutReviewerInput
   reportedContents?: Prisma.ContentReportCreateNestedManyWithoutReporterInput
   reviewedContentReports?: Prisma.ContentReportCreateNestedManyWithoutReviewerInput
+  supportTickets?: Prisma.SupportTicketCreateNestedManyWithoutUserInput
+  reviewedSupportTickets?: Prisma.SupportTicketCreateNestedManyWithoutReviewerInput
 }
 
 export type UserUncheckedCreateWithoutProfileInput = {
@@ -714,6 +782,7 @@ export type UserUncheckedCreateWithoutProfileInput = {
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
   verifications?: Prisma.VerificationUncheckedCreateNestedManyWithoutUserInput
+  setting?: Prisma.UserSettingUncheckedCreateNestedOneWithoutUserInput
   researches?: Prisma.ResearchUncheckedCreateNestedManyWithoutResearcherInput
   participations?: Prisma.RespondentParticipationUncheckedCreateNestedManyWithoutRespondentInput
   reviewedParticipations?: Prisma.RespondentParticipationUncheckedCreateNestedManyWithoutAdminReviewerInput
@@ -722,6 +791,8 @@ export type UserUncheckedCreateWithoutProfileInput = {
   reviewedQualityChecks?: Prisma.QualityCheckUncheckedCreateNestedManyWithoutReviewerInput
   reportedContents?: Prisma.ContentReportUncheckedCreateNestedManyWithoutReporterInput
   reviewedContentReports?: Prisma.ContentReportUncheckedCreateNestedManyWithoutReviewerInput
+  supportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutUserInput
+  reviewedSupportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutReviewerInput
 }
 
 export type UserCreateOrConnectWithoutProfileInput = {
@@ -753,6 +824,7 @@ export type UserUpdateWithoutProfileInput = {
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
   verifications?: Prisma.VerificationUpdateManyWithoutUserNestedInput
+  setting?: Prisma.UserSettingUpdateOneWithoutUserNestedInput
   researches?: Prisma.ResearchUpdateManyWithoutResearcherNestedInput
   participations?: Prisma.RespondentParticipationUpdateManyWithoutRespondentNestedInput
   reviewedParticipations?: Prisma.RespondentParticipationUpdateManyWithoutAdminReviewerNestedInput
@@ -761,6 +833,8 @@ export type UserUpdateWithoutProfileInput = {
   reviewedQualityChecks?: Prisma.QualityCheckUpdateManyWithoutReviewerNestedInput
   reportedContents?: Prisma.ContentReportUpdateManyWithoutReporterNestedInput
   reviewedContentReports?: Prisma.ContentReportUpdateManyWithoutReviewerNestedInput
+  supportTickets?: Prisma.SupportTicketUpdateManyWithoutUserNestedInput
+  reviewedSupportTickets?: Prisma.SupportTicketUpdateManyWithoutReviewerNestedInput
 }
 
 export type UserUncheckedUpdateWithoutProfileInput = {
@@ -776,6 +850,7 @@ export type UserUncheckedUpdateWithoutProfileInput = {
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
   verifications?: Prisma.VerificationUncheckedUpdateManyWithoutUserNestedInput
+  setting?: Prisma.UserSettingUncheckedUpdateOneWithoutUserNestedInput
   researches?: Prisma.ResearchUncheckedUpdateManyWithoutResearcherNestedInput
   participations?: Prisma.RespondentParticipationUncheckedUpdateManyWithoutRespondentNestedInput
   reviewedParticipations?: Prisma.RespondentParticipationUncheckedUpdateManyWithoutAdminReviewerNestedInput
@@ -784,6 +859,8 @@ export type UserUncheckedUpdateWithoutProfileInput = {
   reviewedQualityChecks?: Prisma.QualityCheckUncheckedUpdateManyWithoutReviewerNestedInput
   reportedContents?: Prisma.ContentReportUncheckedUpdateManyWithoutReporterNestedInput
   reviewedContentReports?: Prisma.ContentReportUncheckedUpdateManyWithoutReviewerNestedInput
+  supportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutUserNestedInput
+  reviewedSupportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutReviewerNestedInput
 }
 
 export type UserCreateWithoutAccountsInput = {
@@ -799,6 +876,7 @@ export type UserCreateWithoutAccountsInput = {
   profile?: Prisma.UserProfileCreateNestedOneWithoutUserInput
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
   verifications?: Prisma.VerificationCreateNestedManyWithoutUserInput
+  setting?: Prisma.UserSettingCreateNestedOneWithoutUserInput
   researches?: Prisma.ResearchCreateNestedManyWithoutResearcherInput
   participations?: Prisma.RespondentParticipationCreateNestedManyWithoutRespondentInput
   reviewedParticipations?: Prisma.RespondentParticipationCreateNestedManyWithoutAdminReviewerInput
@@ -807,6 +885,8 @@ export type UserCreateWithoutAccountsInput = {
   reviewedQualityChecks?: Prisma.QualityCheckCreateNestedManyWithoutReviewerInput
   reportedContents?: Prisma.ContentReportCreateNestedManyWithoutReporterInput
   reviewedContentReports?: Prisma.ContentReportCreateNestedManyWithoutReviewerInput
+  supportTickets?: Prisma.SupportTicketCreateNestedManyWithoutUserInput
+  reviewedSupportTickets?: Prisma.SupportTicketCreateNestedManyWithoutReviewerInput
 }
 
 export type UserUncheckedCreateWithoutAccountsInput = {
@@ -822,6 +902,7 @@ export type UserUncheckedCreateWithoutAccountsInput = {
   profile?: Prisma.UserProfileUncheckedCreateNestedOneWithoutUserInput
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
   verifications?: Prisma.VerificationUncheckedCreateNestedManyWithoutUserInput
+  setting?: Prisma.UserSettingUncheckedCreateNestedOneWithoutUserInput
   researches?: Prisma.ResearchUncheckedCreateNestedManyWithoutResearcherInput
   participations?: Prisma.RespondentParticipationUncheckedCreateNestedManyWithoutRespondentInput
   reviewedParticipations?: Prisma.RespondentParticipationUncheckedCreateNestedManyWithoutAdminReviewerInput
@@ -830,6 +911,8 @@ export type UserUncheckedCreateWithoutAccountsInput = {
   reviewedQualityChecks?: Prisma.QualityCheckUncheckedCreateNestedManyWithoutReviewerInput
   reportedContents?: Prisma.ContentReportUncheckedCreateNestedManyWithoutReporterInput
   reviewedContentReports?: Prisma.ContentReportUncheckedCreateNestedManyWithoutReviewerInput
+  supportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutUserInput
+  reviewedSupportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutReviewerInput
 }
 
 export type UserCreateOrConnectWithoutAccountsInput = {
@@ -861,6 +944,7 @@ export type UserUpdateWithoutAccountsInput = {
   profile?: Prisma.UserProfileUpdateOneWithoutUserNestedInput
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
   verifications?: Prisma.VerificationUpdateManyWithoutUserNestedInput
+  setting?: Prisma.UserSettingUpdateOneWithoutUserNestedInput
   researches?: Prisma.ResearchUpdateManyWithoutResearcherNestedInput
   participations?: Prisma.RespondentParticipationUpdateManyWithoutRespondentNestedInput
   reviewedParticipations?: Prisma.RespondentParticipationUpdateManyWithoutAdminReviewerNestedInput
@@ -869,6 +953,8 @@ export type UserUpdateWithoutAccountsInput = {
   reviewedQualityChecks?: Prisma.QualityCheckUpdateManyWithoutReviewerNestedInput
   reportedContents?: Prisma.ContentReportUpdateManyWithoutReporterNestedInput
   reviewedContentReports?: Prisma.ContentReportUpdateManyWithoutReviewerNestedInput
+  supportTickets?: Prisma.SupportTicketUpdateManyWithoutUserNestedInput
+  reviewedSupportTickets?: Prisma.SupportTicketUpdateManyWithoutReviewerNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAccountsInput = {
@@ -884,6 +970,7 @@ export type UserUncheckedUpdateWithoutAccountsInput = {
   profile?: Prisma.UserProfileUncheckedUpdateOneWithoutUserNestedInput
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
   verifications?: Prisma.VerificationUncheckedUpdateManyWithoutUserNestedInput
+  setting?: Prisma.UserSettingUncheckedUpdateOneWithoutUserNestedInput
   researches?: Prisma.ResearchUncheckedUpdateManyWithoutResearcherNestedInput
   participations?: Prisma.RespondentParticipationUncheckedUpdateManyWithoutRespondentNestedInput
   reviewedParticipations?: Prisma.RespondentParticipationUncheckedUpdateManyWithoutAdminReviewerNestedInput
@@ -892,6 +979,8 @@ export type UserUncheckedUpdateWithoutAccountsInput = {
   reviewedQualityChecks?: Prisma.QualityCheckUncheckedUpdateManyWithoutReviewerNestedInput
   reportedContents?: Prisma.ContentReportUncheckedUpdateManyWithoutReporterNestedInput
   reviewedContentReports?: Prisma.ContentReportUncheckedUpdateManyWithoutReviewerNestedInput
+  supportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutUserNestedInput
+  reviewedSupportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutReviewerNestedInput
 }
 
 export type UserCreateWithoutSessionsInput = {
@@ -907,6 +996,7 @@ export type UserCreateWithoutSessionsInput = {
   profile?: Prisma.UserProfileCreateNestedOneWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   verifications?: Prisma.VerificationCreateNestedManyWithoutUserInput
+  setting?: Prisma.UserSettingCreateNestedOneWithoutUserInput
   researches?: Prisma.ResearchCreateNestedManyWithoutResearcherInput
   participations?: Prisma.RespondentParticipationCreateNestedManyWithoutRespondentInput
   reviewedParticipations?: Prisma.RespondentParticipationCreateNestedManyWithoutAdminReviewerInput
@@ -915,6 +1005,8 @@ export type UserCreateWithoutSessionsInput = {
   reviewedQualityChecks?: Prisma.QualityCheckCreateNestedManyWithoutReviewerInput
   reportedContents?: Prisma.ContentReportCreateNestedManyWithoutReporterInput
   reviewedContentReports?: Prisma.ContentReportCreateNestedManyWithoutReviewerInput
+  supportTickets?: Prisma.SupportTicketCreateNestedManyWithoutUserInput
+  reviewedSupportTickets?: Prisma.SupportTicketCreateNestedManyWithoutReviewerInput
 }
 
 export type UserUncheckedCreateWithoutSessionsInput = {
@@ -930,6 +1022,7 @@ export type UserUncheckedCreateWithoutSessionsInput = {
   profile?: Prisma.UserProfileUncheckedCreateNestedOneWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   verifications?: Prisma.VerificationUncheckedCreateNestedManyWithoutUserInput
+  setting?: Prisma.UserSettingUncheckedCreateNestedOneWithoutUserInput
   researches?: Prisma.ResearchUncheckedCreateNestedManyWithoutResearcherInput
   participations?: Prisma.RespondentParticipationUncheckedCreateNestedManyWithoutRespondentInput
   reviewedParticipations?: Prisma.RespondentParticipationUncheckedCreateNestedManyWithoutAdminReviewerInput
@@ -938,6 +1031,8 @@ export type UserUncheckedCreateWithoutSessionsInput = {
   reviewedQualityChecks?: Prisma.QualityCheckUncheckedCreateNestedManyWithoutReviewerInput
   reportedContents?: Prisma.ContentReportUncheckedCreateNestedManyWithoutReporterInput
   reviewedContentReports?: Prisma.ContentReportUncheckedCreateNestedManyWithoutReviewerInput
+  supportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutUserInput
+  reviewedSupportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutReviewerInput
 }
 
 export type UserCreateOrConnectWithoutSessionsInput = {
@@ -969,6 +1064,7 @@ export type UserUpdateWithoutSessionsInput = {
   profile?: Prisma.UserProfileUpdateOneWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   verifications?: Prisma.VerificationUpdateManyWithoutUserNestedInput
+  setting?: Prisma.UserSettingUpdateOneWithoutUserNestedInput
   researches?: Prisma.ResearchUpdateManyWithoutResearcherNestedInput
   participations?: Prisma.RespondentParticipationUpdateManyWithoutRespondentNestedInput
   reviewedParticipations?: Prisma.RespondentParticipationUpdateManyWithoutAdminReviewerNestedInput
@@ -977,6 +1073,8 @@ export type UserUpdateWithoutSessionsInput = {
   reviewedQualityChecks?: Prisma.QualityCheckUpdateManyWithoutReviewerNestedInput
   reportedContents?: Prisma.ContentReportUpdateManyWithoutReporterNestedInput
   reviewedContentReports?: Prisma.ContentReportUpdateManyWithoutReviewerNestedInput
+  supportTickets?: Prisma.SupportTicketUpdateManyWithoutUserNestedInput
+  reviewedSupportTickets?: Prisma.SupportTicketUpdateManyWithoutReviewerNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSessionsInput = {
@@ -992,6 +1090,7 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
   profile?: Prisma.UserProfileUncheckedUpdateOneWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   verifications?: Prisma.VerificationUncheckedUpdateManyWithoutUserNestedInput
+  setting?: Prisma.UserSettingUncheckedUpdateOneWithoutUserNestedInput
   researches?: Prisma.ResearchUncheckedUpdateManyWithoutResearcherNestedInput
   participations?: Prisma.RespondentParticipationUncheckedUpdateManyWithoutRespondentNestedInput
   reviewedParticipations?: Prisma.RespondentParticipationUncheckedUpdateManyWithoutAdminReviewerNestedInput
@@ -1000,6 +1099,8 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
   reviewedQualityChecks?: Prisma.QualityCheckUncheckedUpdateManyWithoutReviewerNestedInput
   reportedContents?: Prisma.ContentReportUncheckedUpdateManyWithoutReporterNestedInput
   reviewedContentReports?: Prisma.ContentReportUncheckedUpdateManyWithoutReviewerNestedInput
+  supportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutUserNestedInput
+  reviewedSupportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutReviewerNestedInput
 }
 
 export type UserCreateWithoutVerificationsInput = {
@@ -1015,6 +1116,7 @@ export type UserCreateWithoutVerificationsInput = {
   profile?: Prisma.UserProfileCreateNestedOneWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  setting?: Prisma.UserSettingCreateNestedOneWithoutUserInput
   researches?: Prisma.ResearchCreateNestedManyWithoutResearcherInput
   participations?: Prisma.RespondentParticipationCreateNestedManyWithoutRespondentInput
   reviewedParticipations?: Prisma.RespondentParticipationCreateNestedManyWithoutAdminReviewerInput
@@ -1023,6 +1125,8 @@ export type UserCreateWithoutVerificationsInput = {
   reviewedQualityChecks?: Prisma.QualityCheckCreateNestedManyWithoutReviewerInput
   reportedContents?: Prisma.ContentReportCreateNestedManyWithoutReporterInput
   reviewedContentReports?: Prisma.ContentReportCreateNestedManyWithoutReviewerInput
+  supportTickets?: Prisma.SupportTicketCreateNestedManyWithoutUserInput
+  reviewedSupportTickets?: Prisma.SupportTicketCreateNestedManyWithoutReviewerInput
 }
 
 export type UserUncheckedCreateWithoutVerificationsInput = {
@@ -1038,6 +1142,7 @@ export type UserUncheckedCreateWithoutVerificationsInput = {
   profile?: Prisma.UserProfileUncheckedCreateNestedOneWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  setting?: Prisma.UserSettingUncheckedCreateNestedOneWithoutUserInput
   researches?: Prisma.ResearchUncheckedCreateNestedManyWithoutResearcherInput
   participations?: Prisma.RespondentParticipationUncheckedCreateNestedManyWithoutRespondentInput
   reviewedParticipations?: Prisma.RespondentParticipationUncheckedCreateNestedManyWithoutAdminReviewerInput
@@ -1046,6 +1151,8 @@ export type UserUncheckedCreateWithoutVerificationsInput = {
   reviewedQualityChecks?: Prisma.QualityCheckUncheckedCreateNestedManyWithoutReviewerInput
   reportedContents?: Prisma.ContentReportUncheckedCreateNestedManyWithoutReporterInput
   reviewedContentReports?: Prisma.ContentReportUncheckedCreateNestedManyWithoutReviewerInput
+  supportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutUserInput
+  reviewedSupportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutReviewerInput
 }
 
 export type UserCreateOrConnectWithoutVerificationsInput = {
@@ -1077,6 +1184,7 @@ export type UserUpdateWithoutVerificationsInput = {
   profile?: Prisma.UserProfileUpdateOneWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  setting?: Prisma.UserSettingUpdateOneWithoutUserNestedInput
   researches?: Prisma.ResearchUpdateManyWithoutResearcherNestedInput
   participations?: Prisma.RespondentParticipationUpdateManyWithoutRespondentNestedInput
   reviewedParticipations?: Prisma.RespondentParticipationUpdateManyWithoutAdminReviewerNestedInput
@@ -1085,6 +1193,8 @@ export type UserUpdateWithoutVerificationsInput = {
   reviewedQualityChecks?: Prisma.QualityCheckUpdateManyWithoutReviewerNestedInput
   reportedContents?: Prisma.ContentReportUpdateManyWithoutReporterNestedInput
   reviewedContentReports?: Prisma.ContentReportUpdateManyWithoutReviewerNestedInput
+  supportTickets?: Prisma.SupportTicketUpdateManyWithoutUserNestedInput
+  reviewedSupportTickets?: Prisma.SupportTicketUpdateManyWithoutReviewerNestedInput
 }
 
 export type UserUncheckedUpdateWithoutVerificationsInput = {
@@ -1100,6 +1210,7 @@ export type UserUncheckedUpdateWithoutVerificationsInput = {
   profile?: Prisma.UserProfileUncheckedUpdateOneWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  setting?: Prisma.UserSettingUncheckedUpdateOneWithoutUserNestedInput
   researches?: Prisma.ResearchUncheckedUpdateManyWithoutResearcherNestedInput
   participations?: Prisma.RespondentParticipationUncheckedUpdateManyWithoutRespondentNestedInput
   reviewedParticipations?: Prisma.RespondentParticipationUncheckedUpdateManyWithoutAdminReviewerNestedInput
@@ -1108,6 +1219,8 @@ export type UserUncheckedUpdateWithoutVerificationsInput = {
   reviewedQualityChecks?: Prisma.QualityCheckUncheckedUpdateManyWithoutReviewerNestedInput
   reportedContents?: Prisma.ContentReportUncheckedUpdateManyWithoutReporterNestedInput
   reviewedContentReports?: Prisma.ContentReportUncheckedUpdateManyWithoutReviewerNestedInput
+  supportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutUserNestedInput
+  reviewedSupportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutReviewerNestedInput
 }
 
 export type UserCreateWithoutReviewedQualityChecksInput = {
@@ -1124,6 +1237,7 @@ export type UserCreateWithoutReviewedQualityChecksInput = {
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
   verifications?: Prisma.VerificationCreateNestedManyWithoutUserInput
+  setting?: Prisma.UserSettingCreateNestedOneWithoutUserInput
   researches?: Prisma.ResearchCreateNestedManyWithoutResearcherInput
   participations?: Prisma.RespondentParticipationCreateNestedManyWithoutRespondentInput
   reviewedParticipations?: Prisma.RespondentParticipationCreateNestedManyWithoutAdminReviewerInput
@@ -1131,6 +1245,8 @@ export type UserCreateWithoutReviewedQualityChecksInput = {
   tokenWallet?: Prisma.TokenWalletCreateNestedOneWithoutUserInput
   reportedContents?: Prisma.ContentReportCreateNestedManyWithoutReporterInput
   reviewedContentReports?: Prisma.ContentReportCreateNestedManyWithoutReviewerInput
+  supportTickets?: Prisma.SupportTicketCreateNestedManyWithoutUserInput
+  reviewedSupportTickets?: Prisma.SupportTicketCreateNestedManyWithoutReviewerInput
 }
 
 export type UserUncheckedCreateWithoutReviewedQualityChecksInput = {
@@ -1147,6 +1263,7 @@ export type UserUncheckedCreateWithoutReviewedQualityChecksInput = {
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
   verifications?: Prisma.VerificationUncheckedCreateNestedManyWithoutUserInput
+  setting?: Prisma.UserSettingUncheckedCreateNestedOneWithoutUserInput
   researches?: Prisma.ResearchUncheckedCreateNestedManyWithoutResearcherInput
   participations?: Prisma.RespondentParticipationUncheckedCreateNestedManyWithoutRespondentInput
   reviewedParticipations?: Prisma.RespondentParticipationUncheckedCreateNestedManyWithoutAdminReviewerInput
@@ -1154,6 +1271,8 @@ export type UserUncheckedCreateWithoutReviewedQualityChecksInput = {
   tokenWallet?: Prisma.TokenWalletUncheckedCreateNestedOneWithoutUserInput
   reportedContents?: Prisma.ContentReportUncheckedCreateNestedManyWithoutReporterInput
   reviewedContentReports?: Prisma.ContentReportUncheckedCreateNestedManyWithoutReviewerInput
+  supportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutUserInput
+  reviewedSupportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutReviewerInput
 }
 
 export type UserCreateOrConnectWithoutReviewedQualityChecksInput = {
@@ -1186,6 +1305,7 @@ export type UserUpdateWithoutReviewedQualityChecksInput = {
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
   verifications?: Prisma.VerificationUpdateManyWithoutUserNestedInput
+  setting?: Prisma.UserSettingUpdateOneWithoutUserNestedInput
   researches?: Prisma.ResearchUpdateManyWithoutResearcherNestedInput
   participations?: Prisma.RespondentParticipationUpdateManyWithoutRespondentNestedInput
   reviewedParticipations?: Prisma.RespondentParticipationUpdateManyWithoutAdminReviewerNestedInput
@@ -1193,6 +1313,8 @@ export type UserUpdateWithoutReviewedQualityChecksInput = {
   tokenWallet?: Prisma.TokenWalletUpdateOneWithoutUserNestedInput
   reportedContents?: Prisma.ContentReportUpdateManyWithoutReporterNestedInput
   reviewedContentReports?: Prisma.ContentReportUpdateManyWithoutReviewerNestedInput
+  supportTickets?: Prisma.SupportTicketUpdateManyWithoutUserNestedInput
+  reviewedSupportTickets?: Prisma.SupportTicketUpdateManyWithoutReviewerNestedInput
 }
 
 export type UserUncheckedUpdateWithoutReviewedQualityChecksInput = {
@@ -1209,6 +1331,7 @@ export type UserUncheckedUpdateWithoutReviewedQualityChecksInput = {
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
   verifications?: Prisma.VerificationUncheckedUpdateManyWithoutUserNestedInput
+  setting?: Prisma.UserSettingUncheckedUpdateOneWithoutUserNestedInput
   researches?: Prisma.ResearchUncheckedUpdateManyWithoutResearcherNestedInput
   participations?: Prisma.RespondentParticipationUncheckedUpdateManyWithoutRespondentNestedInput
   reviewedParticipations?: Prisma.RespondentParticipationUncheckedUpdateManyWithoutAdminReviewerNestedInput
@@ -1216,6 +1339,8 @@ export type UserUncheckedUpdateWithoutReviewedQualityChecksInput = {
   tokenWallet?: Prisma.TokenWalletUncheckedUpdateOneWithoutUserNestedInput
   reportedContents?: Prisma.ContentReportUncheckedUpdateManyWithoutReporterNestedInput
   reviewedContentReports?: Prisma.ContentReportUncheckedUpdateManyWithoutReviewerNestedInput
+  supportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutUserNestedInput
+  reviewedSupportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutReviewerNestedInput
 }
 
 export type UserCreateWithoutReportedContentsInput = {
@@ -1232,6 +1357,7 @@ export type UserCreateWithoutReportedContentsInput = {
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
   verifications?: Prisma.VerificationCreateNestedManyWithoutUserInput
+  setting?: Prisma.UserSettingCreateNestedOneWithoutUserInput
   researches?: Prisma.ResearchCreateNestedManyWithoutResearcherInput
   participations?: Prisma.RespondentParticipationCreateNestedManyWithoutRespondentInput
   reviewedParticipations?: Prisma.RespondentParticipationCreateNestedManyWithoutAdminReviewerInput
@@ -1239,6 +1365,8 @@ export type UserCreateWithoutReportedContentsInput = {
   tokenWallet?: Prisma.TokenWalletCreateNestedOneWithoutUserInput
   reviewedQualityChecks?: Prisma.QualityCheckCreateNestedManyWithoutReviewerInput
   reviewedContentReports?: Prisma.ContentReportCreateNestedManyWithoutReviewerInput
+  supportTickets?: Prisma.SupportTicketCreateNestedManyWithoutUserInput
+  reviewedSupportTickets?: Prisma.SupportTicketCreateNestedManyWithoutReviewerInput
 }
 
 export type UserUncheckedCreateWithoutReportedContentsInput = {
@@ -1255,6 +1383,7 @@ export type UserUncheckedCreateWithoutReportedContentsInput = {
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
   verifications?: Prisma.VerificationUncheckedCreateNestedManyWithoutUserInput
+  setting?: Prisma.UserSettingUncheckedCreateNestedOneWithoutUserInput
   researches?: Prisma.ResearchUncheckedCreateNestedManyWithoutResearcherInput
   participations?: Prisma.RespondentParticipationUncheckedCreateNestedManyWithoutRespondentInput
   reviewedParticipations?: Prisma.RespondentParticipationUncheckedCreateNestedManyWithoutAdminReviewerInput
@@ -1262,6 +1391,8 @@ export type UserUncheckedCreateWithoutReportedContentsInput = {
   tokenWallet?: Prisma.TokenWalletUncheckedCreateNestedOneWithoutUserInput
   reviewedQualityChecks?: Prisma.QualityCheckUncheckedCreateNestedManyWithoutReviewerInput
   reviewedContentReports?: Prisma.ContentReportUncheckedCreateNestedManyWithoutReviewerInput
+  supportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutUserInput
+  reviewedSupportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutReviewerInput
 }
 
 export type UserCreateOrConnectWithoutReportedContentsInput = {
@@ -1283,6 +1414,7 @@ export type UserCreateWithoutReviewedContentReportsInput = {
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
   verifications?: Prisma.VerificationCreateNestedManyWithoutUserInput
+  setting?: Prisma.UserSettingCreateNestedOneWithoutUserInput
   researches?: Prisma.ResearchCreateNestedManyWithoutResearcherInput
   participations?: Prisma.RespondentParticipationCreateNestedManyWithoutRespondentInput
   reviewedParticipations?: Prisma.RespondentParticipationCreateNestedManyWithoutAdminReviewerInput
@@ -1290,6 +1422,8 @@ export type UserCreateWithoutReviewedContentReportsInput = {
   tokenWallet?: Prisma.TokenWalletCreateNestedOneWithoutUserInput
   reviewedQualityChecks?: Prisma.QualityCheckCreateNestedManyWithoutReviewerInput
   reportedContents?: Prisma.ContentReportCreateNestedManyWithoutReporterInput
+  supportTickets?: Prisma.SupportTicketCreateNestedManyWithoutUserInput
+  reviewedSupportTickets?: Prisma.SupportTicketCreateNestedManyWithoutReviewerInput
 }
 
 export type UserUncheckedCreateWithoutReviewedContentReportsInput = {
@@ -1306,6 +1440,7 @@ export type UserUncheckedCreateWithoutReviewedContentReportsInput = {
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
   verifications?: Prisma.VerificationUncheckedCreateNestedManyWithoutUserInput
+  setting?: Prisma.UserSettingUncheckedCreateNestedOneWithoutUserInput
   researches?: Prisma.ResearchUncheckedCreateNestedManyWithoutResearcherInput
   participations?: Prisma.RespondentParticipationUncheckedCreateNestedManyWithoutRespondentInput
   reviewedParticipations?: Prisma.RespondentParticipationUncheckedCreateNestedManyWithoutAdminReviewerInput
@@ -1313,6 +1448,8 @@ export type UserUncheckedCreateWithoutReviewedContentReportsInput = {
   tokenWallet?: Prisma.TokenWalletUncheckedCreateNestedOneWithoutUserInput
   reviewedQualityChecks?: Prisma.QualityCheckUncheckedCreateNestedManyWithoutReviewerInput
   reportedContents?: Prisma.ContentReportUncheckedCreateNestedManyWithoutReporterInput
+  supportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutUserInput
+  reviewedSupportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutReviewerInput
 }
 
 export type UserCreateOrConnectWithoutReviewedContentReportsInput = {
@@ -1345,6 +1482,7 @@ export type UserUpdateWithoutReportedContentsInput = {
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
   verifications?: Prisma.VerificationUpdateManyWithoutUserNestedInput
+  setting?: Prisma.UserSettingUpdateOneWithoutUserNestedInput
   researches?: Prisma.ResearchUpdateManyWithoutResearcherNestedInput
   participations?: Prisma.RespondentParticipationUpdateManyWithoutRespondentNestedInput
   reviewedParticipations?: Prisma.RespondentParticipationUpdateManyWithoutAdminReviewerNestedInput
@@ -1352,6 +1490,8 @@ export type UserUpdateWithoutReportedContentsInput = {
   tokenWallet?: Prisma.TokenWalletUpdateOneWithoutUserNestedInput
   reviewedQualityChecks?: Prisma.QualityCheckUpdateManyWithoutReviewerNestedInput
   reviewedContentReports?: Prisma.ContentReportUpdateManyWithoutReviewerNestedInput
+  supportTickets?: Prisma.SupportTicketUpdateManyWithoutUserNestedInput
+  reviewedSupportTickets?: Prisma.SupportTicketUpdateManyWithoutReviewerNestedInput
 }
 
 export type UserUncheckedUpdateWithoutReportedContentsInput = {
@@ -1368,6 +1508,7 @@ export type UserUncheckedUpdateWithoutReportedContentsInput = {
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
   verifications?: Prisma.VerificationUncheckedUpdateManyWithoutUserNestedInput
+  setting?: Prisma.UserSettingUncheckedUpdateOneWithoutUserNestedInput
   researches?: Prisma.ResearchUncheckedUpdateManyWithoutResearcherNestedInput
   participations?: Prisma.RespondentParticipationUncheckedUpdateManyWithoutRespondentNestedInput
   reviewedParticipations?: Prisma.RespondentParticipationUncheckedUpdateManyWithoutAdminReviewerNestedInput
@@ -1375,6 +1516,8 @@ export type UserUncheckedUpdateWithoutReportedContentsInput = {
   tokenWallet?: Prisma.TokenWalletUncheckedUpdateOneWithoutUserNestedInput
   reviewedQualityChecks?: Prisma.QualityCheckUncheckedUpdateManyWithoutReviewerNestedInput
   reviewedContentReports?: Prisma.ContentReportUncheckedUpdateManyWithoutReviewerNestedInput
+  supportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutUserNestedInput
+  reviewedSupportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutReviewerNestedInput
 }
 
 export type UserUpsertWithoutReviewedContentReportsInput = {
@@ -1402,6 +1545,7 @@ export type UserUpdateWithoutReviewedContentReportsInput = {
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
   verifications?: Prisma.VerificationUpdateManyWithoutUserNestedInput
+  setting?: Prisma.UserSettingUpdateOneWithoutUserNestedInput
   researches?: Prisma.ResearchUpdateManyWithoutResearcherNestedInput
   participations?: Prisma.RespondentParticipationUpdateManyWithoutRespondentNestedInput
   reviewedParticipations?: Prisma.RespondentParticipationUpdateManyWithoutAdminReviewerNestedInput
@@ -1409,6 +1553,8 @@ export type UserUpdateWithoutReviewedContentReportsInput = {
   tokenWallet?: Prisma.TokenWalletUpdateOneWithoutUserNestedInput
   reviewedQualityChecks?: Prisma.QualityCheckUpdateManyWithoutReviewerNestedInput
   reportedContents?: Prisma.ContentReportUpdateManyWithoutReporterNestedInput
+  supportTickets?: Prisma.SupportTicketUpdateManyWithoutUserNestedInput
+  reviewedSupportTickets?: Prisma.SupportTicketUpdateManyWithoutReviewerNestedInput
 }
 
 export type UserUncheckedUpdateWithoutReviewedContentReportsInput = {
@@ -1425,6 +1571,7 @@ export type UserUncheckedUpdateWithoutReviewedContentReportsInput = {
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
   verifications?: Prisma.VerificationUncheckedUpdateManyWithoutUserNestedInput
+  setting?: Prisma.UserSettingUncheckedUpdateOneWithoutUserNestedInput
   researches?: Prisma.ResearchUncheckedUpdateManyWithoutResearcherNestedInput
   participations?: Prisma.RespondentParticipationUncheckedUpdateManyWithoutRespondentNestedInput
   reviewedParticipations?: Prisma.RespondentParticipationUncheckedUpdateManyWithoutAdminReviewerNestedInput
@@ -1432,6 +1579,8 @@ export type UserUncheckedUpdateWithoutReviewedContentReportsInput = {
   tokenWallet?: Prisma.TokenWalletUncheckedUpdateOneWithoutUserNestedInput
   reviewedQualityChecks?: Prisma.QualityCheckUncheckedUpdateManyWithoutReviewerNestedInput
   reportedContents?: Prisma.ContentReportUncheckedUpdateManyWithoutReporterNestedInput
+  supportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutUserNestedInput
+  reviewedSupportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutReviewerNestedInput
 }
 
 export type UserCreateWithoutParticipationsInput = {
@@ -1448,6 +1597,7 @@ export type UserCreateWithoutParticipationsInput = {
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
   verifications?: Prisma.VerificationCreateNestedManyWithoutUserInput
+  setting?: Prisma.UserSettingCreateNestedOneWithoutUserInput
   researches?: Prisma.ResearchCreateNestedManyWithoutResearcherInput
   reviewedParticipations?: Prisma.RespondentParticipationCreateNestedManyWithoutAdminReviewerInput
   payments?: Prisma.PaymentCreateNestedManyWithoutUserInput
@@ -1455,6 +1605,8 @@ export type UserCreateWithoutParticipationsInput = {
   reviewedQualityChecks?: Prisma.QualityCheckCreateNestedManyWithoutReviewerInput
   reportedContents?: Prisma.ContentReportCreateNestedManyWithoutReporterInput
   reviewedContentReports?: Prisma.ContentReportCreateNestedManyWithoutReviewerInput
+  supportTickets?: Prisma.SupportTicketCreateNestedManyWithoutUserInput
+  reviewedSupportTickets?: Prisma.SupportTicketCreateNestedManyWithoutReviewerInput
 }
 
 export type UserUncheckedCreateWithoutParticipationsInput = {
@@ -1471,6 +1623,7 @@ export type UserUncheckedCreateWithoutParticipationsInput = {
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
   verifications?: Prisma.VerificationUncheckedCreateNestedManyWithoutUserInput
+  setting?: Prisma.UserSettingUncheckedCreateNestedOneWithoutUserInput
   researches?: Prisma.ResearchUncheckedCreateNestedManyWithoutResearcherInput
   reviewedParticipations?: Prisma.RespondentParticipationUncheckedCreateNestedManyWithoutAdminReviewerInput
   payments?: Prisma.PaymentUncheckedCreateNestedManyWithoutUserInput
@@ -1478,6 +1631,8 @@ export type UserUncheckedCreateWithoutParticipationsInput = {
   reviewedQualityChecks?: Prisma.QualityCheckUncheckedCreateNestedManyWithoutReviewerInput
   reportedContents?: Prisma.ContentReportUncheckedCreateNestedManyWithoutReporterInput
   reviewedContentReports?: Prisma.ContentReportUncheckedCreateNestedManyWithoutReviewerInput
+  supportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutUserInput
+  reviewedSupportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutReviewerInput
 }
 
 export type UserCreateOrConnectWithoutParticipationsInput = {
@@ -1499,6 +1654,7 @@ export type UserCreateWithoutReviewedParticipationsInput = {
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
   verifications?: Prisma.VerificationCreateNestedManyWithoutUserInput
+  setting?: Prisma.UserSettingCreateNestedOneWithoutUserInput
   researches?: Prisma.ResearchCreateNestedManyWithoutResearcherInput
   participations?: Prisma.RespondentParticipationCreateNestedManyWithoutRespondentInput
   payments?: Prisma.PaymentCreateNestedManyWithoutUserInput
@@ -1506,6 +1662,8 @@ export type UserCreateWithoutReviewedParticipationsInput = {
   reviewedQualityChecks?: Prisma.QualityCheckCreateNestedManyWithoutReviewerInput
   reportedContents?: Prisma.ContentReportCreateNestedManyWithoutReporterInput
   reviewedContentReports?: Prisma.ContentReportCreateNestedManyWithoutReviewerInput
+  supportTickets?: Prisma.SupportTicketCreateNestedManyWithoutUserInput
+  reviewedSupportTickets?: Prisma.SupportTicketCreateNestedManyWithoutReviewerInput
 }
 
 export type UserUncheckedCreateWithoutReviewedParticipationsInput = {
@@ -1522,6 +1680,7 @@ export type UserUncheckedCreateWithoutReviewedParticipationsInput = {
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
   verifications?: Prisma.VerificationUncheckedCreateNestedManyWithoutUserInput
+  setting?: Prisma.UserSettingUncheckedCreateNestedOneWithoutUserInput
   researches?: Prisma.ResearchUncheckedCreateNestedManyWithoutResearcherInput
   participations?: Prisma.RespondentParticipationUncheckedCreateNestedManyWithoutRespondentInput
   payments?: Prisma.PaymentUncheckedCreateNestedManyWithoutUserInput
@@ -1529,6 +1688,8 @@ export type UserUncheckedCreateWithoutReviewedParticipationsInput = {
   reviewedQualityChecks?: Prisma.QualityCheckUncheckedCreateNestedManyWithoutReviewerInput
   reportedContents?: Prisma.ContentReportUncheckedCreateNestedManyWithoutReporterInput
   reviewedContentReports?: Prisma.ContentReportUncheckedCreateNestedManyWithoutReviewerInput
+  supportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutUserInput
+  reviewedSupportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutReviewerInput
 }
 
 export type UserCreateOrConnectWithoutReviewedParticipationsInput = {
@@ -1561,6 +1722,7 @@ export type UserUpdateWithoutParticipationsInput = {
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
   verifications?: Prisma.VerificationUpdateManyWithoutUserNestedInput
+  setting?: Prisma.UserSettingUpdateOneWithoutUserNestedInput
   researches?: Prisma.ResearchUpdateManyWithoutResearcherNestedInput
   reviewedParticipations?: Prisma.RespondentParticipationUpdateManyWithoutAdminReviewerNestedInput
   payments?: Prisma.PaymentUpdateManyWithoutUserNestedInput
@@ -1568,6 +1730,8 @@ export type UserUpdateWithoutParticipationsInput = {
   reviewedQualityChecks?: Prisma.QualityCheckUpdateManyWithoutReviewerNestedInput
   reportedContents?: Prisma.ContentReportUpdateManyWithoutReporterNestedInput
   reviewedContentReports?: Prisma.ContentReportUpdateManyWithoutReviewerNestedInput
+  supportTickets?: Prisma.SupportTicketUpdateManyWithoutUserNestedInput
+  reviewedSupportTickets?: Prisma.SupportTicketUpdateManyWithoutReviewerNestedInput
 }
 
 export type UserUncheckedUpdateWithoutParticipationsInput = {
@@ -1584,6 +1748,7 @@ export type UserUncheckedUpdateWithoutParticipationsInput = {
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
   verifications?: Prisma.VerificationUncheckedUpdateManyWithoutUserNestedInput
+  setting?: Prisma.UserSettingUncheckedUpdateOneWithoutUserNestedInput
   researches?: Prisma.ResearchUncheckedUpdateManyWithoutResearcherNestedInput
   reviewedParticipations?: Prisma.RespondentParticipationUncheckedUpdateManyWithoutAdminReviewerNestedInput
   payments?: Prisma.PaymentUncheckedUpdateManyWithoutUserNestedInput
@@ -1591,6 +1756,8 @@ export type UserUncheckedUpdateWithoutParticipationsInput = {
   reviewedQualityChecks?: Prisma.QualityCheckUncheckedUpdateManyWithoutReviewerNestedInput
   reportedContents?: Prisma.ContentReportUncheckedUpdateManyWithoutReporterNestedInput
   reviewedContentReports?: Prisma.ContentReportUncheckedUpdateManyWithoutReviewerNestedInput
+  supportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutUserNestedInput
+  reviewedSupportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutReviewerNestedInput
 }
 
 export type UserUpsertWithoutReviewedParticipationsInput = {
@@ -1618,6 +1785,7 @@ export type UserUpdateWithoutReviewedParticipationsInput = {
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
   verifications?: Prisma.VerificationUpdateManyWithoutUserNestedInput
+  setting?: Prisma.UserSettingUpdateOneWithoutUserNestedInput
   researches?: Prisma.ResearchUpdateManyWithoutResearcherNestedInput
   participations?: Prisma.RespondentParticipationUpdateManyWithoutRespondentNestedInput
   payments?: Prisma.PaymentUpdateManyWithoutUserNestedInput
@@ -1625,6 +1793,8 @@ export type UserUpdateWithoutReviewedParticipationsInput = {
   reviewedQualityChecks?: Prisma.QualityCheckUpdateManyWithoutReviewerNestedInput
   reportedContents?: Prisma.ContentReportUpdateManyWithoutReporterNestedInput
   reviewedContentReports?: Prisma.ContentReportUpdateManyWithoutReviewerNestedInput
+  supportTickets?: Prisma.SupportTicketUpdateManyWithoutUserNestedInput
+  reviewedSupportTickets?: Prisma.SupportTicketUpdateManyWithoutReviewerNestedInput
 }
 
 export type UserUncheckedUpdateWithoutReviewedParticipationsInput = {
@@ -1641,6 +1811,7 @@ export type UserUncheckedUpdateWithoutReviewedParticipationsInput = {
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
   verifications?: Prisma.VerificationUncheckedUpdateManyWithoutUserNestedInput
+  setting?: Prisma.UserSettingUncheckedUpdateOneWithoutUserNestedInput
   researches?: Prisma.ResearchUncheckedUpdateManyWithoutResearcherNestedInput
   participations?: Prisma.RespondentParticipationUncheckedUpdateManyWithoutRespondentNestedInput
   payments?: Prisma.PaymentUncheckedUpdateManyWithoutUserNestedInput
@@ -1648,6 +1819,8 @@ export type UserUncheckedUpdateWithoutReviewedParticipationsInput = {
   reviewedQualityChecks?: Prisma.QualityCheckUncheckedUpdateManyWithoutReviewerNestedInput
   reportedContents?: Prisma.ContentReportUncheckedUpdateManyWithoutReporterNestedInput
   reviewedContentReports?: Prisma.ContentReportUncheckedUpdateManyWithoutReviewerNestedInput
+  supportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutUserNestedInput
+  reviewedSupportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutReviewerNestedInput
 }
 
 export type UserCreateWithoutPaymentsInput = {
@@ -1664,6 +1837,7 @@ export type UserCreateWithoutPaymentsInput = {
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
   verifications?: Prisma.VerificationCreateNestedManyWithoutUserInput
+  setting?: Prisma.UserSettingCreateNestedOneWithoutUserInput
   researches?: Prisma.ResearchCreateNestedManyWithoutResearcherInput
   participations?: Prisma.RespondentParticipationCreateNestedManyWithoutRespondentInput
   reviewedParticipations?: Prisma.RespondentParticipationCreateNestedManyWithoutAdminReviewerInput
@@ -1671,6 +1845,8 @@ export type UserCreateWithoutPaymentsInput = {
   reviewedQualityChecks?: Prisma.QualityCheckCreateNestedManyWithoutReviewerInput
   reportedContents?: Prisma.ContentReportCreateNestedManyWithoutReporterInput
   reviewedContentReports?: Prisma.ContentReportCreateNestedManyWithoutReviewerInput
+  supportTickets?: Prisma.SupportTicketCreateNestedManyWithoutUserInput
+  reviewedSupportTickets?: Prisma.SupportTicketCreateNestedManyWithoutReviewerInput
 }
 
 export type UserUncheckedCreateWithoutPaymentsInput = {
@@ -1687,6 +1863,7 @@ export type UserUncheckedCreateWithoutPaymentsInput = {
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
   verifications?: Prisma.VerificationUncheckedCreateNestedManyWithoutUserInput
+  setting?: Prisma.UserSettingUncheckedCreateNestedOneWithoutUserInput
   researches?: Prisma.ResearchUncheckedCreateNestedManyWithoutResearcherInput
   participations?: Prisma.RespondentParticipationUncheckedCreateNestedManyWithoutRespondentInput
   reviewedParticipations?: Prisma.RespondentParticipationUncheckedCreateNestedManyWithoutAdminReviewerInput
@@ -1694,6 +1871,8 @@ export type UserUncheckedCreateWithoutPaymentsInput = {
   reviewedQualityChecks?: Prisma.QualityCheckUncheckedCreateNestedManyWithoutReviewerInput
   reportedContents?: Prisma.ContentReportUncheckedCreateNestedManyWithoutReporterInput
   reviewedContentReports?: Prisma.ContentReportUncheckedCreateNestedManyWithoutReviewerInput
+  supportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutUserInput
+  reviewedSupportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutReviewerInput
 }
 
 export type UserCreateOrConnectWithoutPaymentsInput = {
@@ -1726,6 +1905,7 @@ export type UserUpdateWithoutPaymentsInput = {
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
   verifications?: Prisma.VerificationUpdateManyWithoutUserNestedInput
+  setting?: Prisma.UserSettingUpdateOneWithoutUserNestedInput
   researches?: Prisma.ResearchUpdateManyWithoutResearcherNestedInput
   participations?: Prisma.RespondentParticipationUpdateManyWithoutRespondentNestedInput
   reviewedParticipations?: Prisma.RespondentParticipationUpdateManyWithoutAdminReviewerNestedInput
@@ -1733,6 +1913,8 @@ export type UserUpdateWithoutPaymentsInput = {
   reviewedQualityChecks?: Prisma.QualityCheckUpdateManyWithoutReviewerNestedInput
   reportedContents?: Prisma.ContentReportUpdateManyWithoutReporterNestedInput
   reviewedContentReports?: Prisma.ContentReportUpdateManyWithoutReviewerNestedInput
+  supportTickets?: Prisma.SupportTicketUpdateManyWithoutUserNestedInput
+  reviewedSupportTickets?: Prisma.SupportTicketUpdateManyWithoutReviewerNestedInput
 }
 
 export type UserUncheckedUpdateWithoutPaymentsInput = {
@@ -1749,6 +1931,7 @@ export type UserUncheckedUpdateWithoutPaymentsInput = {
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
   verifications?: Prisma.VerificationUncheckedUpdateManyWithoutUserNestedInput
+  setting?: Prisma.UserSettingUncheckedUpdateOneWithoutUserNestedInput
   researches?: Prisma.ResearchUncheckedUpdateManyWithoutResearcherNestedInput
   participations?: Prisma.RespondentParticipationUncheckedUpdateManyWithoutRespondentNestedInput
   reviewedParticipations?: Prisma.RespondentParticipationUncheckedUpdateManyWithoutAdminReviewerNestedInput
@@ -1756,6 +1939,8 @@ export type UserUncheckedUpdateWithoutPaymentsInput = {
   reviewedQualityChecks?: Prisma.QualityCheckUncheckedUpdateManyWithoutReviewerNestedInput
   reportedContents?: Prisma.ContentReportUncheckedUpdateManyWithoutReporterNestedInput
   reviewedContentReports?: Prisma.ContentReportUncheckedUpdateManyWithoutReviewerNestedInput
+  supportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutUserNestedInput
+  reviewedSupportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutReviewerNestedInput
 }
 
 export type UserCreateWithoutResearchesInput = {
@@ -1772,6 +1957,7 @@ export type UserCreateWithoutResearchesInput = {
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
   verifications?: Prisma.VerificationCreateNestedManyWithoutUserInput
+  setting?: Prisma.UserSettingCreateNestedOneWithoutUserInput
   participations?: Prisma.RespondentParticipationCreateNestedManyWithoutRespondentInput
   reviewedParticipations?: Prisma.RespondentParticipationCreateNestedManyWithoutAdminReviewerInput
   payments?: Prisma.PaymentCreateNestedManyWithoutUserInput
@@ -1779,6 +1965,8 @@ export type UserCreateWithoutResearchesInput = {
   reviewedQualityChecks?: Prisma.QualityCheckCreateNestedManyWithoutReviewerInput
   reportedContents?: Prisma.ContentReportCreateNestedManyWithoutReporterInput
   reviewedContentReports?: Prisma.ContentReportCreateNestedManyWithoutReviewerInput
+  supportTickets?: Prisma.SupportTicketCreateNestedManyWithoutUserInput
+  reviewedSupportTickets?: Prisma.SupportTicketCreateNestedManyWithoutReviewerInput
 }
 
 export type UserUncheckedCreateWithoutResearchesInput = {
@@ -1795,6 +1983,7 @@ export type UserUncheckedCreateWithoutResearchesInput = {
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
   verifications?: Prisma.VerificationUncheckedCreateNestedManyWithoutUserInput
+  setting?: Prisma.UserSettingUncheckedCreateNestedOneWithoutUserInput
   participations?: Prisma.RespondentParticipationUncheckedCreateNestedManyWithoutRespondentInput
   reviewedParticipations?: Prisma.RespondentParticipationUncheckedCreateNestedManyWithoutAdminReviewerInput
   payments?: Prisma.PaymentUncheckedCreateNestedManyWithoutUserInput
@@ -1802,6 +1991,8 @@ export type UserUncheckedCreateWithoutResearchesInput = {
   reviewedQualityChecks?: Prisma.QualityCheckUncheckedCreateNestedManyWithoutReviewerInput
   reportedContents?: Prisma.ContentReportUncheckedCreateNestedManyWithoutReporterInput
   reviewedContentReports?: Prisma.ContentReportUncheckedCreateNestedManyWithoutReviewerInput
+  supportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutUserInput
+  reviewedSupportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutReviewerInput
 }
 
 export type UserCreateOrConnectWithoutResearchesInput = {
@@ -1834,6 +2025,7 @@ export type UserUpdateWithoutResearchesInput = {
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
   verifications?: Prisma.VerificationUpdateManyWithoutUserNestedInput
+  setting?: Prisma.UserSettingUpdateOneWithoutUserNestedInput
   participations?: Prisma.RespondentParticipationUpdateManyWithoutRespondentNestedInput
   reviewedParticipations?: Prisma.RespondentParticipationUpdateManyWithoutAdminReviewerNestedInput
   payments?: Prisma.PaymentUpdateManyWithoutUserNestedInput
@@ -1841,6 +2033,8 @@ export type UserUpdateWithoutResearchesInput = {
   reviewedQualityChecks?: Prisma.QualityCheckUpdateManyWithoutReviewerNestedInput
   reportedContents?: Prisma.ContentReportUpdateManyWithoutReporterNestedInput
   reviewedContentReports?: Prisma.ContentReportUpdateManyWithoutReviewerNestedInput
+  supportTickets?: Prisma.SupportTicketUpdateManyWithoutUserNestedInput
+  reviewedSupportTickets?: Prisma.SupportTicketUpdateManyWithoutReviewerNestedInput
 }
 
 export type UserUncheckedUpdateWithoutResearchesInput = {
@@ -1857,6 +2051,7 @@ export type UserUncheckedUpdateWithoutResearchesInput = {
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
   verifications?: Prisma.VerificationUncheckedUpdateManyWithoutUserNestedInput
+  setting?: Prisma.UserSettingUncheckedUpdateOneWithoutUserNestedInput
   participations?: Prisma.RespondentParticipationUncheckedUpdateManyWithoutRespondentNestedInput
   reviewedParticipations?: Prisma.RespondentParticipationUncheckedUpdateManyWithoutAdminReviewerNestedInput
   payments?: Prisma.PaymentUncheckedUpdateManyWithoutUserNestedInput
@@ -1864,9 +2059,11 @@ export type UserUncheckedUpdateWithoutResearchesInput = {
   reviewedQualityChecks?: Prisma.QualityCheckUncheckedUpdateManyWithoutReviewerNestedInput
   reportedContents?: Prisma.ContentReportUncheckedUpdateManyWithoutReporterNestedInput
   reviewedContentReports?: Prisma.ContentReportUncheckedUpdateManyWithoutReviewerNestedInput
+  supportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutUserNestedInput
+  reviewedSupportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutReviewerNestedInput
 }
 
-export type UserCreateWithoutTokenWalletInput = {
+export type UserCreateWithoutSettingInput = {
   id?: string
   name: string
   email: string
@@ -1884,12 +2081,15 @@ export type UserCreateWithoutTokenWalletInput = {
   participations?: Prisma.RespondentParticipationCreateNestedManyWithoutRespondentInput
   reviewedParticipations?: Prisma.RespondentParticipationCreateNestedManyWithoutAdminReviewerInput
   payments?: Prisma.PaymentCreateNestedManyWithoutUserInput
+  tokenWallet?: Prisma.TokenWalletCreateNestedOneWithoutUserInput
   reviewedQualityChecks?: Prisma.QualityCheckCreateNestedManyWithoutReviewerInput
   reportedContents?: Prisma.ContentReportCreateNestedManyWithoutReporterInput
   reviewedContentReports?: Prisma.ContentReportCreateNestedManyWithoutReviewerInput
+  supportTickets?: Prisma.SupportTicketCreateNestedManyWithoutUserInput
+  reviewedSupportTickets?: Prisma.SupportTicketCreateNestedManyWithoutReviewerInput
 }
 
-export type UserUncheckedCreateWithoutTokenWalletInput = {
+export type UserUncheckedCreateWithoutSettingInput = {
   id?: string
   name: string
   email: string
@@ -1907,9 +2107,372 @@ export type UserUncheckedCreateWithoutTokenWalletInput = {
   participations?: Prisma.RespondentParticipationUncheckedCreateNestedManyWithoutRespondentInput
   reviewedParticipations?: Prisma.RespondentParticipationUncheckedCreateNestedManyWithoutAdminReviewerInput
   payments?: Prisma.PaymentUncheckedCreateNestedManyWithoutUserInput
+  tokenWallet?: Prisma.TokenWalletUncheckedCreateNestedOneWithoutUserInput
   reviewedQualityChecks?: Prisma.QualityCheckUncheckedCreateNestedManyWithoutReviewerInput
   reportedContents?: Prisma.ContentReportUncheckedCreateNestedManyWithoutReporterInput
   reviewedContentReports?: Prisma.ContentReportUncheckedCreateNestedManyWithoutReviewerInput
+  supportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutUserInput
+  reviewedSupportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutReviewerInput
+}
+
+export type UserCreateOrConnectWithoutSettingInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutSettingInput, Prisma.UserUncheckedCreateWithoutSettingInput>
+}
+
+export type UserUpsertWithoutSettingInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutSettingInput, Prisma.UserUncheckedUpdateWithoutSettingInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutSettingInput, Prisma.UserUncheckedCreateWithoutSettingInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutSettingInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutSettingInput, Prisma.UserUncheckedUpdateWithoutSettingInput>
+}
+
+export type UserUpdateWithoutSettingInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  verifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  roles?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profile?: Prisma.UserProfileUpdateOneWithoutUserNestedInput
+  accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  verifications?: Prisma.VerificationUpdateManyWithoutUserNestedInput
+  researches?: Prisma.ResearchUpdateManyWithoutResearcherNestedInput
+  participations?: Prisma.RespondentParticipationUpdateManyWithoutRespondentNestedInput
+  reviewedParticipations?: Prisma.RespondentParticipationUpdateManyWithoutAdminReviewerNestedInput
+  payments?: Prisma.PaymentUpdateManyWithoutUserNestedInput
+  tokenWallet?: Prisma.TokenWalletUpdateOneWithoutUserNestedInput
+  reviewedQualityChecks?: Prisma.QualityCheckUpdateManyWithoutReviewerNestedInput
+  reportedContents?: Prisma.ContentReportUpdateManyWithoutReporterNestedInput
+  reviewedContentReports?: Prisma.ContentReportUpdateManyWithoutReviewerNestedInput
+  supportTickets?: Prisma.SupportTicketUpdateManyWithoutUserNestedInput
+  reviewedSupportTickets?: Prisma.SupportTicketUpdateManyWithoutReviewerNestedInput
+}
+
+export type UserUncheckedUpdateWithoutSettingInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  verifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  roles?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profile?: Prisma.UserProfileUncheckedUpdateOneWithoutUserNestedInput
+  accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  verifications?: Prisma.VerificationUncheckedUpdateManyWithoutUserNestedInput
+  researches?: Prisma.ResearchUncheckedUpdateManyWithoutResearcherNestedInput
+  participations?: Prisma.RespondentParticipationUncheckedUpdateManyWithoutRespondentNestedInput
+  reviewedParticipations?: Prisma.RespondentParticipationUncheckedUpdateManyWithoutAdminReviewerNestedInput
+  payments?: Prisma.PaymentUncheckedUpdateManyWithoutUserNestedInput
+  tokenWallet?: Prisma.TokenWalletUncheckedUpdateOneWithoutUserNestedInput
+  reviewedQualityChecks?: Prisma.QualityCheckUncheckedUpdateManyWithoutReviewerNestedInput
+  reportedContents?: Prisma.ContentReportUncheckedUpdateManyWithoutReporterNestedInput
+  reviewedContentReports?: Prisma.ContentReportUncheckedUpdateManyWithoutReviewerNestedInput
+  supportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutUserNestedInput
+  reviewedSupportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutReviewerNestedInput
+}
+
+export type UserCreateWithoutSupportTicketsInput = {
+  id?: string
+  name: string
+  email: string
+  verifiedAt?: Date | string | null
+  image?: string | null
+  roles?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  deletedAt?: Date | string | null
+  profile?: Prisma.UserProfileCreateNestedOneWithoutUserInput
+  accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
+  sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  verifications?: Prisma.VerificationCreateNestedManyWithoutUserInput
+  setting?: Prisma.UserSettingCreateNestedOneWithoutUserInput
+  researches?: Prisma.ResearchCreateNestedManyWithoutResearcherInput
+  participations?: Prisma.RespondentParticipationCreateNestedManyWithoutRespondentInput
+  reviewedParticipations?: Prisma.RespondentParticipationCreateNestedManyWithoutAdminReviewerInput
+  payments?: Prisma.PaymentCreateNestedManyWithoutUserInput
+  tokenWallet?: Prisma.TokenWalletCreateNestedOneWithoutUserInput
+  reviewedQualityChecks?: Prisma.QualityCheckCreateNestedManyWithoutReviewerInput
+  reportedContents?: Prisma.ContentReportCreateNestedManyWithoutReporterInput
+  reviewedContentReports?: Prisma.ContentReportCreateNestedManyWithoutReviewerInput
+  reviewedSupportTickets?: Prisma.SupportTicketCreateNestedManyWithoutReviewerInput
+}
+
+export type UserUncheckedCreateWithoutSupportTicketsInput = {
+  id?: string
+  name: string
+  email: string
+  verifiedAt?: Date | string | null
+  image?: string | null
+  roles?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  deletedAt?: Date | string | null
+  profile?: Prisma.UserProfileUncheckedCreateNestedOneWithoutUserInput
+  accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
+  sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  verifications?: Prisma.VerificationUncheckedCreateNestedManyWithoutUserInput
+  setting?: Prisma.UserSettingUncheckedCreateNestedOneWithoutUserInput
+  researches?: Prisma.ResearchUncheckedCreateNestedManyWithoutResearcherInput
+  participations?: Prisma.RespondentParticipationUncheckedCreateNestedManyWithoutRespondentInput
+  reviewedParticipations?: Prisma.RespondentParticipationUncheckedCreateNestedManyWithoutAdminReviewerInput
+  payments?: Prisma.PaymentUncheckedCreateNestedManyWithoutUserInput
+  tokenWallet?: Prisma.TokenWalletUncheckedCreateNestedOneWithoutUserInput
+  reviewedQualityChecks?: Prisma.QualityCheckUncheckedCreateNestedManyWithoutReviewerInput
+  reportedContents?: Prisma.ContentReportUncheckedCreateNestedManyWithoutReporterInput
+  reviewedContentReports?: Prisma.ContentReportUncheckedCreateNestedManyWithoutReviewerInput
+  reviewedSupportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutReviewerInput
+}
+
+export type UserCreateOrConnectWithoutSupportTicketsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutSupportTicketsInput, Prisma.UserUncheckedCreateWithoutSupportTicketsInput>
+}
+
+export type UserCreateWithoutReviewedSupportTicketsInput = {
+  id?: string
+  name: string
+  email: string
+  verifiedAt?: Date | string | null
+  image?: string | null
+  roles?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  deletedAt?: Date | string | null
+  profile?: Prisma.UserProfileCreateNestedOneWithoutUserInput
+  accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
+  sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  verifications?: Prisma.VerificationCreateNestedManyWithoutUserInput
+  setting?: Prisma.UserSettingCreateNestedOneWithoutUserInput
+  researches?: Prisma.ResearchCreateNestedManyWithoutResearcherInput
+  participations?: Prisma.RespondentParticipationCreateNestedManyWithoutRespondentInput
+  reviewedParticipations?: Prisma.RespondentParticipationCreateNestedManyWithoutAdminReviewerInput
+  payments?: Prisma.PaymentCreateNestedManyWithoutUserInput
+  tokenWallet?: Prisma.TokenWalletCreateNestedOneWithoutUserInput
+  reviewedQualityChecks?: Prisma.QualityCheckCreateNestedManyWithoutReviewerInput
+  reportedContents?: Prisma.ContentReportCreateNestedManyWithoutReporterInput
+  reviewedContentReports?: Prisma.ContentReportCreateNestedManyWithoutReviewerInput
+  supportTickets?: Prisma.SupportTicketCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutReviewedSupportTicketsInput = {
+  id?: string
+  name: string
+  email: string
+  verifiedAt?: Date | string | null
+  image?: string | null
+  roles?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  deletedAt?: Date | string | null
+  profile?: Prisma.UserProfileUncheckedCreateNestedOneWithoutUserInput
+  accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
+  sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  verifications?: Prisma.VerificationUncheckedCreateNestedManyWithoutUserInput
+  setting?: Prisma.UserSettingUncheckedCreateNestedOneWithoutUserInput
+  researches?: Prisma.ResearchUncheckedCreateNestedManyWithoutResearcherInput
+  participations?: Prisma.RespondentParticipationUncheckedCreateNestedManyWithoutRespondentInput
+  reviewedParticipations?: Prisma.RespondentParticipationUncheckedCreateNestedManyWithoutAdminReviewerInput
+  payments?: Prisma.PaymentUncheckedCreateNestedManyWithoutUserInput
+  tokenWallet?: Prisma.TokenWalletUncheckedCreateNestedOneWithoutUserInput
+  reviewedQualityChecks?: Prisma.QualityCheckUncheckedCreateNestedManyWithoutReviewerInput
+  reportedContents?: Prisma.ContentReportUncheckedCreateNestedManyWithoutReporterInput
+  reviewedContentReports?: Prisma.ContentReportUncheckedCreateNestedManyWithoutReviewerInput
+  supportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutReviewedSupportTicketsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutReviewedSupportTicketsInput, Prisma.UserUncheckedCreateWithoutReviewedSupportTicketsInput>
+}
+
+export type UserUpsertWithoutSupportTicketsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutSupportTicketsInput, Prisma.UserUncheckedUpdateWithoutSupportTicketsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutSupportTicketsInput, Prisma.UserUncheckedCreateWithoutSupportTicketsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutSupportTicketsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutSupportTicketsInput, Prisma.UserUncheckedUpdateWithoutSupportTicketsInput>
+}
+
+export type UserUpdateWithoutSupportTicketsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  verifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  roles?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profile?: Prisma.UserProfileUpdateOneWithoutUserNestedInput
+  accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  verifications?: Prisma.VerificationUpdateManyWithoutUserNestedInput
+  setting?: Prisma.UserSettingUpdateOneWithoutUserNestedInput
+  researches?: Prisma.ResearchUpdateManyWithoutResearcherNestedInput
+  participations?: Prisma.RespondentParticipationUpdateManyWithoutRespondentNestedInput
+  reviewedParticipations?: Prisma.RespondentParticipationUpdateManyWithoutAdminReviewerNestedInput
+  payments?: Prisma.PaymentUpdateManyWithoutUserNestedInput
+  tokenWallet?: Prisma.TokenWalletUpdateOneWithoutUserNestedInput
+  reviewedQualityChecks?: Prisma.QualityCheckUpdateManyWithoutReviewerNestedInput
+  reportedContents?: Prisma.ContentReportUpdateManyWithoutReporterNestedInput
+  reviewedContentReports?: Prisma.ContentReportUpdateManyWithoutReviewerNestedInput
+  reviewedSupportTickets?: Prisma.SupportTicketUpdateManyWithoutReviewerNestedInput
+}
+
+export type UserUncheckedUpdateWithoutSupportTicketsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  verifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  roles?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profile?: Prisma.UserProfileUncheckedUpdateOneWithoutUserNestedInput
+  accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  verifications?: Prisma.VerificationUncheckedUpdateManyWithoutUserNestedInput
+  setting?: Prisma.UserSettingUncheckedUpdateOneWithoutUserNestedInput
+  researches?: Prisma.ResearchUncheckedUpdateManyWithoutResearcherNestedInput
+  participations?: Prisma.RespondentParticipationUncheckedUpdateManyWithoutRespondentNestedInput
+  reviewedParticipations?: Prisma.RespondentParticipationUncheckedUpdateManyWithoutAdminReviewerNestedInput
+  payments?: Prisma.PaymentUncheckedUpdateManyWithoutUserNestedInput
+  tokenWallet?: Prisma.TokenWalletUncheckedUpdateOneWithoutUserNestedInput
+  reviewedQualityChecks?: Prisma.QualityCheckUncheckedUpdateManyWithoutReviewerNestedInput
+  reportedContents?: Prisma.ContentReportUncheckedUpdateManyWithoutReporterNestedInput
+  reviewedContentReports?: Prisma.ContentReportUncheckedUpdateManyWithoutReviewerNestedInput
+  reviewedSupportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutReviewerNestedInput
+}
+
+export type UserUpsertWithoutReviewedSupportTicketsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutReviewedSupportTicketsInput, Prisma.UserUncheckedUpdateWithoutReviewedSupportTicketsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutReviewedSupportTicketsInput, Prisma.UserUncheckedCreateWithoutReviewedSupportTicketsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutReviewedSupportTicketsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutReviewedSupportTicketsInput, Prisma.UserUncheckedUpdateWithoutReviewedSupportTicketsInput>
+}
+
+export type UserUpdateWithoutReviewedSupportTicketsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  verifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  roles?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profile?: Prisma.UserProfileUpdateOneWithoutUserNestedInput
+  accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  verifications?: Prisma.VerificationUpdateManyWithoutUserNestedInput
+  setting?: Prisma.UserSettingUpdateOneWithoutUserNestedInput
+  researches?: Prisma.ResearchUpdateManyWithoutResearcherNestedInput
+  participations?: Prisma.RespondentParticipationUpdateManyWithoutRespondentNestedInput
+  reviewedParticipations?: Prisma.RespondentParticipationUpdateManyWithoutAdminReviewerNestedInput
+  payments?: Prisma.PaymentUpdateManyWithoutUserNestedInput
+  tokenWallet?: Prisma.TokenWalletUpdateOneWithoutUserNestedInput
+  reviewedQualityChecks?: Prisma.QualityCheckUpdateManyWithoutReviewerNestedInput
+  reportedContents?: Prisma.ContentReportUpdateManyWithoutReporterNestedInput
+  reviewedContentReports?: Prisma.ContentReportUpdateManyWithoutReviewerNestedInput
+  supportTickets?: Prisma.SupportTicketUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutReviewedSupportTicketsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  verifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  roles?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profile?: Prisma.UserProfileUncheckedUpdateOneWithoutUserNestedInput
+  accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  verifications?: Prisma.VerificationUncheckedUpdateManyWithoutUserNestedInput
+  setting?: Prisma.UserSettingUncheckedUpdateOneWithoutUserNestedInput
+  researches?: Prisma.ResearchUncheckedUpdateManyWithoutResearcherNestedInput
+  participations?: Prisma.RespondentParticipationUncheckedUpdateManyWithoutRespondentNestedInput
+  reviewedParticipations?: Prisma.RespondentParticipationUncheckedUpdateManyWithoutAdminReviewerNestedInput
+  payments?: Prisma.PaymentUncheckedUpdateManyWithoutUserNestedInput
+  tokenWallet?: Prisma.TokenWalletUncheckedUpdateOneWithoutUserNestedInput
+  reviewedQualityChecks?: Prisma.QualityCheckUncheckedUpdateManyWithoutReviewerNestedInput
+  reportedContents?: Prisma.ContentReportUncheckedUpdateManyWithoutReporterNestedInput
+  reviewedContentReports?: Prisma.ContentReportUncheckedUpdateManyWithoutReviewerNestedInput
+  supportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutTokenWalletInput = {
+  id?: string
+  name: string
+  email: string
+  verifiedAt?: Date | string | null
+  image?: string | null
+  roles?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  deletedAt?: Date | string | null
+  profile?: Prisma.UserProfileCreateNestedOneWithoutUserInput
+  accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
+  sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  verifications?: Prisma.VerificationCreateNestedManyWithoutUserInput
+  setting?: Prisma.UserSettingCreateNestedOneWithoutUserInput
+  researches?: Prisma.ResearchCreateNestedManyWithoutResearcherInput
+  participations?: Prisma.RespondentParticipationCreateNestedManyWithoutRespondentInput
+  reviewedParticipations?: Prisma.RespondentParticipationCreateNestedManyWithoutAdminReviewerInput
+  payments?: Prisma.PaymentCreateNestedManyWithoutUserInput
+  reviewedQualityChecks?: Prisma.QualityCheckCreateNestedManyWithoutReviewerInput
+  reportedContents?: Prisma.ContentReportCreateNestedManyWithoutReporterInput
+  reviewedContentReports?: Prisma.ContentReportCreateNestedManyWithoutReviewerInput
+  supportTickets?: Prisma.SupportTicketCreateNestedManyWithoutUserInput
+  reviewedSupportTickets?: Prisma.SupportTicketCreateNestedManyWithoutReviewerInput
+}
+
+export type UserUncheckedCreateWithoutTokenWalletInput = {
+  id?: string
+  name: string
+  email: string
+  verifiedAt?: Date | string | null
+  image?: string | null
+  roles?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  deletedAt?: Date | string | null
+  profile?: Prisma.UserProfileUncheckedCreateNestedOneWithoutUserInput
+  accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
+  sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  verifications?: Prisma.VerificationUncheckedCreateNestedManyWithoutUserInput
+  setting?: Prisma.UserSettingUncheckedCreateNestedOneWithoutUserInput
+  researches?: Prisma.ResearchUncheckedCreateNestedManyWithoutResearcherInput
+  participations?: Prisma.RespondentParticipationUncheckedCreateNestedManyWithoutRespondentInput
+  reviewedParticipations?: Prisma.RespondentParticipationUncheckedCreateNestedManyWithoutAdminReviewerInput
+  payments?: Prisma.PaymentUncheckedCreateNestedManyWithoutUserInput
+  reviewedQualityChecks?: Prisma.QualityCheckUncheckedCreateNestedManyWithoutReviewerInput
+  reportedContents?: Prisma.ContentReportUncheckedCreateNestedManyWithoutReporterInput
+  reviewedContentReports?: Prisma.ContentReportUncheckedCreateNestedManyWithoutReviewerInput
+  supportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutUserInput
+  reviewedSupportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutReviewerInput
 }
 
 export type UserCreateOrConnectWithoutTokenWalletInput = {
@@ -1942,6 +2505,7 @@ export type UserUpdateWithoutTokenWalletInput = {
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
   verifications?: Prisma.VerificationUpdateManyWithoutUserNestedInput
+  setting?: Prisma.UserSettingUpdateOneWithoutUserNestedInput
   researches?: Prisma.ResearchUpdateManyWithoutResearcherNestedInput
   participations?: Prisma.RespondentParticipationUpdateManyWithoutRespondentNestedInput
   reviewedParticipations?: Prisma.RespondentParticipationUpdateManyWithoutAdminReviewerNestedInput
@@ -1949,6 +2513,8 @@ export type UserUpdateWithoutTokenWalletInput = {
   reviewedQualityChecks?: Prisma.QualityCheckUpdateManyWithoutReviewerNestedInput
   reportedContents?: Prisma.ContentReportUpdateManyWithoutReporterNestedInput
   reviewedContentReports?: Prisma.ContentReportUpdateManyWithoutReviewerNestedInput
+  supportTickets?: Prisma.SupportTicketUpdateManyWithoutUserNestedInput
+  reviewedSupportTickets?: Prisma.SupportTicketUpdateManyWithoutReviewerNestedInput
 }
 
 export type UserUncheckedUpdateWithoutTokenWalletInput = {
@@ -1965,6 +2531,7 @@ export type UserUncheckedUpdateWithoutTokenWalletInput = {
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
   verifications?: Prisma.VerificationUncheckedUpdateManyWithoutUserNestedInput
+  setting?: Prisma.UserSettingUncheckedUpdateOneWithoutUserNestedInput
   researches?: Prisma.ResearchUncheckedUpdateManyWithoutResearcherNestedInput
   participations?: Prisma.RespondentParticipationUncheckedUpdateManyWithoutRespondentNestedInput
   reviewedParticipations?: Prisma.RespondentParticipationUncheckedUpdateManyWithoutAdminReviewerNestedInput
@@ -1972,6 +2539,8 @@ export type UserUncheckedUpdateWithoutTokenWalletInput = {
   reviewedQualityChecks?: Prisma.QualityCheckUncheckedUpdateManyWithoutReviewerNestedInput
   reportedContents?: Prisma.ContentReportUncheckedUpdateManyWithoutReporterNestedInput
   reviewedContentReports?: Prisma.ContentReportUncheckedUpdateManyWithoutReviewerNestedInput
+  supportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutUserNestedInput
+  reviewedSupportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutReviewerNestedInput
 }
 
 
@@ -1990,6 +2559,8 @@ export type UserCountOutputType = {
   reviewedQualityChecks: number
   reportedContents: number
   reviewedContentReports: number
+  supportTickets: number
+  reviewedSupportTickets: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -2003,6 +2574,8 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   reviewedQualityChecks?: boolean | UserCountOutputTypeCountReviewedQualityChecksArgs
   reportedContents?: boolean | UserCountOutputTypeCountReportedContentsArgs
   reviewedContentReports?: boolean | UserCountOutputTypeCountReviewedContentReportsArgs
+  supportTickets?: boolean | UserCountOutputTypeCountSupportTicketsArgs
+  reviewedSupportTickets?: boolean | UserCountOutputTypeCountReviewedSupportTicketsArgs
 }
 
 /**
@@ -2085,6 +2658,20 @@ export type UserCountOutputTypeCountReviewedContentReportsArgs<ExtArgs extends r
   where?: Prisma.ContentReportWhereInput
 }
 
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountSupportTicketsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.SupportTicketWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountReviewedSupportTicketsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.SupportTicketWhereInput
+}
+
 
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -2100,6 +2687,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   accounts?: boolean | Prisma.User$accountsArgs<ExtArgs>
   sessions?: boolean | Prisma.User$sessionsArgs<ExtArgs>
   verifications?: boolean | Prisma.User$verificationsArgs<ExtArgs>
+  setting?: boolean | Prisma.User$settingArgs<ExtArgs>
   researches?: boolean | Prisma.User$researchesArgs<ExtArgs>
   participations?: boolean | Prisma.User$participationsArgs<ExtArgs>
   reviewedParticipations?: boolean | Prisma.User$reviewedParticipationsArgs<ExtArgs>
@@ -2108,6 +2696,8 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   reviewedQualityChecks?: boolean | Prisma.User$reviewedQualityChecksArgs<ExtArgs>
   reportedContents?: boolean | Prisma.User$reportedContentsArgs<ExtArgs>
   reviewedContentReports?: boolean | Prisma.User$reviewedContentReportsArgs<ExtArgs>
+  supportTickets?: boolean | Prisma.User$supportTicketsArgs<ExtArgs>
+  reviewedSupportTickets?: boolean | Prisma.User$reviewedSupportTicketsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -2131,6 +2721,7 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   accounts?: boolean | Prisma.User$accountsArgs<ExtArgs>
   sessions?: boolean | Prisma.User$sessionsArgs<ExtArgs>
   verifications?: boolean | Prisma.User$verificationsArgs<ExtArgs>
+  setting?: boolean | Prisma.User$settingArgs<ExtArgs>
   researches?: boolean | Prisma.User$researchesArgs<ExtArgs>
   participations?: boolean | Prisma.User$participationsArgs<ExtArgs>
   reviewedParticipations?: boolean | Prisma.User$reviewedParticipationsArgs<ExtArgs>
@@ -2139,6 +2730,8 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   reviewedQualityChecks?: boolean | Prisma.User$reviewedQualityChecksArgs<ExtArgs>
   reportedContents?: boolean | Prisma.User$reportedContentsArgs<ExtArgs>
   reviewedContentReports?: boolean | Prisma.User$reviewedContentReportsArgs<ExtArgs>
+  supportTickets?: boolean | Prisma.User$supportTicketsArgs<ExtArgs>
+  reviewedSupportTickets?: boolean | Prisma.User$reviewedSupportTicketsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 
@@ -2149,6 +2742,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     accounts: Prisma.$AccountPayload<ExtArgs>[]
     sessions: Prisma.$SessionPayload<ExtArgs>[]
     verifications: Prisma.$VerificationPayload<ExtArgs>[]
+    setting: Prisma.$UserSettingPayload<ExtArgs> | null
     researches: Prisma.$ResearchPayload<ExtArgs>[]
     participations: Prisma.$RespondentParticipationPayload<ExtArgs>[]
     reviewedParticipations: Prisma.$RespondentParticipationPayload<ExtArgs>[]
@@ -2157,6 +2751,8 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     reviewedQualityChecks: Prisma.$QualityCheckPayload<ExtArgs>[]
     reportedContents: Prisma.$ContentReportPayload<ExtArgs>[]
     reviewedContentReports: Prisma.$ContentReportPayload<ExtArgs>[]
+    supportTickets: Prisma.$SupportTicketPayload<ExtArgs>[]
+    reviewedSupportTickets: Prisma.$SupportTicketPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -2512,6 +3108,7 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   accounts<T extends Prisma.User$accountsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$accountsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AccountPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   sessions<T extends Prisma.User$sessionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$sessionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$SessionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   verifications<T extends Prisma.User$verificationsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$verificationsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$VerificationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  setting<T extends Prisma.User$settingArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$settingArgs<ExtArgs>>): Prisma.Prisma__UserSettingClient<runtime.Types.Result.GetResult<Prisma.$UserSettingPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   researches<T extends Prisma.User$researchesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$researchesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ResearchPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   participations<T extends Prisma.User$participationsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$participationsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$RespondentParticipationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   reviewedParticipations<T extends Prisma.User$reviewedParticipationsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$reviewedParticipationsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$RespondentParticipationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -2520,6 +3117,8 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   reviewedQualityChecks<T extends Prisma.User$reviewedQualityChecksArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$reviewedQualityChecksArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$QualityCheckPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   reportedContents<T extends Prisma.User$reportedContentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$reportedContentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ContentReportPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   reviewedContentReports<T extends Prisma.User$reviewedContentReportsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$reviewedContentReportsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ContentReportPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  supportTickets<T extends Prisma.User$supportTicketsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$supportTicketsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$SupportTicketPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  reviewedSupportTickets<T extends Prisma.User$reviewedSupportTicketsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$reviewedSupportTicketsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$SupportTicketPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2997,6 +3596,25 @@ export type User$verificationsArgs<ExtArgs extends runtime.Types.Extensions.Inte
 }
 
 /**
+ * User.setting
+ */
+export type User$settingArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the UserSetting
+   */
+  select?: Prisma.UserSettingSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the UserSetting
+   */
+  omit?: Prisma.UserSettingOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.UserSettingInclude<ExtArgs> | null
+  where?: Prisma.UserSettingWhereInput
+}
+
+/**
  * User.researches
  */
 export type User$researchesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -3181,6 +3799,54 @@ export type User$reviewedContentReportsArgs<ExtArgs extends runtime.Types.Extens
   take?: number
   skip?: number
   distinct?: Prisma.ContentReportScalarFieldEnum | Prisma.ContentReportScalarFieldEnum[]
+}
+
+/**
+ * User.supportTickets
+ */
+export type User$supportTicketsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the SupportTicket
+   */
+  select?: Prisma.SupportTicketSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the SupportTicket
+   */
+  omit?: Prisma.SupportTicketOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.SupportTicketInclude<ExtArgs> | null
+  where?: Prisma.SupportTicketWhereInput
+  orderBy?: Prisma.SupportTicketOrderByWithRelationInput | Prisma.SupportTicketOrderByWithRelationInput[]
+  cursor?: Prisma.SupportTicketWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.SupportTicketScalarFieldEnum | Prisma.SupportTicketScalarFieldEnum[]
+}
+
+/**
+ * User.reviewedSupportTickets
+ */
+export type User$reviewedSupportTicketsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the SupportTicket
+   */
+  select?: Prisma.SupportTicketSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the SupportTicket
+   */
+  omit?: Prisma.SupportTicketOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.SupportTicketInclude<ExtArgs> | null
+  where?: Prisma.SupportTicketWhereInput
+  orderBy?: Prisma.SupportTicketOrderByWithRelationInput | Prisma.SupportTicketOrderByWithRelationInput[]
+  cursor?: Prisma.SupportTicketWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.SupportTicketScalarFieldEnum | Prisma.SupportTicketScalarFieldEnum[]
 }
 
 /**

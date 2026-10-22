@@ -1,23 +1,30 @@
-"use client";
+"use client"
 
-import { useState } from "react";
+import { Loader2, Save } from "lucide-react"
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Label } from "@/components/ui/label"
+import { Separator } from "@/components/ui/separator"
+import { Switch } from "@/components/ui/switch"
+import { toast } from "@/components/ui/toast"
+import { patchJson } from "@/lib/api-client"
+import type { AccountSettings } from "@/lib/api-types"
 
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import { Switch } from "@/components/ui/switch";
-
+/**
+ * Every toggle here is one field of `settings`, so the group's keys double as the
+ * request body: no mapping layer to keep in step with the API.
+ */
 const notificationGroups = [
     {
         title: "Channel Notifikasi",
         options: [
             {
-                id: "email",
+                key: "notifyEmail",
                 label: "Notifikasi Email",
                 description: "Terima update melalui email terdaftar",
             },
             {
-                id: "push",
+                key: "notifyPush",
                 label: "Push Notification",
                 description: "Notifikasi langsung di browser",
             },
@@ -27,48 +34,59 @@ const notificationGroups = [
         title: "Jenis Notifikasi",
         options: [
             {
-                id: "surveyReminder",
+                key: "notifySurveyReminder",
                 label: "Pengingat Survei",
                 description: "Reminder untuk survei yang belum dikerjakan",
             },
             {
-                id: "reward",
+                key: "notifyReward",
                 label: "Reward & Pencairan",
                 description: "Notifikasi saat token reward masuk atau dicairkan",
             },
             {
-                id: "weeklySummary",
+                key: "notifyWeeklySummary",
                 label: "Ringkasan Mingguan",
                 description: "Email digest mingguan aktivitas akun",
             },
             {
-                id: "promotion",
+                key: "notifyPromotion",
                 label: "Info & Promo",
                 description: "Update produk, tips, dan penawaran khusus",
             },
         ],
     },
-] as const;
+] as const
 
-type NotificationId = (typeof notificationGroups)[number]["options"][number]["id"];
+type NotificationKey = (typeof notificationGroups)[number]["options"][number]["key"]
 
-export default function NotificationSettings() {
-    const [preferences, setPreferences] = useState<Record<NotificationId, boolean>>({
-        email: true,
-        push: true,
-        surveyReminder: true,
-        reward: true,
-        weeklySummary: false,
-        promotion: false,
-    });
+export default function NotificationSettings({ settings, onSaved }: { settings: AccountSettings; onSaved: (settings: AccountSettings) => void }) {
+    const [preferences, setPreferences] = useState<Record<NotificationKey, boolean>>({
+        notifyEmail: settings.notifyEmail,
+        notifyPush: settings.notifyPush,
+        notifySurveyReminder: settings.notifySurveyReminder,
+        notifyReward: settings.notifyReward,
+        notifyWeeklySummary: settings.notifyWeeklySummary,
+        notifyPromotion: settings.notifyPromotion,
+    })
+    const [saving, setSaving] = useState(false)
 
-    const handleSave = () => {
-        console.log("Preferensi notifikasi:", preferences);
-    };
+    async function save() {
+        setSaving(true)
+        const result = await patchJson<{ settings: AccountSettings }>("/api/user/settings", preferences)
+        setSaving(false)
+
+        if (!result.ok) {
+            toast.add({ type: "error", title: "Preferensi gagal disimpan", description: result.message })
+            return
+        }
+
+        toast.add({ type: "success", title: "Preferensi tersimpan", description: "Preferensi notifikasi sudah diperbarui." })
+        if (result.data?.settings) onSaved(result.data.settings)
+    }
 
     return (
         <div>
-            <h3 className="text-xl font-semibold leading-snug">Preferensi Notifikasi</h3>
+            <h3 className="text-xl leading-snug font-semibold">Preferensi Notifikasi</h3>
             <p className="leading-relaxed text-muted-foreground">Kontrol jenis notifikasi yang ingin Anda terima.</p>
 
             <Separator className="my-4" />
@@ -80,22 +98,22 @@ export default function NotificationSettings() {
 
                         <div className="space-y-5">
                             {group.options.map((option, index) => (
-                                <div key={option.id}>
+                                <div key={option.key}>
                                     <div className="flex items-center justify-between gap-4">
                                         <div className="space-y-1">
-                                            <Label htmlFor={option.id} className="font-medium">
+                                            <Label htmlFor={option.key} className="font-medium">
                                                 {option.label}
                                             </Label>
                                             <p className="text-sm text-muted-foreground">{option.description}</p>
                                         </div>
 
                                         <Switch
-                                            id={option.id}
-                                            checked={preferences[option.id]}
+                                            id={option.key}
+                                            checked={preferences[option.key]}
                                             onCheckedChange={(checked) =>
                                                 setPreferences((current) => ({
                                                     ...current,
-                                                    [option.id]: checked,
+                                                    [option.key]: checked,
                                                 }))
                                             }
                                         />
@@ -110,8 +128,20 @@ export default function NotificationSettings() {
                     </section>
                 ))}
 
-                <Button onClick={handleSave}>Simpan Preferensi</Button>
+                <Button disabled={saving} onClick={() => void save()}>
+                    {saving ? (
+                        <>
+                            <Loader2 className="animate-spin" />
+                            Menyimpan…
+                        </>
+                    ) : (
+                        <>
+                            <Save />
+                            Simpan Preferensi
+                        </>
+                    )}
+                </Button>
             </div>
         </div>
-    );
+    )
 }

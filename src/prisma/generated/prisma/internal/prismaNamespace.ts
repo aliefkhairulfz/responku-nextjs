@@ -412,6 +412,8 @@ export const ModelName = {
   ResearchQuestion: 'ResearchQuestion',
   ResearchQuestionChoice: 'ResearchQuestionChoice',
   Reward: 'Reward',
+  UserSetting: 'UserSetting',
+  SupportTicket: 'SupportTicket',
   TokenWallet: 'TokenWallet',
   TokenTransaction: 'TokenTransaction'
 } as const
@@ -429,7 +431,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "userProfile" | "account" | "session" | "verification" | "qualityCheck" | "contentReport" | "respondentParticipation" | "participationAnswer" | "payment" | "research" | "researchCriteria" | "researchQuestion" | "researchQuestionChoice" | "reward" | "tokenWallet" | "tokenTransaction"
+    modelProps: "user" | "userProfile" | "account" | "session" | "verification" | "qualityCheck" | "contentReport" | "respondentParticipation" | "participationAnswer" | "payment" | "research" | "researchCriteria" | "researchQuestion" | "researchQuestionChoice" | "reward" | "userSetting" | "supportTicket" | "tokenWallet" | "tokenTransaction"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1423,6 +1425,138 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    UserSetting: {
+      payload: Prisma.$UserSettingPayload<ExtArgs>
+      fields: Prisma.UserSettingFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.UserSettingFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserSettingPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.UserSettingFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserSettingPayload>
+        }
+        findFirst: {
+          args: Prisma.UserSettingFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserSettingPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.UserSettingFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserSettingPayload>
+        }
+        findMany: {
+          args: Prisma.UserSettingFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserSettingPayload>[]
+        }
+        create: {
+          args: Prisma.UserSettingCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserSettingPayload>
+        }
+        createMany: {
+          args: Prisma.UserSettingCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        delete: {
+          args: Prisma.UserSettingDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserSettingPayload>
+        }
+        update: {
+          args: Prisma.UserSettingUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserSettingPayload>
+        }
+        deleteMany: {
+          args: Prisma.UserSettingDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.UserSettingUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        upsert: {
+          args: Prisma.UserSettingUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserSettingPayload>
+        }
+        aggregate: {
+          args: Prisma.UserSettingAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateUserSetting>
+        }
+        groupBy: {
+          args: Prisma.UserSettingGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.UserSettingGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.UserSettingCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.UserSettingCountAggregateOutputType> | number
+        }
+      }
+    }
+    SupportTicket: {
+      payload: Prisma.$SupportTicketPayload<ExtArgs>
+      fields: Prisma.SupportTicketFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.SupportTicketFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SupportTicketPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.SupportTicketFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SupportTicketPayload>
+        }
+        findFirst: {
+          args: Prisma.SupportTicketFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SupportTicketPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.SupportTicketFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SupportTicketPayload>
+        }
+        findMany: {
+          args: Prisma.SupportTicketFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SupportTicketPayload>[]
+        }
+        create: {
+          args: Prisma.SupportTicketCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SupportTicketPayload>
+        }
+        createMany: {
+          args: Prisma.SupportTicketCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        delete: {
+          args: Prisma.SupportTicketDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SupportTicketPayload>
+        }
+        update: {
+          args: Prisma.SupportTicketUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SupportTicketPayload>
+        }
+        deleteMany: {
+          args: Prisma.SupportTicketDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.SupportTicketUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        upsert: {
+          args: Prisma.SupportTicketUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SupportTicketPayload>
+        }
+        aggregate: {
+          args: Prisma.SupportTicketAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateSupportTicket>
+        }
+        groupBy: {
+          args: Prisma.SupportTicketGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.SupportTicketGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.SupportTicketCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.SupportTicketCountAggregateOutputType> | number
+        }
+      }
+    }
     TokenWallet: {
       payload: Prisma.$TokenWalletPayload<ExtArgs>
       fields: Prisma.TokenWalletFieldRefs
@@ -1840,6 +1974,48 @@ export const RewardScalarFieldEnum = {
 export type RewardScalarFieldEnum = (typeof RewardScalarFieldEnum)[keyof typeof RewardScalarFieldEnum]
 
 
+export const UserSettingScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  language: 'language',
+  theme: 'theme',
+  compactMode: 'compactMode',
+  notifyEmail: 'notifyEmail',
+  notifyPush: 'notifyPush',
+  notifySurveyReminder: 'notifySurveyReminder',
+  notifyReward: 'notifyReward',
+  notifyWeeklySummary: 'notifyWeeklySummary',
+  notifyPromotion: 'notifyPromotion',
+  privacyPublicProfile: 'privacyPublicProfile',
+  privacyOnlineStatus: 'privacyOnlineStatus',
+  privacyAnalyticsSharing: 'privacyAnalyticsSharing',
+  securityTwoFactorAuth: 'securityTwoFactorAuth',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  deletedAt: 'deletedAt'
+} as const
+
+export type UserSettingScalarFieldEnum = (typeof UserSettingScalarFieldEnum)[keyof typeof UserSettingScalarFieldEnum]
+
+
+export const SupportTicketScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  category: 'category',
+  subject: 'subject',
+  description: 'description',
+  status: 'status',
+  reviewedBy: 'reviewedBy',
+  reviewedAt: 'reviewedAt',
+  resolutionNote: 'resolutionNote',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  deletedAt: 'deletedAt'
+} as const
+
+export type SupportTicketScalarFieldEnum = (typeof SupportTicketScalarFieldEnum)[keyof typeof SupportTicketScalarFieldEnum]
+
+
 export const TokenWalletScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
@@ -2073,6 +2249,28 @@ export const RewardOrderByRelevanceFieldEnum = {
 export type RewardOrderByRelevanceFieldEnum = (typeof RewardOrderByRelevanceFieldEnum)[keyof typeof RewardOrderByRelevanceFieldEnum]
 
 
+export const UserSettingOrderByRelevanceFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  language: 'language',
+  theme: 'theme'
+} as const
+
+export type UserSettingOrderByRelevanceFieldEnum = (typeof UserSettingOrderByRelevanceFieldEnum)[keyof typeof UserSettingOrderByRelevanceFieldEnum]
+
+
+export const SupportTicketOrderByRelevanceFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  subject: 'subject',
+  description: 'description',
+  reviewedBy: 'reviewedBy',
+  resolutionNote: 'resolutionNote'
+} as const
+
+export type SupportTicketOrderByRelevanceFieldEnum = (typeof SupportTicketOrderByRelevanceFieldEnum)[keyof typeof SupportTicketOrderByRelevanceFieldEnum]
+
+
 export const TokenWalletOrderByRelevanceFieldEnum = {
   id: 'id',
   userId: 'userId'
@@ -2228,6 +2426,20 @@ export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel,
  * Reference to a field of type 'RewardStatus'
  */
 export type EnumRewardStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'RewardStatus'>
+    
+
+
+/**
+ * Reference to a field of type 'TicketCategory'
+ */
+export type EnumTicketCategoryFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TicketCategory'>
+    
+
+
+/**
+ * Reference to a field of type 'TicketStatus'
+ */
+export type EnumTicketStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TicketStatus'>
     
 
 
@@ -2410,6 +2622,8 @@ export type GlobalOmitConfig = {
   researchQuestion?: Prisma.ResearchQuestionOmit
   researchQuestionChoice?: Prisma.ResearchQuestionChoiceOmit
   reward?: Prisma.RewardOmit
+  userSetting?: Prisma.UserSettingOmit
+  supportTicket?: Prisma.SupportTicketOmit
   tokenWallet?: Prisma.TokenWalletOmit
   tokenTransaction?: Prisma.TokenTransactionOmit
 }

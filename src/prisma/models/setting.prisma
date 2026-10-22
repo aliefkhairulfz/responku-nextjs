@@ -1,0 +1,54 @@
+// ============================================================
+// ACCOUNT SETTINGS: userSettings
+// ============================================================
+
+// One row of account preferences per user, backing the Account Settings page.
+//
+// Every column is an explicit boolean or a small string rather than one JSON blob:
+// the set is closed and known, so typed columns let the API validate a single field
+// at a time and let the database own the defaults. The defaults below mirror what the
+// page shipped with while it was still client-only — changing one here changes it for
+// every account that has not overridden it.
+//
+// `Sesi Aktif` deliberately has no table of its own; the signed-in devices come from
+// `Session`, which already carries per-session `userAgent`, `ipAddress`, `expiresAt`,
+// and `createdAt`.
+
+model UserSetting {
+  id     String @id @default(cuid()) @db.VarChar(36)
+  userId String @unique @map("user_id") @db.VarChar(36)
+
+  // Umum
+  // Key stabil ("id"/"en"); label tampilannya ada di UI
+  language    String  @default("id") @db.VarChar(10)
+  // Key stabil ("light"/"system"); "dark" belum aktif
+  theme       String  @default("light") @db.VarChar(20)
+  compactMode Boolean @default(false) @map("compact_mode")
+
+  // Notifikasi — kanal
+  notifyEmail Boolean @default(true) @map("notify_email")
+  notifyPush  Boolean @default(true) @map("notify_push")
+
+  // Notifikasi — jenis
+  notifySurveyReminder Boolean @default(true) @map("notify_survey_reminder")
+  notifyReward         Boolean @default(true) @map("notify_reward")
+  notifyWeeklySummary  Boolean @default(false) @map("notify_weekly_summary")
+  notifyPromotion      Boolean @default(false) @map("notify_promotion")
+
+  // Privasi & Keamanan
+  privacyPublicProfile    Boolean @default(true) @map("privacy_public_profile")
+  privacyOnlineStatus     Boolean @default(true) @map("privacy_online_status")
+  privacyAnalyticsSharing Boolean @default(false) @map("privacy_analytics_sharing")
+
+  // Penanda minat 2FA. Autentikasi dua faktornya sendiri belum ada, jadi ini baru
+  // mencatat pilihan user — jangan dipakai sebagai penjaga keamanan apa pun.
+  securityTwoFactorAuth Boolean @default(false) @map("security_two_factor_auth")
+
+  createdAt DateTime  @default(now()) @db.DateTime(3)
+  updatedAt DateTime  @updatedAt @db.DateTime(3)
+  deletedAt DateTime? @db.DateTime(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_settings")
+}

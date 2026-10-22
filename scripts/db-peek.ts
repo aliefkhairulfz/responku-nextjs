@@ -70,9 +70,10 @@ if (command === "wallet") {
  * hang off it.
  *
  * Children go first because most of these relations are `RESTRICT`, not `CASCADE`:
- * a research or a payment would refuse to let its owner go. Criteria, questions, and
- * choices do cascade from the research, and the profile, accounts, sessions, and
- * verifications cascade from the user.
+ * a research, a payment, or a support ticket would refuse to let its owner go. Criteria,
+ * questions, and choices do cascade from the research, and the profile, accounts, sessions,
+ * and verifications cascade from the user. Participations restrict from both ends — the
+ * research and the respondent — so they are cleared before either.
  *
  * Everything runs in one transaction, so a run that hits an unexpected relation
  * removes nothing at all rather than leaving half an account behind.
@@ -91,10 +92,16 @@ if (command === "purge") {
     const userIds = users.map((user) => user.id)
     const wallets = await prisma.tokenWallet.findMany({ where: { userId: { in: userIds } }, select: { id: true } })
     const walletIds = wallets.map((wallet) => wallet.id)
+    const researches = await prisma.research.findMany({ where: { researcherId: { in: userIds } }, select: { id: true } })
+    const researchIds = researches.map((research) => research.id)
 
-    const [transactions, payments, removedWallets, researches, removedUsers] = await prisma.$transaction([
+    const [transactions, participations, payments, removedTickets, removedWallets, removedResearches, removedUsers] = await prisma.$transaction([
         prisma.tokenTransaction.deleteMany({ where: { walletId: { in: walletIds } } }),
+        prisma.respondentParticipation.deleteMany({
+            where: { OR: [{ researchId: { in: researchIds } }, { respondentId: { in: userIds } }] },
+        }),
         prisma.payment.deleteMany({ where: { userId: { in: userIds } } }),
+        prisma.supportTicket.deleteMany({ where: { userId: { in: userIds } } }),
         prisma.tokenWallet.deleteMany({ where: { userId: { in: userIds } } }),
         prisma.research.deleteMany({ where: { researcherId: { in: userIds } } }),
         prisma.user.deleteMany({ where: { id: { in: userIds } } }),
@@ -103,8 +110,9 @@ if (command === "purge") {
     for (const user of users) console.log(`  - ${user.email}`)
 
     console.log(
-        `removed ${removedUsers.count} users, ${researches.count} researches, ${removedWallets.count} wallets, ` +
-            `${transactions.count} token transactions, ${payments.count} payments`,
+        `removed ${removedUsers.count} users, ${removedResearches.count} researches, ${removedWallets.count} wallets, ` +
+            `${transactions.count} token transactions, ${participations.count} participations, ${payments.count} payments, ` +
+            `${removedTickets.count} support tickets`,
     )
 }
 

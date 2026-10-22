@@ -29,6 +29,27 @@ type AccountState =
     | { status: "unauthenticated" }
     | { status: "error"; message: string }
 
+/**
+ * Reads the account and answers with the state to show.
+ *
+ * Returning the state rather than setting it keeps this free of React, and lets the
+ * effect apply the answer in a callback — which is where an effect is allowed to put
+ * state.
+ */
+async function readAccount(): Promise<AccountState> {
+    const [me, profile] = await Promise.all([
+        getJson<{ user: CurrentUser }>("/api/auth/me"),
+        getJson<{ profile: UserProfile | null }>("/api/user/profile"),
+    ])
+
+    // Catching an expired session here is what keeps a signed-out visitor from seeing
+    // an empty profile shell.
+    if (me.statusCode === 401 || profile.statusCode === 401) return { status: "unauthenticated" }
+    if (!me.ok || !me.data?.user) return { status: "error", message: me.message }
+
+    return { status: "ready", user: me.data.user, profile: profile.data?.profile ?? null }
+}
+
 function MenuList({ activeMenu, onMenuChange }: { activeMenu: string; onMenuChange: (label: string) => void }) {
     return (
         <ul className="flex flex-col gap-1">
@@ -55,32 +76,24 @@ export default function Page() {
     const [activeMenu, setActiveMenu] = useState("Data Identitas")
     const [state, setState] = useState<AccountState>({ status: "loading" })
 
-    const load = useCallback(async () => {
-        setState({ status: "loading" })
+    useEffect(() => {
+        let cancelled = false
 
-        const [me, profile] = await Promise.all([
-            getJson<{ user: CurrentUser }>("/api/auth/me"),
-            getJson<{ profile: UserProfile | null }>("/api/user/profile"),
-        ])
+        void readAccount().then((next) => {
+            if (!cancelled) setState(next)
+        })
 
-        // Straining out an expired session here is what keeps a signed-out visitor
-        // from seeing an empty profile shell.
-        if (me.statusCode === 401 || profile.statusCode === 401) {
-            setState({ status: "unauthenticated" })
-            return
+        return () => {
+            cancelled = true
         }
-
-        if (!me.ok || !me.data?.user) {
-            setState({ status: "error", message: me.message })
-            return
-        }
-
-        setState({ status: "ready", user: me.data.user, profile: profile.data?.profile ?? null })
     }, [])
 
-    useEffect(() => {
-        void load()
-    }, [load])
+    // Putting the spinner up is only needed when retrying: the first render is already the
+    // loading state.
+    const reload = useCallback(() => {
+        setState({ status: "loading" })
+        void readAccount().then(setState)
+    }, [])
 
     useEffect(() => {
         if (state.status === "unauthenticated") router.replace("/login")
@@ -113,7 +126,7 @@ export default function Page() {
                             {state.message}
                         </p>
 
-                        <Button type="button" variant="outline" size="sm" onClick={() => void load()}>
+                        <Button type="button" variant="outline" size="sm" onClick={reload}>
                             <RefreshCw />
                             Coba lagi
                         </Button>

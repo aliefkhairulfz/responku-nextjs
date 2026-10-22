@@ -68,6 +68,53 @@ export const env = createEnv({
             .default("false")
             .transform((value) => value === "true"),
 
+        /* --- Upload (Cloudinary) --- */
+
+        /**
+         * Cloudinary credentials. Optional on purpose: without them the upload
+         * endpoints answer 503 instead of the app refusing to boot, so a dev
+         * environment with no media account still runs — the same call as
+         * `MIDTRANS_SERVER_KEY` below.
+         */
+        CLOUDINARY_CLOUD_NAME: z.string().min(1).optional(),
+        CLOUDINARY_API_KEY: z.string().min(1).optional(),
+        CLOUDINARY_API_SECRET: z.string().min(1).optional(),
+        /**
+         * The `cloudinary://key:secret@cloud_name` form, which the Cloudinary CLI
+         * and SDK read on their own. This app talks to the REST API with the three
+         * keys above, so it is declared for completeness.
+         */
+        CLOUDINARY_URL: z.string().min(1).optional(),
+
+        /** Root folder every asset this app uploads is stored under. */
+        CLOUDINARY_UPLOAD_FOLDER: z.string().min(1).default("responku"),
+        /** Where profile photos go, one asset per account. */
+        CLOUDINARY_UPLOAD_USER_PROFILE_FOLDER: z.string().min(1).default("responku/userProfiles"),
+        /** Shared folder for assets that belong to no single user. */
+        CLOUDINARY_UPLOAD_COMMON_FOLDER: z.string().min(1).default("responku/common"),
+
+        /** Largest single upload accepted, in bytes. */
+        MAX_FILE_SIZE_UPLOAD: z.coerce.number().int().positive().default(1_000_000),
+        /**
+         * Files one request may carry. Declared for the multi-file flows still to
+         * come; the single uploads built so far ignore it.
+         */
+        MAX_FILE_COUNT: z.coerce.number().int().positive().default(4),
+        /**
+         * Accepted MIME types as a piped list (e.g. `image/png|image/jpeg`), parsed
+         * into an array here so the check and its error message share one source.
+         */
+        ALLOWED_MIME_TYPE: z
+            .string()
+            .min(1)
+            .default("image/png|image/jpeg")
+            .transform((value) =>
+                value
+                    .split("|")
+                    .map((mime) => mime.trim())
+                    .filter(Boolean),
+            ),
+
         /* --- Token & reward economy --- */
 
         /** What one token costs, in rupiah. Handed to the wallet UI by its page. */

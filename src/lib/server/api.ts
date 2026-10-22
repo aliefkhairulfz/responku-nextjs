@@ -23,6 +23,20 @@ export async function readJsonBody(req: NextRequest): Promise<unknown> {
     }
 }
 
+/**
+ * Reads and parses a `multipart/form-data` body.
+ *
+ * `req.formData()` throws on anything else — a JSON body or an empty request, most
+ * likely — which would otherwise surface as a 500 instead of a bad-request error.
+ */
+export async function readFormData(req: NextRequest): Promise<FormData> {
+    try {
+        return await req.formData()
+    } catch {
+        throw new BadRequestException("Request body must be multipart/form-data")
+    }
+}
+
 /** Validates `body` against `schema`, throwing a 422 with per-field errors. */
 export function parseBody<T extends z.ZodType>(schema: T, body: unknown): z.infer<T> {
     const result = schema.safeParse(body)

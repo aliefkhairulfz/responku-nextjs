@@ -66,3 +66,17 @@ export function postJson<T = unknown>(path: string, body?: unknown) {
 export function patchJson<T = unknown>(path: string, body?: unknown) {
     return request<T>(path, json("PATCH", body))
 }
+
+export function deleteJson<T = unknown>(path: string) {
+    return request<T>(path, { method: "DELETE" })
+}
+
+/**
+ * A `multipart/form-data` body.
+ *
+ * No `content-type` header is set: the browser has to generate it so it can carry
+ * the boundary that separates the parts, and setting it by hand would drop that.
+ */
+export function postForm<T = unknown>(path: string, body: FormData) {
+    return request<T>(path, { method: "POST", body })
+}

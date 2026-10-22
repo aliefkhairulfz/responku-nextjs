@@ -116,6 +116,15 @@ call PATCH /api/user/profile '{"gender":"female","education":"bachelor","provinc
 call PATCH /api/user/profile '{"religion":"islam"}'
 call PATCH /api/user/profile '{"religion":"islam","religionConsent":true}'
 
+step "3b. Support tickets"
+call POST /api/ticket '{"category":"DISPUTE","subject":"Permohonan banding penolakan","description":"Pengisian kuesioner sudah selesai dengan cermat sesuai instruksi, mohon review manual."}'
+call POST /api/ticket '{"category":"dispute","subject":"kategori huruf kecil","description":"Nilai enum tersimpan huruf besar, jadi ini harus ditolak 422."}'
+call POST /api/ticket '{"category":"LAIN","subject":"x","description":"pendek"}'
+call GET  /api/ticket
+call GET  "/api/ticket?status=REVIEW"
+call GET  "/api/ticket?status=bogus"
+call POST /api/ticket/whatever '{"category":"OTHER","subject":"Salah path","description":"Ini seharusnya dijawab 404 bukan dibuat."}'
+
 step "4. Research: create, get, update"
 call POST /api/research/create
 RID=$(printf '%s' "$LAST" | json_field '.data.research.id')
@@ -179,6 +188,8 @@ bun run scripts/db-peek.ts roles "$NEW_EMAIL" '["researcher","respondent"]'
 call POST /api/auth/logout
 call GET /api/auth/me
 call POST /api/research/create
+call GET /api/ticket
+call POST /api/ticket '{"category":"OTHER","subject":"Tanpa sesi","description":"Permintaan tanpa login harus ditolak dengan 401."}'
 call DELETE "/api/research/apa-saja"
 call POST /api/payment/topup '{"tokenAmount":10}'
 call GET /api/payment/wallet

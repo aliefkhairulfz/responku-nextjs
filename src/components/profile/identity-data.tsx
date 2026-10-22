@@ -1,8 +1,8 @@
 "use client"
 
 import { useForm } from "@tanstack/react-form"
-import { BadgeCheck, CalendarDays, ClipboardList, Loader2, Mail, Save, ShieldCheck, Star, TriangleAlert } from "lucide-react"
-import { useState } from "react"
+import { BadgeCheck, CalendarDays, ClipboardList, Loader2, Mail, Save, ShieldCheck, Star, TriangleAlert, Upload } from "lucide-react"
+import { useRef, useState } from "react"
 import { z } from "zod"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label"
 import { OTP_LENGTH, OtpInput } from "@/components/ui/otp-input"
 import { Separator } from "@/components/ui/separator"
 import { toast } from "@/components/ui/toast"
-import { patchJson, postJson } from "@/lib/api-client"
+import { patchJson, postForm, postJson } from "@/lib/api-client"
 import type { CurrentUser, UserProfile } from "@/lib/api-types"
 import { hasFieldError, toFieldErrors } from "@/lib/form-error"
 import { PHONE_MAX_LENGTH, isPhoneNumber } from "@/lib/profile-schema"
@@ -260,6 +260,93 @@ function EmailChangeDialog({ user, onUserUpdated }: { user: CurrentUser; onUserU
     )
 }
 
+/* ========== Foto profil ========== */
+
+/**
+ * Uploads a new profile photo.
+ *
+ * The file goes to Cloudinary through the API, which answers with the updated user —
+ * so the avatar is refreshed from the server's own copy of the URL rather than from a
+ * temporary object URL that would die with the page.
+ *
+ * The API is what enforces the size and type limits; the `accept` attribute here is
+ * only there to steer the picker.
+ */
+function ProfilePhotoUpload({ user, onUserUpdated }: { user: CurrentUser; onUserUpdated: (user: CurrentUser) => void }) {
+    const inputRef = useRef<HTMLInputElement>(null)
+    const [uploading, setUploading] = useState(false)
+    const [fileError, setFileError] = useState<string | null>(null)
+
+    const initials = user.name.trim().charAt(0).toUpperCase() || "?"
+
+    async function upload(file: File) {
+        setFileError(null)
+        setUploading(true)
+
+        const body = new FormData()
+        body.append("file", file)
+
+        const result = await postForm<{ user: CurrentUser }>("/api/user/avatar", body)
+
+        setUploading(false)
+
+        if (!result.ok) {
+            // A rejected file is worth pointing at; anything else is worth a toast.
+            if (result.errors.file) {
+                setFileError(result.errors.file)
+                return
+            }
+
+            toast.add({ type: "error", title: "Foto gagal diunggah", description: result.message })
+            return
+        }
+
+        if (result.data?.user) onUserUpdated(result.data.user)
+
+        toast.add({ type: "success", title: "Foto profil tersimpan", description: "Foto baru sudah dipakai di seluruh akun." })
+    }
+
+    return (
+        <section className="space-y-3">
+            <p className="leading-relaxed text-muted-foreground">Foto Profil</p>
+
+            <div className="flex flex-wrap items-center gap-4">
+                <Avatar className="size-24">
+                    <AvatarImage src={user.image ?? undefined} alt={user.name} />
+                    <AvatarFallback className="text-2xl font-semibold">{initials}</AvatarFallback>
+                </Avatar>
+
+                <div className="space-y-2">
+                    <input
+                        ref={inputRef}
+                        type="file"
+                        accept="image/png,image/jpeg"
+                        className="hidden"
+                        onChange={(event) => {
+                            const file = event.target.files?.[0]
+                            // Cleared so picking the same file twice still fires a change.
+                            event.target.value = ""
+
+                            if (file) void upload(file)
+                        }}
+                    />
+
+                    <div className="flex flex-wrap items-center gap-2">
+                        <Button type="button" size="sm" variant="outline" disabled={uploading} onClick={() => inputRef.current?.click()}>
+                            {uploading ? <Loader2 className="animate-spin" /> : <Upload />}
+                            {uploading ? "Mengunggah…" : user.image ? "Ganti Foto" : "Unggah Foto"}
+                        </Button>
+                    </div>
+
+                    <p className="max-w-sm text-sm text-muted-foreground">PNG atau JPEG, maksimal 1 MB. Foto persegi paling rapi.</p>
+
+                    <FieldError errors={fileError ? [{ message: fileError }] : []} />
+                </div>
+            </div>
+        </section>
+    )
+}
+
 /* ========== Halaman ========== */
 
 export default function IdentityData({
@@ -273,7 +360,6 @@ export default function IdentityData({
     onUserUpdated: (user: CurrentUser) => void
     onProfileUpdated: (profile: UserProfile) => void
 }) {
-    const initials = user.name.trim().charAt(0).toUpperCase() || "?"
     const verified = user.verifiedAt !== null
 
     // The phone number lives on the profile, and the API only creates that from a
@@ -336,20 +422,7 @@ export default function IdentityData({
 
             <Separator />
 
-            <section className="space-y-3">
-                <p className="leading-relaxed text-muted-foreground">Foto Profil</p>
-
-                <div className="flex flex-wrap items-center gap-4">
-                    <Avatar className="size-24">
-                        <AvatarImage src={user.image ?? undefined} alt={user.name} />
-                        <AvatarFallback className="text-2xl font-semibold">{initials}</AvatarFallback>
-                    </Avatar>
-
-                    <p className="max-w-sm text-sm text-muted-foreground">
-                        Unggah foto belum tersedia — belum ada endpoint penyimpanan berkas, jadi foto akun masih kosong.
-                    </p>
-                </div>
-            </section>
+            <ProfilePhotoUpload user={user} onUserUpdated={onUserUpdated} />
 
             <Separator />
 

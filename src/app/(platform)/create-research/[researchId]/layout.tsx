@@ -1,8 +1,8 @@
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { LayoutDashboard } from "lucide-react";
-import Link from "next/link";
-import { ReactNode, Suspense } from "react";
+import { Button } from "@/components/ui/button"
+import { Separator } from "@/components/ui/separator"
+import { LayoutDashboard } from "lucide-react"
+import Link from "next/link"
+import { type ReactNode, Suspense } from "react"
 
 export default function Layout({ children }: { children: ReactNode }) {
     return (
@@ -26,5 +26,5 @@ export default function Layout({ children }: { children: ReactNode }) {
 
             <Suspense>{children}</Suspense>
         </div>
-    );
+    )
 }

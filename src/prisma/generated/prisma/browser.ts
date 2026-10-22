@@ -93,6 +93,16 @@ export type ResearchQuestionChoice = Prisma.ResearchQuestionChoiceModel
  */
 export type Reward = Prisma.RewardModel
 /**
+ * Model UserSetting
+ * 
+ */
+export type UserSetting = Prisma.UserSettingModel
+/**
+ * Model SupportTicket
+ * 
+ */
+export type SupportTicket = Prisma.SupportTicketModel
+/**
  * Model TokenWallet
  * 
  */

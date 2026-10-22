@@ -43,7 +43,7 @@ const criteriaSchema = z
         path: ["ageMax"],
     })
 const criteriaSchemaDefaultValue: z.infer<typeof criteriaSchema> = {
-    ageMin: 16,
+    ageMin: MIN_AGE,
     ageMax: 30,
     gender: "all",
     region: "all",
@@ -99,8 +99,8 @@ const questionSchemaDefaultValue: z.infer<typeof questionSchema> = [
         pos: 1,
         question: "seberapa sering anda berolahraga kardio, di hari libur?",
         mustFill: true,
-        questionType: "SINGLE_CHOICE",
-        choices: [{ id: crypto.randomUUID(), pos: 1, n: "a", choiceText: "sangat sering" }],
+        questionType: "TEXT",
+        choices: [],
     },
 ]
 
@@ -142,29 +142,49 @@ type CriteriaSchema = z.infer<typeof criteriaSchema>
 type AlocationTokenSchema = z.infer<typeof alocationTokenSchema>
 
 /** HOOKS */
-function useResearchEditorForm() {
-    const [defaultValues] = useState(() => ({
-        allocationToken: allocationTokenSchemaDefaultValue,
-        identity: identitySchemaDefaultValue,
-        criteria: criteriaSchemaDefaultValue,
-        questions: questionSchemaDefaultValue,
-    }))
+
+/** Everything the editor holds, validated as one object on every change. */
+const editorFormSchema = z.object({
+    allocationToken: alocationTokenSchema,
+    identity: identitySchema,
+    criteria: criteriaSchema,
+    questions: questionSchema,
+})
+
+type EditorValues = z.infer<typeof editorFormSchema>
+
+/** The editor's two actions: keep it as a draft, or save it and publish. */
+type EditorAction = "draft" | "publish"
+
+/**
+ * The editor's form.
+ *
+ * `onSubmit` is handed the values and which button was pressed, and is expected to
+ * do the talking — the form knows nothing about the API. Both buttons submit
+ * through here, so the saving state it drives covers publishing too.
+ *
+ * `initial` is read once, at mount: a stored research cannot be poured into a form
+ * that already exists, so the caller mounts a fresh one instead.
+ */
+function useResearchEditorForm(onSubmit: (values: EditorValues, action: EditorAction) => Promise<void>, initial?: EditorValues) {
+    const [defaultValues] = useState(
+        () =>
+            initial ?? {
+                allocationToken: allocationTokenSchemaDefaultValue,
+                identity: identitySchemaDefaultValue,
+                criteria: criteriaSchemaDefaultValue,
+                questions: questionSchemaDefaultValue,
+            },
+    )
 
     const form = useForm({
         defaultValues,
-        validators: {
-            onChange: z.object({
-                allocationToken: alocationTokenSchema,
-                identity: identitySchema,
-                criteria: criteriaSchema,
-                questions: questionSchema,
-            }),
-        },
+        validators: { onChange: editorFormSchema },
         onSubmit: async ({ value, meta }) => {
-            const action = meta as "publish" | "draft"
+            // `handleSubmit({ action })` hands the object back as `meta`.
+            const { action } = (meta ?? {}) as { action?: EditorAction }
 
-            if (action === "publish") console.log("PUBLISH", value)
-            else console.log("DRAFT", value)
+            await onSubmit(value, action ?? "draft")
         },
     })
 
@@ -176,7 +196,9 @@ type UseResearchEditorForm = ReturnType<typeof useResearchEditorForm>
 export {
     alocationTokenSchema,
     criteriaSchema,
+    criteriaSchemaDefaultValue,
     identitySchema,
+    identitySchemaDefaultValue,
     MAX_AGE,
     MIN_AGE,
     questionSchema,
@@ -185,7 +207,7 @@ export {
     useResearchEditorForm,
     questionSchemaDefaultValue,
 }
-export type { AlocationTokenSchema, CriteriaSchema, IdentitySchema, QuestionSchema, UseResearchEditorForm }
+export type { AlocationTokenSchema, CriteriaSchema, EditorAction, EditorValues, IdentitySchema, QuestionSchema, UseResearchEditorForm }
 
 export const genderItems = [
     { value: "all", label: "Semua" },

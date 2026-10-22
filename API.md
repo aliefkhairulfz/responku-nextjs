@@ -93,6 +93,10 @@ Nilai-nilai ini dipakai di request dan response:
 | `status` (research)   | `DRAFT`, `PENDING_REVIEW`, `PUBLISHED`, `CLOSED`, `COMPLETED`, `REJECTED`, `CANCELLED` |
 | `type` (token mutasi) | `TOPUP`, `RESERVE`, `RELEASE`, `CONSUME`, `REWARD`, `WITHDRAW`, `FEE`, `REFUND`        |
 | `status` (payment)    | `PENDING`, `PAID`, `FAILED`, `EXPIRED`, `REFUNDED`                                     |
+| `category` (ticket)   | `DISPUTE`, `RESEARCH`, `TRANSACTION`, `ACCOUNT`, `OTHER`                               |
+| `status` (ticket)     | `REVIEW`, `RESOLVED`, `REJECTED`                                                       |
+| `language` (setting)  | `id`, `en`                                                                             |
+| `theme` (setting)     | `light`, `system`                                                                      |
 
 `roles` disimpan sebagai JSON array. User yang baru mendaftar mendapat
 `["researcher", "respondent"]`; admin `["researcher", "respondent", "admin"]`.
@@ -458,11 +462,327 @@ sistem — tidak bisa di-set lewat API ini.
 
 ---
 
+### `POST /api/user/avatar`
+
+Mengunggah **foto profil** milik user yang login. Butuh login.
+
+Body-nya `multipart/form-data` dengan satu field bernama `file`:
+
+```sh
+curl -X POST http://localhost:3000/api/user/avatar \
+  -b cookies.txt \
+  -F "file=@./foto.png;type=image/png"
+```
+
+Berkasnya diteruskan ke **Cloudinary** lewat REST API-nya, dan yang disimpan ke database
+(`User.image`) hanya `secure_url` hasil unggahan — byte-nya tetap di Cloudinary. Barisnya jadi kecil,
+dan gambarnya tidak ikut hilang saat deploy.
+
+Asset-nya diberi `public_id` tetap, yaitu
+`<CLOUDINARY_UPLOAD_USER_PROFILE_FOLDER>/<userId>`, sehingga unggahan kedua **menimpa** yang pertama
+(`overwrite` + `invalidate`) — satu akun, satu foto, tanpa sampah asset. Segmen versi di URL ikut
+berubah, jadi browser/CDN tidak menyajikan cache lama.
+
+Batas unggahan dibaca dari env dan **dicek di server**, bukan di browser:
+
+- `MAX_FILE_SIZE_UPLOAD` — ukuran maksimal satu berkas dalam byte (default `1000000`, yaitu 1 MB).
+- `ALLOWED_MIME_TYPE` — daftar tipe MIME yang diterima, dipisah karakter `|` (default
+  `image/png|image/jpeg`).
+- `MAX_FILE_COUNT` — jumlah berkas per request; disiapkan untuk unggah banyak berkas, unggah tunggal
+  mengabaikannya.
+
+Kredensial yang dipakai: `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, dan `CLOUDINARY_API_SECRET`
+(auth HTTP Basic). Ketiganya opsional: selama belum diisi, endpoint ini menjawab `503` alih-alih
+menggagalkan boot aplikasi.
+
+**Response `200`**
+
+```json
+{
+    "ok": true,
+    "statusCode": 200,
+    "message": "Profile photo updated",
+    "data": {
+        "user": {
+            "id": "…",
+            "name": "Curl Tester",
+            "email": "curl-test@example.com",
+            "image": "https://res.cloudinary.com/<cloud>/image/upload/v1792671776/responku/userProfiles/<userId>.png",
+            "roles": ["researcher", "respondent"],
+            "verifiedAt": null,
+            "createdAt": "2026-10-22T…"
+        }
+    }
+}
+```
+
+Bentuk `user`-nya sama persis dengan `GET /api/auth/me`, jadi client bisa langsung menimpanya.
+
+**Error:**
+
+- `401` belum login.
+- `422` — `file` tidak ada (`{"file": "Attach the image as the \"file\" field."}`), berkas kosong,
+  melebihi `MAX_FILE_SIZE_UPLOAD`, tipe MIME-nya tidak di `ALLOWED_MIME_TYPE`, atau body-nya bukan
+  `multipart/form-data`.
+- `502` Cloudinary menolak unggahan (mis. berkasnya rusak); pesan dari Cloudinary yang diteruskan.
+- `503` `CLOUDINARY_*` belum diisi.
+
+---
+
+### `GET /api/user/settings`
+
+Preferensi akun yang login (halaman **Account Settings**). Butuh login.
+
+Mencakup tiga tab: **Umum** (`language`, `theme`, `compactMode`), **Notifikasi** (`notify*`), dan
+**Privasi & Keamanan** (`privacy*`, `securityTwoFactorAuth`).
+
+**Response `200`**
+
+```json
+{
+    "ok": true,
+    "statusCode": 200,
+    "message": "Account settings",
+    "data": {
+        "settings": {
+            "language": "id",
+            "theme": "light",
+            "compactMode": false,
+            "notifyEmail": true,
+            "notifyPush": true,
+            "notifySurveyReminder": true,
+            "notifyReward": true,
+            "notifyWeeklySummary": false,
+            "notifyPromotion": false,
+            "privacyPublicProfile": true,
+            "privacyOnlineStatus": true,
+            "privacyAnalyticsSharing": false,
+            "securityTwoFactorAuth": false,
+            "updatedAt": "2026-10-22T…"
+        }
+    }
+}
+```
+
+**Barisnya dibuat saat dibaca pertama kali.** User yang belum pernah mengubah apa pun belum punya baris,
+jadi `GET` ini membuatnya dengan nilai default kolom — supaya default hanya hidup di schema, bukan
+terduplikasi di kode. Efek sampingnya `GET` ini menulis sekali per akun.
+
+`securityTwoFactorAuth` hanya mencatat keinginan user; 2FA-nya sendiri belum ada, jadi jangan dipakai
+sebagai penjaga apa pun.
+
+**Error:** `401`.
+
+---
+
+### `PATCH /api/user/settings`
+
+Memperbarui sebagian preferensi akun. Butuh login.
+
+Semua field opsional (field yang tidak dikirim tidak diubah) dan **tidak ada yang menerima `null`** —
+setiap kolom NOT NULL dengan default, jadi preferensi bisa diubah tapi tidak bisa dikosongkan.
+
+| Field                     | Aturan                       |
+| ------------------------- | ---------------------------- |
+| `language`                | opsional, `id` / `en`        |
+| `theme`                   | opsional, `light` / `system` |
+| `compactMode`             | opsional, boolean            |
+| `notifyEmail`             | opsional, boolean            |
+| `notifyPush`              | opsional, boolean            |
+| `notifySurveyReminder`    | opsional, boolean            |
+| `notifyReward`            | opsional, boolean            |
+| `notifyWeeklySummary`     | opsional, boolean            |
+| `notifyPromotion`         | opsional, boolean            |
+| `privacyPublicProfile`    | opsional, boolean            |
+| `privacyOnlineStatus`     | opsional, boolean            |
+| `privacyAnalyticsSharing` | opsional, boolean            |
+| `securityTwoFactorAuth`   | opsional, boolean            |
+
+```json
+{ "theme": "system", "notifyPromotion": true, "compactMode": true }
+```
+
+**Response `200`** — bentuk `settings`-nya sama dengan `GET` di atas.
+
+**Error:** `401` · `422` — body kosong (`{"_root": "Provide at least one setting to update"}`), atau
+`language`/`theme` di luar daftar.
+
+---
+
+### `GET /api/user/sessions`
+
+Daftar perangkat yang sedang login ke akun pemanggil, terbaru dulu. Butuh login.
+
+Ini baris dari tabel `sessions` yang sudah ada — tidak ada tabel baru untuk “Sesi Aktif”. Hanya sesi
+yang masih berlaku yang ditampilkan (yang kedaluwarsa disaring), karena yang ditanya adalah “sedang
+login di mana”.
+
+**Response `200`**
+
+```json
+{
+    "ok": true,
+    "statusCode": 200,
+    "message": "Active sessions",
+    "data": {
+        "sessions": [
+            {
+                "id": "…",
+                "userAgent": "Mozilla/5.0 (Macintosh; …) Chrome/131.0.0.0 Safari/537.36",
+                "ipAddress": "::1",
+                "createdAt": "2026-10-22T…",
+                "expiresAt": "2026-11-21T…",
+                "current": true
+            }
+        ]
+    }
+}
+```
+
+`current` menandai sesi yang dipakai request ini, yang tidak ditawarkan tombol “Keluar” di UI.
+`userAgent` dikirim mentah; label ramah seperti “Chrome di macOS” diturunkan di UI (sekadar petunjuk,
+bukan fingerprint).
+
+Yang **tidak** ada: lokasi perangkat (butuh geolokasi dari IP) dan “terakhir aktif” (tidak ada
+pencatatan last-seen per request — yang tersedia hanya `createdAt` dan `expiresAt`).
+
+**Error:** `401`.
+
+---
+
+### `DELETE /api/user/sessions/{id}`
+
+Mengakhiri satu sesi milik pemanggil. Butuh login.
+
+Dibatasi `userId`, jadi id milik orang lain dijawab `404` (bukan dihapus). Sesi yang sedang dipakai
+**boleh** diakhiri — hasilnya sama dengan `logout`, dan hanya memengaruhi perangkat pemanggil sendiri.
+
+Penghapusannya hard delete, sama seperti `logout`: sesi adalah artefak autentikasi yang fana.
+
+**Response `200`** — `{ "revoked": 1 }`.
+
+**Error:** `401` · `404` id tidak dikenal atau bukan milik pemanggil.
+
+---
+
+### `DELETE /api/user/sessions`
+
+Mengakhiri **semua sesi lain** milik pemanggil; sesi yang dipakai request ini ikut disisakan, karena ini
+aksi “keluar dari semua perangkat lain” — mengakhiri sesi sendiri justru akan mengeluarkan user dari
+halaman yang baru ia pakai.
+
+**Response `200`** — `{ "revoked": 2 }` (`0` bila memang tidak ada perangkat lain).
+
+**Error:** `401`.
+
+---
+
 ## Research
 
 Semua endpoint research butuh **login** dan role **`researcher`** — kalau tidak, `401`/`403`.
 
 Riset diidentifikasi lewat `{id}` di URL. Nama aksi (`create`) tidak pernah dianggap sebagai id.
+
+### `GET /api/research`
+
+Daftar riset milik pemanggil, yang paling baru diperbarui dulu.
+
+**Query**
+
+| Param    | Aturan                                                                                                |
+| -------- | ----------------------------------------------------------------------------------------------------- |
+| `status` | opsional, salah satu `DRAFT`/`PENDING_REVIEW`/`PUBLISHED`/`CLOSED`/`COMPLETED`/`REJECTED`/`CANCELLED` |
+| `take`   | opsional, bilangan bulat 1–100 (default 50)                                                           |
+
+**Response `200`**
+
+```json
+{
+    "ok": true,
+    "statusCode": 200,
+    "message": "Researches",
+    "data": {
+        "researches": [
+            {
+                "id": "…",
+                "title": "",
+                "status": "DRAFT",
+                "questionCount": 0,
+                "targetRespondentCount": 0,
+                "tokensReserved": 0,
+                "tokensConsumed": 0,
+                "respondentCount": 0,
+                "updatedAt": "2026-10-22T…"
+            }
+        ]
+    }
+}
+```
+
+`title` kosong untuk draft yang belum diberi judul. Riset yang sudah di-archive tidak ikut terdaftar, dan
+query yang tidak valid dijawab `422` dengan key `status`/`take`.
+
+`respondentCount` adalah jumlah partisipasi yang **sudah dikirim** (`submittedAt` terisi) — sekadar join
+belum dihitung. Bandingkan dengan `targetRespondentCount` untuk progres "responden terkumpul".
+
+**Error:** `401` · `403` bila bukan `researcher` · `422`.
+
+---
+
+### `GET /api/research/available`
+
+Feed untuk **responden**: riset milik orang lain yang sedang dibuka dan belum pernah dia ikuti. Butuh
+login, tapi **tidak** butuh role `researcher` — ini sisi sebaliknya dari resource yang sama.
+
+Yang tidak ikut masuk daftar:
+
+- riset milik pemanggil sendiri,
+- yang statusnya bukan `PUBLISHED`,
+- yang sudah di-archive,
+- yang deadline-nya sudah lewat (statusnya masih `PUBLISHED`, tapi tidak lagi menerima jawaban),
+- yang sudah pernah dia ikuti (baris partisipasi apa pun).
+
+**Query**
+
+| Param      | Aturan                                                                    |
+| ---------- | ------------------------------------------------------------------------- |
+| `category` | opsional, salah satu `fintech`/`retail`/`education`/`health`/`technology` |
+| `take`     | opsional, bilangan bulat 1–100 (default 50)                               |
+
+**Response `200`**
+
+```json
+{
+    "ok": true,
+    "statusCode": 200,
+    "message": "Available research",
+    "data": {
+        "researches": [
+            {
+                "id": "…",
+                "title": "…",
+                "description": "…",
+                "category": "fintech",
+                "researcherName": "…",
+                "tokenPerRespondent": 2,
+                "rewardIdr": 2000,
+                "estimatedDurationMinutes": 8,
+                "deadline": "2026-12-31T…",
+                "respondentCount": 82,
+                "targetRespondentCount": 100
+            }
+        ]
+    }
+}
+```
+
+`rewardIdr` dihitung di server (`tokenPerRespondent × TOKEN_PRICE_IDR`), supaya client tidak perlu tahu
+harga token. `respondentCount` mengikuti aturan yang sama dengan daftar peneliti: hanya partisipasi yang
+sudah dikirim.
+
+**Error:** `401` · `422` query tidak valid.
+
+---
 
 ### `POST /api/research/create`
 
@@ -935,13 +1255,115 @@ Status satu payment milik pemanggil — dipakai untuk memeriksa hasil top-up seb
 
 ---
 
+## Support
+
+Tiket bantuan dari halaman **Pusat Bantuan**. Semua endpoint di bagian ini butuh login; tidak ada role
+khusus, karena tiap user boleh membuka tiket atas namanya sendiri.
+
+### `POST /api/ticket`
+
+Membuka tiket bantuan untuk pemanggil. Tiket selalu lahir `REVIEW` — `status` tidak diambil dari client,
+hanya peninjauan admin yang mengubahnya.
+
+**Request**
+
+```json
+{
+    "category": "DISPUTE",
+    "subject": "Permohonan Banding Penolakan Respon Survei Retail",
+    "description": "Pengisian kuesioner telah selesai dengan cermat sesuai instruksi, mohon review manual."
+}
+```
+
+| Field         | Aturan                                                           |
+| ------------- | ---------------------------------------------------------------- |
+| `category`    | wajib, enum `DISPUTE`/`RESEARCH`/`TRANSACTION`/`ACCOUNT`/`OTHER` |
+| `subject`     | wajib, 3–150 karakter (spasi tepi dirapikan)                     |
+| `description` | wajib, 20–5000 karakter (spasi tepi dirapikan)                   |
+
+**Response `201`**
+
+```json
+{
+    "ok": true,
+    "statusCode": 201,
+    "message": "Ticket created",
+    "data": {
+        "ticket": {
+            "id": "…",
+            "category": "DISPUTE",
+            "subject": "Permohonan Banding Penolakan Respon Survei Retail",
+            "description": "Pengisian kuesioner telah selesai dengan cermat sesuai instruksi, mohon review manual.",
+            "status": "REVIEW",
+            "createdAt": "…",
+            "updatedAt": "…"
+        }
+    }
+}
+```
+
+**Error:** `401` · `422`.
+
+---
+
+### `GET /api/ticket`
+
+Riwayat tiket milik pemanggil, terbaru dulu (default 50 baris). Hanya tiket milik pemanggil yang tampil —
+riwayat satu akun tidak pernah terlihat akun lain.
+
+**Query**
+
+| Param    | Aturan                                              |
+| -------- | --------------------------------------------------- |
+| `status` | opsional, salah satu `REVIEW`/`RESOLVED`/`REJECTED` |
+| `take`   | opsional, bilangan bulat 1–100 (default 50)         |
+
+**Response `200`**
+
+```json
+{
+    "ok": true,
+    "statusCode": 200,
+    "message": "Tickets",
+    "data": {
+        "tickets": [
+            {
+                "id": "…",
+                "category": "DISPUTE",
+                "subject": "Permohonan Banding Penolakan Respon Survei Retail",
+                "description": "Pengisian kuesioner telah selesai dengan cermat sesuai instruksi, mohon review manual.",
+                "status": "REVIEW",
+                "createdAt": "…",
+                "updatedAt": "…"
+            }
+        ]
+    }
+}
+```
+
+**Error:** `401` · `422` query yang tidak valid.
+
+---
+
 ## Catatan & yang belum ada
 
 **Yang sudah berjalan:** register/login/confirm/logout/me, profil demografi (dengan aturan consent
-UU PDP), draft riset + detail + update + criteria + kuesioner + publish + close + delete, serta wallet
-token (top-up, reserve, dan release).
+UU PDP) + unggah foto profil ke Cloudinary, preferensi Account Settings (umum, notifikasi, privasi &
+keamanan) + sesi aktif, draft riset + detail + update + criteria + kuesioner + publish + close +
+delete, tiket bantuan (pusat bantuan), serta wallet token (top-up, reserve, dan release).
 
 **Yang belum ada:**
+
+- **Lokasi & “terakhir aktif” pada sesi** — daftar sesi menampilkan `userAgent`, IP, `createdAt`, dan
+  `expiresAt` saja. Lokasi perangkat butuh geolokasi dari IP, dan “terakhir aktif” butuh pencatatan
+  last-seen per request yang belum ada — jadi yang ditampilkan adalah IP apa adanya dan kapan sesinya
+  dimulai, bukan tebakan.
+- **Preferensi akun belum dipakai ke mana-mana** — nilai yang disimpan lewat `PATCH /api/user/settings`
+  baru sebatas tersimpan: bahasa, tema, dan mode ringkas belum benar-benar mengubah tampilan, dan
+  `securityTwoFactorAuth` belum menjadi alur login 2FA.
+- **Peninjauan tiket oleh admin** — tiket selalu lahir `REVIEW` dan kolom peninjauannya (`reviewedBy`,
+  `reviewedAt`, `resolutionNote`) sudah ada di schema, tapi belum ada endpoint untuk memindahkannya ke
+  `RESOLVED`/`REJECTED`. Saat ini status hanya bisa diubah manual lewat database.
 
 - **Verifikasi nomor telepon (`PHONE_VERIFICATION`)** — sudah ada di enum `VerificationType`, dan
   nomornya kini tersimpan di `UserProfile.phoneNumber` (bisa diubah lewat `PATCH /api/user/profile`),
@@ -961,13 +1383,22 @@ token (top-up, reserve, dan release).
   `TOKEN_EXPIRY_IDLE_MONTHS`, `MIN_RESPONDENT_PER_RESEARCH`, `ADMIN_REVIEW_SLA_HOURS`,
   `CONTENT_REPORT_SLA_HOURS`, dan `QUALITY_HOLD_RELEASE_HOURS` — nilainya sudah terpusat, tapi belum
   ada alur yang memakainya.
-- **List riset** (`GET /api/research`) dan **unpublish** belum ada.
-- **Akun yang belum bisa diubah dari UI profil** — belum ada endpoint untuk mengganti `User.name`,
-  mengunggah foto (`User.image`), mengganti kata sandi (walau `PASSWORD_RESET` sudah ada di enum),
-  maupun ekspor/hapus akun untuk UU PDP.
+- **Unpublish riset** yang sudah `PUBLISHED` belum ada — yang tersedia baru `close` dan archive.
+- **Akun yang belum bisa diubah dari UI profil** — belum ada endpoint untuk mengganti `User.name`
+  maupun mengganti kata sandi (walau `PASSWORD_RESET` sudah ada di enum), dan ekspor/hapus akun untuk
+  UU PDP juga belum ada. Foto profil (`User.image`) sudah bisa diunggah lewat
+  `POST /api/user/avatar`, begitu juga email dan nomor telepon.
+- **Sampah asset Cloudinary** — unggahan ulang foto profil menimpa asset yang sama, jadi tidak menumpuk
+  sampah. Yang belum ada: menghapus gambar dari Cloudinary saat akun dihapus, dan menghapus foto dari
+  profil (`DELETE`). Utility baca-satu-asset (`getSingleAsset`) sudah ada di
+  `src/lib/server/cloudinary.ts` tapi belum dipakai endpoint mana pun.
 - **UI untuk tipe pertanyaan `NUMBER`** — sudah valid di schema dan API, tapi editor belum
   menawarkannya (baru 4 tipe: `SINGLE_CHOICE`, `MULTIPLE_CHOICE`, `TEXT`, `SCALE`), dan halaman
   responden belum merender input angkanya.
+- **Skor “cocok” dan institusi peneliti** — kartu survei di feed responden versi awal menampilkan
+  badge “99% cocok” dan nama institusi; keduanya belum ada datanya. Skor kecocokan butuh evaluasi
+  kriteria terhadap profil (dan profil belum menyimpan usia), sedangkan institusi belum punya kolom —
+  jadi yang tampil sekarang nama peneliti, dan badge kecocokannya dibuang daripada dikarang.
 
 **Perilaku yang mudah bikin bingung:**
 
@@ -994,3 +1425,13 @@ Skrip ini mendaftarkan akun sekali pakai, membuat riset, dan membaca kode OTP la
 (`scripts/db-peek.ts`). Ia juga menyalakan **stub Snap** di `127.0.0.1:4566`, jadi dev server harus
 dijalankan dengan `MIDTRANS_SNAP_BASE_URL` seperti di atas — kalau tidak, `topup` akan memanggil Midtrans
 sungguhan dan ditolak dengan `502`. **Hanya untuk database development.**
+
+Dua seeder untuk alur yang belum punya endpoint-nya sendiri, juga development-only:
+
+```sh
+bun run scripts/credit-wallet.ts <email> <amount>          # isi saldo token
+bun run scripts/seed-participations.ts <email> <count>     # isi partisipasi yang sudah dikirim
+```
+
+Keduanya menulis baris turunannya sekalian (ledger token / partisipasi), jadi datanya tetap bisa
+dijelaskan. Bersihkan dengan `bun run scripts/db-peek.ts purge <pola-email>`.

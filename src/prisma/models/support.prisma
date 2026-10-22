@@ -1,0 +1,44 @@
+// ============================================================
+// SUPPORT: supportTickets
+// ============================================================
+
+enum TicketStatus {
+  REVIEW
+  RESOLVED
+  REJECTED
+}
+
+enum TicketCategory {
+  DISPUTE
+  RESEARCH
+  TRANSACTION
+  ACCOUNT
+  OTHER
+}
+
+model SupportTicket {
+  id     String @id @default(cuid()) @db.VarChar(36)
+  userId String @map("user_id") @db.VarChar(36)
+
+  category    TicketCategory
+  subject     String         @db.VarChar(150)
+  description String         @db.Text
+  // Tiket baru langsung masuk antrean peninjauan
+  status      TicketStatus   @default(REVIEW)
+
+  // Jejak peninjauan admin. Belum ada endpoint-nya, kolomnya disiapkan untuk itu.
+  reviewedBy     String?   @map("reviewed_by") @db.VarChar(36)
+  reviewedAt     DateTime? @map("reviewed_at") @db.DateTime(3)
+  resolutionNote String?   @map("resolution_note") @db.Text
+
+  createdAt DateTime  @default(now()) @db.DateTime(3)
+  updatedAt DateTime  @updatedAt @db.DateTime(3)
+  deletedAt DateTime? @db.DateTime(3)
+
+  user     User  @relation("SupportTicketRequester", fields: [userId], references: [id])
+  reviewer User? @relation("SupportTicketReviewer", fields: [reviewedBy], references: [id])
+
+  @@index([userId, createdAt])
+  @@index([status])
+  @@map("support_tickets")
+}

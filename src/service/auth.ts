@@ -1,4 +1,6 @@
 import { cookies } from "next/headers"
+import { env } from "@/env"
+import { assertUploadableFile, uploadSingleAsset } from "@/lib/server/cloudinary"
 import { generateOTP, generateTokenWithHash, hashPassword, hashToken, verifyPassword } from "@/lib/server/crypto"
 import { BadRequestException, ConflictException, TooManyRequestsException, UnauthorizedException } from "@/lib/server/http-exception"
 import { sendVerificationCodeEmail } from "@/lib/server/mail"
@@ -530,10 +532,37 @@ export async function requireSession(): Promise<Session> {
 /* ========== Current user ========== */
 
 /**
+ * The identity columns `toCurrentUser` reads.
+ *
+ * Narrower than a session's `user`, so the avatar update below can select exactly
+ * these columns and still come back through the same mapper as `getSession`.
+ */
+type CurrentUserFields = {
+    id: string
+    name: string
+    email: string
+    image: string | null
+    roles: unknown
+    verifiedAt: Date | null
+    createdAt: Date
+}
+
+/** Columns that make up a `CurrentUser`, reused by the avatar update. */
+const CURRENT_USER_SELECT = {
+    id: true,
+    name: true,
+    email: true,
+    image: true,
+    roles: true,
+    verifiedAt: true,
+    createdAt: true,
+} as const
+
+/**
  * Public view of a user: identity fields only, without the soft-delete
  * bookkeeping that `getSession` reads internally.
  */
-function toCurrentUser({ user }: Session) {
+function toCurrentUser(user: CurrentUserFields) {
     return {
         id: user.id,
         name: user.name,
@@ -555,7 +584,7 @@ export type CurrentUser = ReturnType<typeof toCurrentUser>
  */
 export async function getCurrentUser(): Promise<CurrentUser | null> {
     const session = await getSession()
-    return session === null ? null : toCurrentUser(session)
+    return session === null ? null : toCurrentUser(session.user)
 }
 
 /**
@@ -564,5 +593,40 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
  * Route handlers use this to guard endpoints that need a signed-in user.
  */
 export async function requireCurrentUser(): Promise<CurrentUser> {
-    return toCurrentUser(await requireSession())
+    return toCurrentUser((await requireSession()).user)
+}
+
+/* ========== Foto profil ========== */
+
+/** Tag every profile photo carries, so they can be found again in Cloudinary. */
+const USER_AVATAR_TAG = "user-profile"
+
+/**
+ * Replaces the account's profile photo.
+ *
+ * The asset id is the user id inside the profile folder, so a second upload
+ * overwrites the first rather than leaving one orphan per attempt — one account,
+ * one photo. Only the resulting URL is stored: the bytes stay in Cloudinary, which
+ * keeps the row small and the image independent of a deploy.
+ *
+ * Lives in this service rather than `service/user.ts` because it writes `User.image`
+ * and answers with a `CurrentUser` — the shape this module already owns.
+ */
+export async function updateUserAvatarService({ userId, file }: { userId: string; file: File }) {
+    assertUploadableFile(file)
+
+    const asset = await uploadSingleAsset({
+        file,
+        folder: env.CLOUDINARY_UPLOAD_USER_PROFILE_FOLDER,
+        publicId: userId,
+        tags: [USER_AVATAR_TAG],
+    })
+
+    const user = await prisma.user.update({
+        where: { id: userId },
+        data: { image: asset.secureUrl },
+        select: CURRENT_USER_SELECT,
+    })
+
+    return toCurrentUser(user)
 }

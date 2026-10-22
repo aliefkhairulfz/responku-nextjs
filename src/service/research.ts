@@ -1,5 +1,6 @@
 import type { ResearchCategory } from "@/lib/research-category"
 import { BadRequestException, ConflictException, NotFoundException } from "@/lib/server/http-exception"
+import { IDR_PER_TOKEN } from "@/lib/server/token-price"
 import type { Prisma } from "@/prisma/generated/prisma/client"
 import { type CriteriaOperator, QuestionType, ResearchStatus, TokenTransactionType } from "@/prisma/generated/prisma/enums"
 import type { ResearchModel } from "@/prisma/generated/prisma/models/Research"
@@ -25,6 +26,9 @@ const IMMUTABLE_STATUSES: ResearchStatus[] = [ResearchStatus.PUBLISHED]
 
 /** Cap on the reward budget, mirroring the editor's own limit. */
 const TOKEN_TOTAL_LIMIT = 1_000_000
+
+/** How many rows a list returns when the caller does not say. */
+const DEFAULT_RESEARCH_LIMIT = 50
 
 /** Criteria operators the API accepts, mirroring the Prisma enum. */
 export const CRITERIA_OPERATORS = ["EQ", "NEQ", "IN", "NOT_IN", "GT", "GTE", "LT", "LTE", "BETWEEN"] as const
@@ -299,7 +303,116 @@ export async function createResearchDraftService({ researcherId }: { researcherI
     return toResearchResponse(research)
 }
 
+/* ========== Available to respondents ========== */
+
+/**
+ * Lists the research a respondent can still take.
+ *
+ * Published only, never their own, and never one they have already joined: the feed is
+ * what is left to do, not a catalogue of everything. A deadline that has passed drops
+ * out on its own, since such a research is no longer taking answers even though its
+ * status is still `PUBLISHED`.
+ */
+export async function listAvailableResearchService({
+    respondentId,
+    category,
+    take,
+}: {
+    respondentId: string
+    category?: ResearchCategory
+    take?: number
+}) {
+    const researches = await prisma.research.findMany({
+        where: {
+            status: ResearchStatus.PUBLISHED,
+            deletedAt: null,
+            deadline: { gt: new Date() },
+            researcherId: { not: respondentId },
+            ...(category === undefined ? {} : { category }),
+            participations: { none: { respondentId, deletedAt: null } },
+        },
+        orderBy: { publishedAt: "desc" },
+        take: take ?? DEFAULT_RESEARCH_LIMIT,
+        select: {
+            id: true,
+            title: true,
+            description: true,
+            category: true,
+            tokenPerRespondent: true,
+            estimatedDurationMinutes: true,
+            deadline: true,
+            targetRespondentCount: true,
+            researcher: { select: { name: true } },
+            _count: {
+                select: {
+                    // Same rule as the researcher's list: only answers actually sent in.
+                    participations: { where: { submittedAt: { not: null } } },
+                },
+            },
+        },
+    })
+
+    return researches.map((research) => ({
+        id: research.id,
+        title: research.title,
+        description: research.description,
+        category: research.category,
+        researcherName: research.researcher.name,
+        tokenPerRespondent: research.tokenPerRespondent,
+        // Priced here rather than in the browser: the token price is a server variable,
+        // and a client should not have to know it to show a reward.
+        rewardIdr: research.tokenPerRespondent * IDR_PER_TOKEN,
+        estimatedDurationMinutes: research.estimatedDurationMinutes,
+        deadline: research.deadline,
+        respondentCount: research._count.participations,
+        targetRespondentCount: research.targetRespondentCount,
+    }))
+}
+
 /* ========== Read ========== */
+
+/**
+ * Lists the researches owned by `researcherId`, most recently touched first.
+ *
+ * Scoped to the owner and to rows that are not archived, so a list can never show
+ * somebody else's work or a deleted one. Only the fields a list needs are read —
+ * the questionnaire and criteria are several queries of their own.
+ */
+export async function listResearchesService({ researcherId, status, take }: { researcherId: string; status?: ResearchStatus; take?: number }) {
+    const researches = await prisma.research.findMany({
+        where: { researcherId, deletedAt: null, ...(status === undefined ? {} : { status }) },
+        orderBy: { updatedAt: "desc" },
+        take: take ?? DEFAULT_RESEARCH_LIMIT,
+        select: {
+            id: true,
+            title: true,
+            status: true,
+            updatedAt: true,
+            targetRespondentCount: true,
+            tokensReserved: true,
+            tokensConsumed: true,
+            _count: {
+                select: {
+                    questions: true,
+                    // Only answers that were actually sent in; joining is not filling it out.
+                    participations: { where: { submittedAt: { not: null } } },
+                },
+            },
+        },
+    })
+
+    return researches.map((research) => ({
+        id: research.id,
+        title: research.title,
+        status: research.status,
+        questionCount: research._count.questions,
+        targetRespondentCount: research.targetRespondentCount,
+        tokensReserved: research.tokensReserved,
+        tokensConsumed: research.tokensConsumed,
+        respondentCount: research._count.participations,
+        updatedAt: research.updatedAt,
+    }))
+}
 
 /**
  * Returns one research owned by `researcherId`, with its criteria and

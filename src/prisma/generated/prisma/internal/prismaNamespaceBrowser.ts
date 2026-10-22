@@ -66,6 +66,8 @@ export const ModelName = {
   ResearchQuestion: 'ResearchQuestion',
   ResearchQuestionChoice: 'ResearchQuestionChoice',
   Reward: 'Reward',
+  UserSetting: 'UserSetting',
+  SupportTicket: 'SupportTicket',
   TokenWallet: 'TokenWallet',
   TokenTransaction: 'TokenTransaction'
 } as const
@@ -332,6 +334,48 @@ export const RewardScalarFieldEnum = {
 export type RewardScalarFieldEnum = (typeof RewardScalarFieldEnum)[keyof typeof RewardScalarFieldEnum]
 
 
+export const UserSettingScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  language: 'language',
+  theme: 'theme',
+  compactMode: 'compactMode',
+  notifyEmail: 'notifyEmail',
+  notifyPush: 'notifyPush',
+  notifySurveyReminder: 'notifySurveyReminder',
+  notifyReward: 'notifyReward',
+  notifyWeeklySummary: 'notifyWeeklySummary',
+  notifyPromotion: 'notifyPromotion',
+  privacyPublicProfile: 'privacyPublicProfile',
+  privacyOnlineStatus: 'privacyOnlineStatus',
+  privacyAnalyticsSharing: 'privacyAnalyticsSharing',
+  securityTwoFactorAuth: 'securityTwoFactorAuth',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  deletedAt: 'deletedAt'
+} as const
+
+export type UserSettingScalarFieldEnum = (typeof UserSettingScalarFieldEnum)[keyof typeof UserSettingScalarFieldEnum]
+
+
+export const SupportTicketScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  category: 'category',
+  subject: 'subject',
+  description: 'description',
+  status: 'status',
+  reviewedBy: 'reviewedBy',
+  reviewedAt: 'reviewedAt',
+  resolutionNote: 'resolutionNote',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  deletedAt: 'deletedAt'
+} as const
+
+export type SupportTicketScalarFieldEnum = (typeof SupportTicketScalarFieldEnum)[keyof typeof SupportTicketScalarFieldEnum]
+
+
 export const TokenWalletScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
@@ -563,6 +607,28 @@ export const RewardOrderByRelevanceFieldEnum = {
 } as const
 
 export type RewardOrderByRelevanceFieldEnum = (typeof RewardOrderByRelevanceFieldEnum)[keyof typeof RewardOrderByRelevanceFieldEnum]
+
+
+export const UserSettingOrderByRelevanceFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  language: 'language',
+  theme: 'theme'
+} as const
+
+export type UserSettingOrderByRelevanceFieldEnum = (typeof UserSettingOrderByRelevanceFieldEnum)[keyof typeof UserSettingOrderByRelevanceFieldEnum]
+
+
+export const SupportTicketOrderByRelevanceFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  subject: 'subject',
+  description: 'description',
+  reviewedBy: 'reviewedBy',
+  resolutionNote: 'resolutionNote'
+} as const
+
+export type SupportTicketOrderByRelevanceFieldEnum = (typeof SupportTicketOrderByRelevanceFieldEnum)[keyof typeof SupportTicketOrderByRelevanceFieldEnum]
 
 
 export const TokenWalletOrderByRelevanceFieldEnum = {

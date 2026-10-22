@@ -139,6 +139,26 @@ export const RewardStatus = {
 export type RewardStatus = (typeof RewardStatus)[keyof typeof RewardStatus]
 
 
+export const TicketStatus = {
+  REVIEW: 'REVIEW',
+  RESOLVED: 'RESOLVED',
+  REJECTED: 'REJECTED'
+} as const
+
+export type TicketStatus = (typeof TicketStatus)[keyof typeof TicketStatus]
+
+
+export const TicketCategory = {
+  DISPUTE: 'DISPUTE',
+  RESEARCH: 'RESEARCH',
+  TRANSACTION: 'TRANSACTION',
+  ACCOUNT: 'ACCOUNT',
+  OTHER: 'OTHER'
+} as const
+
+export type TicketCategory = (typeof TicketCategory)[keyof typeof TicketCategory]
+
+
 export const TokenTransactionType = {
   TOPUP: 'TOPUP',
   RESERVE: 'RESERVE',
