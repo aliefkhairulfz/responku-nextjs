@@ -9,7 +9,6 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
-import { IDR_PER_TOKEN } from "@/lib/token-price"
 
 const transactions = [
     {
@@ -46,7 +45,7 @@ const transactions = [
     },
 ] as const
 
-function TokenDialog({ type }: { type: "topup" | "withdraw" }) {
+function TokenDialog({ type, tokenPriceIdr }: { type: "topup" | "withdraw"; tokenPriceIdr: number }) {
     const [open, setOpen] = useState(false)
     const [amount, setAmount] = useState("")
     const isTopup = type === "topup"
@@ -96,7 +95,7 @@ function TokenDialog({ type }: { type: "topup" | "withdraw" }) {
                             onChange={(event) => setAmount(event.target.value)}
                             required
                         />
-                        <p className="text-sm text-muted-foreground">1 Token = Rp{IDR_PER_TOKEN.toLocaleString("id-ID")}</p>
+                        <p className="text-sm text-muted-foreground">1 Token = Rp{tokenPriceIdr.toLocaleString("id-ID")}</p>
                     </div>
 
                     {amount && Number(amount) > 0 && (
@@ -107,7 +106,7 @@ function TokenDialog({ type }: { type: "topup" | "withdraw" }) {
                                     style: "currency",
                                     currency: "IDR",
                                     maximumFractionDigits: 0,
-                                }).format(Number(amount) * IDR_PER_TOKEN)}
+                                }).format(Number(amount) * tokenPriceIdr)}
                             </p>
                         </div>
                     )}
@@ -126,7 +125,7 @@ function TokenDialog({ type }: { type: "topup" | "withdraw" }) {
     )
 }
 
-export default function WalletBalancePage() {
+export default function WalletBalancePage({ tokenPriceIdr }: { tokenPriceIdr: number }) {
     const balance = 32
 
     return (
@@ -155,14 +154,14 @@ export default function WalletBalancePage() {
                                 style: "currency",
                                 currency: "IDR",
                                 maximumFractionDigits: 0,
-                            }).format(balance * IDR_PER_TOKEN)}{" "}
-                            (1 Token = Rp{IDR_PER_TOKEN.toLocaleString("id-ID")})
+                            }).format(balance * tokenPriceIdr)}{" "}
+                            (1 Token = Rp{tokenPriceIdr.toLocaleString("id-ID")})
                         </p>
                     </div>
 
                     <div className="flex flex-wrap gap-2">
-                        <TokenDialog type="topup" />
-                        <TokenDialog type="withdraw" />
+                        <TokenDialog type="topup" tokenPriceIdr={tokenPriceIdr} />
+                        <TokenDialog type="withdraw" tokenPriceIdr={tokenPriceIdr} />
                     </div>
                 </CardContent>
             </Card>

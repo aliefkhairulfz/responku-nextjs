@@ -4,8 +4,14 @@
 # LOCAL DEVELOPMENT ONLY — it registers throwaway accounts, creates research, and
 # reads OTP codes straight out of the database, so point it at a dev database.
 #
+#   MIDTRANS_SERVER_KEY=local-dev-midtrans-server-key \
+#   MIDTRANS_SNAP_BASE_URL=http://127.0.0.1:4566 \
 #   bun run dev            # in another terminal
 #   sh scripts/api-smoke.sh
+#
+# Both Midtrans variables are needed: the server key lets the webhook verify the
+# notifications this script signs, and the Snap base URL points a top-up at the
+# stub below instead of the real Midtrans, which would reject the throwaway key.
 #
 # Run it from the repository root.
 set -u
@@ -15,12 +21,36 @@ JAR=tmp-cookies.txt
 STAMP=$(date +%s)
 EMAIL="curl-test-$STAMP@example.com"
 NEW_EMAIL="curl-test-baru-$STAMP@example.com"
-# Must match the dev server's own PAYMENT_WEBHOOK_SECRET; the webhook refuses to
-# run at all while the server has none.
-PAYMENT_WEBHOOK_SECRET=${PAYMENT_WEBHOOK_SECRET:-local-dev-webhook-secret}
+# Must match the dev server's own MIDTRANS_SERVER_KEY: the webhook verifies the
+# signature Midtrans would have signed, and refuses to run at all while the server
+# has no key.
+MIDTRANS_SERVER_KEY=${MIDTRANS_SERVER_KEY:-local-dev-midtrans-server-key}
 LAST=""
 
 : > "$JAR"
+
+# A throwaway Snap endpoint, so a top-up does not depend on real Midtrans
+# credentials. The dev server has to be started with
+# MIDTRANS_SNAP_BASE_URL=http://127.0.0.1:4566 for requests to land here.
+node -e '
+const http = require("node:http")
+http
+    .createServer((req, res) => {
+        let body = ""
+        req.on("data", (chunk) => (body += chunk))
+        req.on("end", () => {
+            let order = "unknown"
+            try {
+                order = JSON.parse(body).transaction_details.order_id
+            } catch {}
+            res.writeHead(201, { "content-type": "application/json" })
+            res.end(JSON.stringify({ token: "stub-" + order, redirect_url: "http://127.0.0.1:4566/redirect/" + order }))
+        })
+    })
+    .listen(4566, "127.0.0.1")
+' >/dev/null 2>&1 &
+SNAP_STUB_PID=$!
+trap 'kill "$SNAP_STUB_PID" 2>/dev/null' EXIT
 
 step() { printf '\n--- %s\n' "$1"; }
 
@@ -30,9 +60,9 @@ call() {
     body=${3:-}
 
     if [ -n "$body" ]; then
-        raw=$(curl -sS -X "$method" "$BASE$path" -H 'content-type: application/json' -H "x-webhook-secret: $PAYMENT_WEBHOOK_SECRET" -b "$JAR" -c "$JAR" -d "$body" -w '\n%{http_code}')
+        raw=$(curl -sS -X "$method" "$BASE$path" -H 'content-type: application/json' -b "$JAR" -c "$JAR" -d "$body" -w '\n%{http_code}')
     else
-        raw=$(curl -sS -X "$method" "$BASE$path" -H 'content-type: application/json' -H "x-webhook-secret: $PAYMENT_WEBHOOK_SECRET" -b "$JAR" -c "$JAR" -w '\n%{http_code}')
+        raw=$(curl -sS -X "$method" "$BASE$path" -H 'content-type: application/json' -b "$JAR" -c "$JAR" -w '\n%{http_code}')
     fi
 
     status=$(printf '%s' "$raw" | tail -n 1)
@@ -46,6 +76,18 @@ code() { bun run scripts/db-peek.ts code "$1" "${2:-EMAIL_VERIFICATION}"; }
 
 json_field() {
     node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{try{let v=JSON.parse(s);for(const k of process.argv[1].split('.').filter(Boolean))v=v?.[k];console.log(v??'')}catch{console.log('')}})" "$1"
+}
+
+# Signs a Midtrans notification the way Midtrans would: sha512 of
+# order_id + status_code + gross_amount + server_key.
+notify() {
+    order_id=$1
+    gross=$2
+    transaction_status=${3:-settlement}
+    signature=$(node -e "const c=require('node:crypto');process.stdout.write(c.createHash('sha512').update(process.argv[1]+'200'+process.argv[2]+process.argv[3]).digest('hex'))" "$order_id" "$gross" "$MIDTRANS_SERVER_KEY")
+
+    call POST /api/payment/webhook \
+        "{\"order_id\":\"$order_id\",\"status_code\":\"200\",\"gross_amount\":\"$gross\",\"transaction_status\":\"$transaction_status\",\"signature_key\":\"$signature\"}"
 }
 
 printf 'email     : %s\nnew email : %s\n' "$EMAIL" "$NEW_EMAIL"
@@ -95,10 +137,15 @@ call POST /api/payment/topup '{"tokenAmount":0}'
 call POST /api/payment/topup '{"tokenAmount":1000}'
 PAYMENT_ID=$(printf '%s' "$LAST" | json_field '.data.payment.id')
 PROVIDER_REF=$(printf '%s' "$LAST" | json_field '.data.payment.providerRef')
-printf 'payment id: %s | provider ref: %s\n' "$PAYMENT_ID" "$PROVIDER_REF"
+GROSS=$(printf '%s' "$LAST" | json_field '.data.payment.amountIdr')
+REDIRECT=$(printf '%s' "$LAST" | json_field '.data.redirectUrl')
+printf 'payment id: %s | order id: %s | gross: %s\nredirect: %s\n' "$PAYMENT_ID" "$PROVIDER_REF" "$GROSS" "$REDIRECT"
 call GET "/api/payment/$PAYMENT_ID"
-call POST /api/payment/webhook "{\"providerRef\":\"$PROVIDER_REF\",\"status\":\"PAID\"}"
-call POST /api/payment/webhook "{\"providerRef\":\"$PROVIDER_REF\",\"status\":\"PAID\"}"
+# A notification nobody signed must not reach the wallet.
+call POST /api/payment/webhook "{\"order_id\":\"$PROVIDER_REF\",\"status_code\":\"200\",\"gross_amount\":\"$GROSS\",\"transaction_status\":\"settlement\",\"signature_key\":\"deadbeef\"}"
+notify "$PROVIDER_REF" "$GROSS" settlement
+notify "$PROVIDER_REF" "$GROSS" settlement
+notify "$PROVIDER_REF" "$GROSS" refund
 call GET  /api/payment/wallet
 call POST "/api/research/$RID/publish"
 call GET  /api/payment/wallet

@@ -8,8 +8,9 @@ import { z } from "zod"
  * malformed variable fails fast with the offending key named instead of
  * surfacing as `undefined` deep inside a request.
  *
- * Import `env` rather than reading `process.env` directly. These are server
- * variables: accessing one from client code throws.
+ * Import `env` rather than reading `process.env` directly. These are all server
+ * variables: accessing one from client code throws, so anything the browser
+ * needs is handed down from a server component instead (see `TOKEN_PRICE_IDR`).
  */
 export const env = createEnv({
     server: {
@@ -45,36 +46,61 @@ export const env = createEnv({
         /** Sending domain suffix, e.g. `"@email.example.com"`. */
         APP_MAIL_NAME: z.string().min(1).optional(),
 
-        /* --- Payment --- */
+        /* --- Payment (Midtrans) --- */
 
-        /** Gateway recorded on each payment; `manual` until one is wired up. */
-        PAYMENT_PROVIDER: z.string().min(1).default("manual"),
         /**
-         * Shared secret a gateway callback has to present. Leaving it unset keeps
-         * the webhook refusing every call, rather than accepting them openly.
+         * Midtrans server key. Optional on purpose: without it the gateway is
+         * skipped and a top-up is only recorded locally, so a dev environment
+         * without credentials still runs.
          */
-        PAYMENT_WEBHOOK_SECRET: z.string().min(16).optional(),
+        MIDTRANS_SERVER_KEY: z.string().min(1).optional(),
+        /**
+         * Where Snap is reached. Defaults to the Midtrans host implied by
+         * `MIDTRANS_IS_PRODUCTION`; set it to point at a proxy or a test stub.
+         */
+        MIDTRANS_SNAP_BASE_URL: z.url().optional(),
+        /**
+         * Sandbox or production Midtrans. Parsed from the strings a `.env` can
+         * actually hold — `z.coerce.boolean()` would read `"false"` as `true`.
+         */
+        MIDTRANS_IS_PRODUCTION: z
+            .enum(["true", "false"])
+            .default("false")
+            .transform((value) => value === "true"),
+
+        /* --- Token & reward economy --- */
+
+        /** What one token costs, in rupiah. Handed to the wallet UI by its page. */
+        TOKEN_PRICE_IDR: z.coerce.number().int().positive().default(1_000),
+        /** Share of every reward kept by the platform. Must pair with the row below. */
+        REWARD_SPLIT_PLATFORM_PERCENT: z.coerce.number().int().min(0).max(100).default(20),
+        /** Share of every reward paid to the respondent. The two must add up to 100. */
+        REWARD_SPLIT_RESPONDENT_PERCENT: z.coerce.number().int().min(0).max(100).default(80),
+        /** Tokens untouched for this many months may be expired. */
+        TOKEN_EXPIRY_IDLE_MONTHS: z.coerce.number().int().positive().default(12),
+        /** Fee taken off a token withdrawal, in percent. */
+        WITHDRAWAL_FEE_PERCENT: z.coerce.number().int().min(0).max(100).default(5),
+
+        /* --- Research & moderation rules --- */
+
+        /** Respondents a research has to attract before it counts as filled. */
+        MIN_RESPONDENT_PER_RESEARCH: z.coerce.number().int().positive().default(1),
+        /** Hours an admin has to review a submission. */
+        ADMIN_REVIEW_SLA_HOURS: z.coerce.number().int().positive().default(24),
+        /** Hours a content report may stay open. */
+        CONTENT_REPORT_SLA_HOURS: z.coerce.number().int().positive().default(24),
+        /** Hours a reward is held while its answer quality is checked. */
+        QUALITY_HOLD_RELEASE_HOURS: z.coerce.number().int().positive().default(72),
 
         /* --- App --- */
 
         /** Declared for completeness; nothing reads this yet. */
         APP_ENV: z.string().min(1).default("local"),
     },
-    client: {
-        /**
-         * Price of one token in rupiah, shared by the API and the wallet UI.
-         *
-         * Public because the UI has to display it. Being `NEXT_PUBLIC_`, it is baked
-         * in at build time: changing it only at runtime would leave the server and the
-         * browser disagreeing about the price.
-         */
-        NEXT_PUBLIC_IDR_PER_TOKEN: z.coerce.number().int().positive().default(1_000),
-    },
-    // Next.js reads server variables from `process.env` directly; only client
-    // variables have to be destructured here so they are inlined into the bundle.
-    experimental__runtimeEnv: {
-        NEXT_PUBLIC_IDR_PER_TOKEN: process.env.NEXT_PUBLIC_IDR_PER_TOKEN,
-    },
+    // The app has no `NEXT_PUBLIC_` variables — every value the browser needs is
+    // passed down from a server component — but the Next adapter still requires
+    // the map to be present.
+    experimental__runtimeEnv: {},
     // Treat `KEY=` in a `.env` file as unset, so `default()` and `optional()`
     // behave as written instead of receiving an empty string.
     emptyStringAsUndefined: true,
@@ -82,3 +108,15 @@ export const env = createEnv({
     // `SKIP_ENV_VALIDATION=1` defers validation to process start.
     skipValidation: !!process.env.SKIP_ENV_VALIDATION,
 })
+
+// t3-env validates each key on its own, so the one rule that spans two keys is
+// asserted here. A reward split that does not add up would quietly pay out the
+// wrong amounts, which is worse than refusing to start. Skipped when validation
+// is deferred to process start.
+if (!process.env.SKIP_ENV_VALIDATION) {
+    const split = env.REWARD_SPLIT_PLATFORM_PERCENT + env.REWARD_SPLIT_RESPONDENT_PERCENT
+
+    if (split !== 100) {
+        throw new Error(`REWARD_SPLIT_PLATFORM_PERCENT + REWARD_SPLIT_RESPONDENT_PERCENT must add up to 100, got ${split}`)
+    }
+}

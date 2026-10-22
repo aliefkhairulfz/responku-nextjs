@@ -1,9 +1,9 @@
 import type { NextRequest } from "next/server"
 import { z } from "zod"
-import { env } from "@/env"
 import { exceptionResponse, handleRouteError, parseBody, readJsonBody, successResponse } from "@/lib/server/api"
+import { isMidtransConfigured } from "@/lib/server/midtrans"
 import { requireSession } from "@/service/auth"
-import { getPaymentService, getWalletService, listPaymentsService, settlePaymentService, topupService } from "@/service/payment"
+import { getPaymentService, getWalletService, listPaymentsService, settleMidtransNotificationService, topupService } from "@/service/payment"
 
 /* ========== Validasi ========== */
 
@@ -20,16 +20,19 @@ const topupSchema = z.object({
 })
 
 /**
- * Outcomes a gateway callback may report.
+ * The fields of a Midtrans notification this app uses. Midtrans posts a large
+ * payload; anything else in it is ignored rather than rejected.
  *
- * `REFUNDED` is deliberately absent: reversing a credit is a flow of its own, and
- * marking a payment refunded without reversing it would leave the wallet wrong.
+ * `gross_amount` arrives as a string (e.g. `"50000.00"`), and that exact string is
+ * what the signature is computed over — so it is kept as one.
  */
-const callbackStatuses = ["PAID", "FAILED", "EXPIRED"] as const
-
 const webhookSchema = z.object({
-    providerRef: z.string().trim().min(1, "providerRef is required"),
-    status: z.enum(callbackStatuses),
+    order_id: z.string().trim().min(1, "order_id is required"),
+    status_code: z.string().trim().min(1, "status_code is required"),
+    gross_amount: z.string().trim().min(1, "gross_amount is required"),
+    transaction_status: z.string().trim().min(1, "transaction_status is required"),
+    fraud_status: z.string().trim().optional(),
+    signature_key: z.string().trim().min(1, "signature_key is required"),
 })
 
 /** Every status a payment can be filtered by. */
@@ -77,37 +80,42 @@ async function topupHandler(req: NextRequest) {
     try {
         const { user } = await requireSession()
         const body = parseBody(topupSchema, await readJsonBody(req))
-        const payment = await topupService({ userId: user.id, tokenAmount: body.tokenAmount })
+        const result = await topupService({
+            userId: user.id,
+            tokenAmount: body.tokenAmount,
+            customer: { name: user.name, email: user.email },
+        })
 
-        return successResponse({ message: "Top-up created", statusCode: 201, data: { payment } })
+        return successResponse({ message: "Top-up created", statusCode: 201, data: result })
     } catch (error) {
         return handleRouteError(error)
     }
 }
 
 /**
- * gateway callback
+ * Midtrans notification.
  *
- * The only endpoint in this route that is not session-guarded — a gateway has no
- * cookie — so it is guarded by a shared secret instead. With
- * `PAYMENT_WEBHOOK_SECRET` unset it refuses every call rather than accepting them
- * openly, and once a real gateway is wired up the secret check should be replaced
- * by that gateway's own signature verification.
+ * The only endpoint in this route that is not session-guarded — Midtrans has no
+ * cookie — so it is guarded by the `signature_key` Midtrans signs every
+ * notification with instead. Verifying that key needs `MIDTRANS_SERVER_KEY`, so
+ * while the gateway is unconfigured the endpoint refuses every call rather than
+ * accepting them openly.
  */
 async function webhookHandler(req: NextRequest) {
     try {
-        const secret = env.PAYMENT_WEBHOOK_SECRET
-
-        if (secret === undefined) {
+        if (!isMidtransConfigured()) {
             return exceptionResponse({ message: "Payment webhook is not configured", statusCode: 503 })
         }
 
-        if (req.headers.get("x-webhook-secret") !== secret) {
-            return exceptionResponse({ message: "Unauthorized", statusCode: 401 })
-        }
-
         const body = parseBody(webhookSchema, await readJsonBody(req))
-        const result = await settlePaymentService(body)
+        const result = await settleMidtransNotificationService({
+            orderId: body.order_id,
+            statusCode: body.status_code,
+            grossAmount: body.gross_amount,
+            transactionStatus: body.transaction_status,
+            fraudStatus: body.fraud_status,
+            signatureKey: body.signature_key,
+        })
 
         return successResponse({
             message: result.credited ? "Payment settled and wallet credited" : "Payment updated",

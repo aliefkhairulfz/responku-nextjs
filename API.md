@@ -718,9 +718,9 @@ Riset yang sudah di-archive akan terlihat seperti tidak ada (`404`) di semua end
 
 ## Payment & wallet
 
-Saldo dinyatakan dalam **token**, dengan harga per token yang bisa diatur lewat env
-`NEXT_PUBLIC_IDR_PER_TOKEN` (default `1000`, jadi Rp1.000/token) — nilai yang sama dipakai halaman
-wallet. Semua endpoint di bagian ini butuh login, kecuali webhook.
+Saldo dinyatakan dalam **token**, dengan harga per token yang diatur lewat env `TOKEN_PRICE_IDR`
+(default `1000`, jadi Rp1.000/token) — nilai yang sama ditampilkan halaman wallet (halaman server
+mengoper nilainya ke komponen client). Semua endpoint di bagian ini butuh login, kecuali webhook.
 
 ### `GET /api/payment`
 
@@ -745,7 +745,7 @@ Daftar payment milik pemanggil, terbaru dulu (default 20 baris).
             {
                 "id": "…",
                 "type": "TOKEN_TOPUP",
-                "provider": "manual",
+                "provider": "midtrans",
                 "providerRef": "topup-…",
                 "amountIdr": 50000,
                 "tokenAmount": 50,
@@ -766,9 +766,13 @@ Query yang tidak valid dijawab `422` dengan key `status`/`take`, sama seperti bo
 
 ### `POST /api/payment/topup`
 
-Membuka order top-up. **Belum ada token yang masuk di langkah ini** — saldo baru bertambah setelah
-gateway melaporkan pembayarannya lunas (lihat webhook di bawah). Belum ada gateway yang terpasang, jadi
-order dicatat dengan `PAYMENT_PROVIDER` (default `manual`) dan `providerRef` yang dibuat backend.
+Membuka order top-up lewat **Midtrans Snap**. **Belum ada token yang masuk di langkah ini** — saldo baru
+bertambah setelah Midtrans melaporkan pembayarannya lunas (lihat webhook di bawah).
+
+Kalau `MIDTRANS_SERVER_KEY` terisi, order didaftarkan ke Snap dan response ikut membawa halaman
+pembayaran yang harus dibuka client: `token` (Snap token) dan `redirectUrl`. Kalau tidak terisi, order
+hanya dicatat lokal dengan `provider: "manual"` dan kedua field itu bernilai `null` — supaya environment
+tanpa kredensial tetap bisa memanggil endpoint ini.
 
 **Request**
 
@@ -791,36 +795,58 @@ order dicatat dengan `PAYMENT_PROVIDER` (default `manual`) dan `providerRef` yan
         "payment": {
             "id": "…",
             "type": "TOKEN_TOPUP",
-            "provider": "manual",
+            "provider": "midtrans",
             "providerRef": "topup-…",
             "amountIdr": 50000,
             "tokenAmount": 50,
             "status": "PENDING",
             "createdAt": "…",
             "updatedAt": "…"
-        }
+        },
+        "token": "…",
+        "redirectUrl": "https://app.sandbox.midtrans.com/snap/v4/redirection/…"
     }
 }
 ```
 
-**Error:** `401` · `422` validasi.
+`providerRef` inilah `order_id` yang dipakai Midtrans. Kalau Snap menolak, ordernya langsung ditandai
+`FAILED` (tidak menggantung `PENDING`) dan endpoint menjawab `502`.
+
+**Error:** `401` · `422` validasi · `502` Snap menolak atau menjawab tanpa token.
 
 ---
 
 ### `POST /api/payment/webhook`
 
-Callback gateway. Ini **bukan** endpoint session — gateway tidak punya cookie — jadi diamankan dengan
-header `x-webhook-secret` yang harus sama dengan `PAYMENT_WEBHOOK_SECRET`. Selama variabel itu belum
-diisi, endpoint ini menolak **semua** panggilan (`503`) alih-alih menerimanya terbuka. Setelah gateway
-asli dipasang, ganti pemeriksaan secret ini dengan verifikasi signature dari gateway tersebut.
+Notification dari Midtrans. Ini **bukan** endpoint session — Midtrans tidak punya cookie — jadi
+diamankan dengan `signature_key` yang ditandatangani Midtrans di tiap notification:
+`sha512(order_id + status_code + gross_amount + server_key)`. Verifikasinya butuh
+`MIDTRANS_SERVER_KEY`, jadi selama key itu belum diisi endpoint ini menolak **semua** panggilan (`503`)
+alih-alih menerimanya terbuka.
 
-`PAID` menambah saldo; `FAILED` dan `EXPIRED` hanya menutup ordernya. `REFUNDED` sengaja tidak diterima,
-karena membalik kredit adalah alur tersendiri.
+Field yang dipakai: `order_id`, `status_code`, `gross_amount`, `transaction_status`, `signature_key`
+(dan `fraud_status` bila ada). Field lain di payload Midtrans diabaikan, bukan ditolak.
 
-**Request**
+| `transaction_status`             | Jadi       | Efek                                 |
+| -------------------------------- | ---------- | ------------------------------------ |
+| `settlement`                     | `PAID`     | saldo bertambah                      |
+| `capture` (fraud `accept`)       | `PAID`     | saldo bertambah                      |
+| `capture` (fraud tidak `accept`) | `PENDING`  | belum ada efek                       |
+| `pending`                        | `PENDING`  | belum ada efek                       |
+| `deny`, `cancel`                 | `FAILED`   | order ditutup (hanya dari `PENDING`) |
+| `expire`                         | `EXPIRED`  | order ditutup (hanya dari `PENDING`) |
+| `refund`, `partial_refund`       | `REFUNDED` | diakui tapi **tidak** diterapkan     |
+
+**Request** (bentuk yang dikirim Midtrans)
 
 ```json
-{ "providerRef": "topup-…", "status": "PAID" }
+{
+    "order_id": "topup-…",
+    "status_code": "200",
+    "gross_amount": "50000.00",
+    "transaction_status": "settlement",
+    "signature_key": "…"
+}
 ```
 
 **Response `200`**
@@ -830,14 +856,18 @@ karena membalik kredit adalah alur tersendiri.
     "ok": true,
     "statusCode": 200,
     "message": "Payment settled and wallet credited",
-    "data": { "id": "…", "status": "PAID", "credited": true }
+    "data": { "id": "…", "status": "PAID", "credited": true, "ignored": false }
 }
 ```
 
 Idempoten: order yang sudah `PAID` dijawab `credited: false`, dan saldo tidak bertambah lagi.
 
-**Error:** `401` secret salah · `404` `providerRef` tidak dikenal · `422` payload atau status tidak valid
-· `503` webhook belum dikonfigurasi.
+**Refund belum diterapkan.** Notification refund dijawab `200` dengan `ignored: true` dan barisnya
+**tidak** diubah — membalik kredit adalah alur tersendiri, dan menandai `REFUNDED` tanpa menarik tokennya
+kembali akan membuat saldo berbohong. Sampai alur itu ada, balik manual lewat baris `REFUND` di ledger.
+
+**Error:** `401` signature tidak sah · `404` `order_id` tidak dikenal · `422` payload atau
+`transaction_status` yang tidak dikenal · `503` gateway belum dikonfigurasi.
 
 ---
 
@@ -892,9 +922,16 @@ token (top-up, reserve, dan release).
 - **Sisa alur token** — top-up (`TOPUP`), reserve (`RESERVE`), dan pelepasan sisa reservasi (`RELEASE`,
   lewat `close` maupun archive) sudah jalan; **pembayaran responden** (`REWARD`/`CONSUME`) belum,
   karena alur partisipasi responden belum ada.
-- **Belum ada gateway pembayaran** — `POST /api/payment/topup` hanya mencatat order: tidak ada redirect
-  URL, dan webhook masih memakai shared secret, bukan verifikasi signature gateway. **Penarikan**
-  (`WITHDRAWAL`) dan **refund** juga belum ada.
+- **Midtrans** — gateway pembayaran sudah terpasang: `POST /api/payment/topup` mendaftarkan order ke
+  Snap, dan webhook memverifikasi signature Midtrans. Env yang dipakai: `MIDTRANS_SERVER_KEY` (wajib
+  untuk mengaktifkan), `MIDTRANS_IS_PRODUCTION` (default `false` = sandbox), dan `MIDTRANS_SNAP_BASE_URL`
+  (opsional, untuk mengarahkan Snap ke proxy/stub). Snap.js di browser (`client_key`) belum dipasang —
+  UI masih mock. **Penarikan** (`WITHDRAWAL`) dan **refund** juga belum ada.
+- **Aturan ekonomi lewat env** — selain `TOKEN_PRICE_IDR`: `REWARD_SPLIT_PLATFORM_PERCENT` +
+  `REWARD_SPLIT_RESPONDENT_PERCENT` (harus berjumlah 100), `WITHDRAWAL_FEE_PERCENT`,
+  `TOKEN_EXPIRY_IDLE_MONTHS`, `MIN_RESPONDENT_PER_RESEARCH`, `ADMIN_REVIEW_SLA_HOURS`,
+  `CONTENT_REPORT_SLA_HOURS`, dan `QUALITY_HOLD_RELEASE_HOURS` — nilainya sudah terpusat, tapi belum
+  ada alur yang memakainya.
 - **List riset** (`GET /api/research`) dan **unpublish** belum ada.
 - **UI untuk tipe pertanyaan `NUMBER`** — sudah valid di schema dan API, tapi editor belum
   menawarkannya (baru 4 tipe: `SINGLE_CHOICE`, `MULTIPLE_CHOICE`, `TEXT`, `SCALE`), dan halaman
@@ -915,9 +952,13 @@ token (top-up, reserve, dan release).
 (`bun run dev`) dan mencetak satu baris per request: method, path, status HTTP, dan cuplikan response.
 
 ```sh
-bun run dev                 # di terminal lain
+MIDTRANS_SERVER_KEY=local-dev-midtrans-server-key \
+  MIDTRANS_SNAP_BASE_URL=http://127.0.0.1:4566 \
+  bun run dev                 # di terminal lain
 sh scripts/api-smoke.sh     # dari root project
 ```
 
 Skrip ini mendaftarkan akun sekali pakai, membuat riset, dan membaca kode OTP langsung dari database
-(`scripts/db-peek.ts`) — jadi **hanya untuk database development**.
+(`scripts/db-peek.ts`). Ia juga menyalakan **stub Snap** di `127.0.0.1:4566`, jadi dev server harus
+dijalankan dengan `MIDTRANS_SNAP_BASE_URL` seperti di atas — kalau tidak, `topup` akan memanggil Midtrans
+sungguhan dan ditolak dengan `502`. **Hanya untuk database development.**

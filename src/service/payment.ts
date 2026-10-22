@@ -1,7 +1,13 @@
 import { randomUUID } from "node:crypto"
-import { env } from "@/env"
-import { IDR_PER_TOKEN } from "@/lib/token-price"
-import { InternalServerErrorException, NotFoundException } from "@/lib/server/http-exception"
+import { BadRequestException, InternalServerErrorException, NotFoundException, UnauthorizedException } from "@/lib/server/http-exception"
+import {
+    createSnapTransaction,
+    isMidtransConfigured,
+    MIDTRANS_PROVIDER,
+    mapTransactionStatus,
+    verifyNotificationSignature,
+} from "@/lib/server/midtrans"
+import { IDR_PER_TOKEN } from "@/lib/server/token-price"
 import { PaymentStatus, PaymentType, TokenTransactionType } from "@/prisma/generated/prisma/enums"
 import type { PaymentModel } from "@/prisma/generated/prisma/models/Payment"
 import { prisma } from "@/prisma/prisma"
@@ -13,6 +19,9 @@ const WALLET_HISTORY_LIMIT = 50
 
 /** Default size of the payment list. */
 const DEFAULT_PAYMENT_LIMIT = 20
+
+/** Recorded on `Payment.provider` when no gateway is configured. */
+const MANUAL_PROVIDER = "manual"
 
 /* ========== Helper ========== */
 
@@ -37,29 +46,54 @@ function toPaymentResponse(payment: PaymentModel) {
 
 /**
  * Opens a token top-up: records the order and hands back what the client needs in
- * order to pay it. Nothing is credited yet — the wallet only moves once the gateway
- * reports the payment as settled (`settlePaymentService`).
+ * order to pay it. Nothing is credited yet — the wallet only moves once Midtrans
+ * reports the payment as settled (`settleMidtransNotificationService`).
  *
- * No gateway is wired up yet, so the order is written with `PAYMENT_PROVIDER` (by
- * default `manual`) and a generated reference. Plugging in Midtrans/Xendit means
- * creating the real order here and returning its redirect URL alongside.
+ * With Midtrans configured the order is registered with Snap, which returns the
+ * hosted payment page to open (`token` + `redirectUrl`). Without a server key the
+ * order is only recorded locally and both are `null`, so a dev environment with no
+ * credentials can still exercise the endpoint.
  */
-export async function topupService({ userId, tokenAmount }: { userId: string; tokenAmount: number }) {
+export async function topupService({
+    userId,
+    tokenAmount,
+    customer,
+}: {
+    userId: string
+    tokenAmount: number
+    customer?: { name?: string; email?: string }
+}) {
     const providerRef = `topup-${randomUUID()}`
+    const amountIdr = tokenAmount * IDR_PER_TOKEN
+    const configured = isMidtransConfigured()
 
     const payment = await prisma.payment.create({
         data: {
             userId,
             type: PaymentType.TOKEN_TOPUP,
-            provider: env.PAYMENT_PROVIDER,
+            provider: configured ? MIDTRANS_PROVIDER : MANUAL_PROVIDER,
             providerRef,
-            amountIdr: tokenAmount * IDR_PER_TOKEN,
+            amountIdr,
             status: PaymentStatus.PENDING,
             idempotencyKey: `topup:${providerRef}`,
         },
     })
 
-    return toPaymentResponse(payment)
+    if (!configured) {
+        return { payment: toPaymentResponse(payment), token: null, redirectUrl: null }
+    }
+
+    try {
+        const snap = await createSnapTransaction({ orderId: providerRef, grossAmount: amountIdr, customer })
+
+        return { payment: toPaymentResponse(payment), token: snap.token, redirectUrl: snap.redirectUrl }
+    } catch (error) {
+        // A row left `PENDING` would look like a payment still on its way; mark it
+        // failed so it reads as dead and the client can start a fresh order.
+        await prisma.payment.update({ where: { id: payment.id }, data: { status: PaymentStatus.FAILED } })
+
+        throw error
+    }
 }
 
 /* ========== Settle ========== */
@@ -78,11 +112,23 @@ export async function topupService({ userId, tokenAmount }: { userId: string; to
  * `topup-credit:{paymentId}`, so a gateway that calls back twice — or retries — can
  * never credit twice. Two callbacks racing past the status check would trip that
  * unique key instead, rolling the second one back.
+ *
+ * `REFUNDED` is acknowledged without being applied: reversing a credit is a flow
+ * of its own, and a status flip without it would leave the wallet lying.
  */
 export async function settlePaymentService({ providerRef, status }: { providerRef: string; status: PaymentStatus }) {
     const payment = await prisma.payment.findUnique({ where: { providerRef }, select: { id: true } })
 
     if (payment === null) throw new NotFoundException("Payment not found")
+
+    // Reversing a credit is a flow of its own. Until it exists a refund is
+    // acknowledged without touching the row: flipping the status to `REFUNDED`
+    // while the tokens stayed in the wallet would leave the two disagreeing.
+    if (status === PaymentStatus.REFUNDED) {
+        console.warn(`[payment] refund for ${providerRef} acknowledged but not applied — reverse it by hand`)
+
+        return { id: payment.id, status, credited: false, ignored: true }
+    }
 
     if (status !== PaymentStatus.PAID) {
         await prisma.payment.updateMany({
@@ -90,7 +136,7 @@ export async function settlePaymentService({ providerRef, status }: { providerRe
             data: { status },
         })
 
-        return { id: payment.id, status, credited: false }
+        return { id: payment.id, status, credited: false, ignored: false }
     }
 
     const credited = await prisma.$transaction(async (tx) => {
@@ -131,7 +177,37 @@ export async function settlePaymentService({ providerRef, status }: { providerRe
         return true
     })
 
-    return { id: payment.id, status: PaymentStatus.PAID, credited }
+    return { id: payment.id, status: PaymentStatus.PAID, credited, ignored: false }
+}
+
+/**
+ * Applies a Midtrans notification.
+ *
+ * Midtrans posts every status change to a single endpoint, so the payload is
+ * verified and mapped here before the shared settlement logic runs. The signature
+ * is checked first — an unverified body is never allowed to move the wallet.
+ */
+export async function settleMidtransNotificationService(notification: {
+    orderId: string
+    statusCode: string
+    grossAmount: string
+    transactionStatus: string
+    fraudStatus?: string
+    signatureKey: string
+}) {
+    if (!verifyNotificationSignature(notification)) {
+        throw new UnauthorizedException("Invalid Midtrans signature")
+    }
+
+    const status = mapTransactionStatus(notification.transactionStatus, notification.fraudStatus)
+
+    if (status === null) {
+        throw new BadRequestException("Unsupported Midtrans transaction status", {
+            transaction_status: `Midtrans sent "${notification.transactionStatus}", which this app does not handle.`,
+        })
+    }
+
+    return settlePaymentService({ providerRef: notification.orderId, status })
 }
 
 /* ========== Reads ========== */
