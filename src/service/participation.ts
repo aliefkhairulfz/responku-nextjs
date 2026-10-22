@@ -352,8 +352,6 @@ async function writeAnswers(tx: Prisma.TransactionClient, participationId: strin
 
     if (answers.length === 0) return
 
-    const answeredAt = new Date()
-
     await tx.participationAnswer.createMany({
         data: answers.map((answer) => ({
             respondentParticipationId: participationId,
@@ -362,7 +360,6 @@ async function writeAnswers(tx: Prisma.TransactionClient, participationId: strin
             // them stores NULL and keeps a choice answer from carrying empty text.
             choiceIds: answer.selected !== undefined && answer.selected.length > 0 ? answer.selected : undefined,
             answerText: answer.text !== undefined && answer.text !== null && answer.text.trim().length > 0 ? answer.text : undefined,
-            answeredAt,
         })),
     })
 }

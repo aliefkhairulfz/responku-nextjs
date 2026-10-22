@@ -67,7 +67,6 @@ model ParticipationAnswer {
   // Jawaban bebas untuk soal yang tidak memakai pilihan (TEXT/NUMBER/SCALE);
   // null untuk jawaban pilihan, jadi salah satu dari choiceIds/answerText yang terisi
   answerText String? @db.Text
-  answeredAt DateTime? @db.DateTime(3)
 
   createdAt DateTime  @default(now()) @db.DateTime(3)
   updatedAt DateTime  @updatedAt @db.DateTime(3)

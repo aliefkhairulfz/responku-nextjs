@@ -4,6 +4,7 @@ import {
     ArrowUpRightIcon,
     CircleHelpIcon,
     LayoutDashboardIcon,
+    LogOutIcon,
     type LucideIcon,
     MenuIcon,
     Microscope,
@@ -13,13 +14,15 @@ import {
     XIcon,
 } from "lucide-react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { type ReactNode, useState } from "react"
 import { StartResearchMenuItem } from "@/components/dashboard/start-research-menu-item"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
+import { toast } from "@/components/ui/toast"
+import { postJson } from "@/lib/api-client"
 import { DashboardStoreProvider, useDashboardStore } from "@/lib/stores/dashboard-store-provider"
 import { useCurrentUser } from "@/lib/use-current-user"
 import { cn } from "@/lib/cn"
@@ -125,6 +128,9 @@ export default function Layout({ children }: { children: ReactNode }) {
 function LayoutChildren({ pathname, children }: { pathname: string; children: ReactNode }) {
     const [open, setOpen] = useState(true)
     const [mobileOpen, setMobileOpen] = useState(false)
+    const [loggingOut, setLoggingOut] = useState(false)
+
+    const router = useRouter()
 
     // stores
     const userMode = useDashboardStore((s) => s.userMode)
@@ -137,6 +143,31 @@ function LayoutChildren({ pathname, children }: { pathname: string; children: Re
     // placeholder letter that would be replaced a moment later.
     const userName = user?.name ?? ""
     const userInitial = userName.trim().charAt(0).toUpperCase()
+
+    /** Fades away with the sidebar, the way the menu labels do. */
+    const hideOnCollapse = open ? "opacity-100" : "md:opacity-0"
+
+    /**
+     * Ends the session, then hands the browser back to the login screen.
+     *
+     * The API response has already cleared the cookie; refreshing makes the server
+     * components re-read it, so nothing signed-in is left on screen.
+     */
+    async function handleLogout() {
+        if (loggingOut) return
+
+        setLoggingOut(true)
+        const result = await postJson("/api/auth/logout")
+
+        if (!result.ok) {
+            setLoggingOut(false)
+            toast.add({ type: "error", title: "Gagal keluar", description: result.message })
+            return
+        }
+
+        router.replace("/login")
+        router.refresh()
+    }
 
     return (
         <div className="w-full h-dvh flex md:divide-x overflow-hidden">
@@ -198,12 +229,22 @@ function LayoutChildren({ pathname, children }: { pathname: string; children: Re
                             <AvatarImage src={user?.image ?? undefined} alt={userName || "Foto profil"} />
                             <AvatarFallback>{userInitial}</AvatarFallback>
                         </Avatar>
-                        <span
-                            className={`text-sm font-medium whitespace-nowrap transition-opacity duration-200 ${open ? "opacity-100" : "md:opacity-0"}`}
-                        >
-                            {userName}
-                        </span>
+                        <span className={`text-sm font-medium whitespace-nowrap transition-opacity duration-200 ${hideOnCollapse}`}>{userName}</span>
                     </div>
+
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        title="Keluar"
+                        onClick={handleLogout}
+                        disabled={loggingOut}
+                        className="w-full h-10 justify-start gap-3 px-3 text-muted-foreground font-medium hover:text-destructive"
+                    >
+                        <LogOutIcon className="size-5 shrink-0" />
+                        <span className={`whitespace-nowrap transition-opacity duration-200 ${hideOnCollapse}`}>
+                            {loggingOut ? "Keluar…" : "Keluar"}
+                        </span>
+                    </Button>
                 </div>
             </aside>
 

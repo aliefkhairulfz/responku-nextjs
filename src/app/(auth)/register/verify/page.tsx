@@ -1,5 +1,4 @@
 import { Suspense } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { VerifyForm } from "./verify-form"
 
 /**
@@ -29,19 +28,20 @@ async function VerifyEmailContent({ searchParams }: { searchParams: VerifySearch
     return <VerifyForm initialEmail={email?.trim() ?? ""} codeSent={sent === undefined ? undefined : sent !== "0"} />
 }
 
+/** Mirrors the form's own header and fields, so the swap does not shift the layout. */
 function VerifyFallback() {
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle>
-                    <div className="h-6 w-40 rounded bg-muted" />
-                </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                <div className="h-4 w-full rounded bg-muted" />
+        <div aria-hidden className="space-y-8">
+            <div className="space-y-2">
+                <div className="h-8 w-48 rounded bg-muted" />
+                <div className="h-5 w-full rounded bg-muted" />
+            </div>
+
+            <div className="space-y-4">
+                <div className="h-5 w-32 rounded bg-muted" />
                 <div className="h-12 w-full rounded bg-muted" />
                 <div className="h-9 w-full rounded bg-muted" />
-            </CardContent>
-        </Card>
+            </div>
+        </div>
     )
 }

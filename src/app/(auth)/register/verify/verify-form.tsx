@@ -1,12 +1,10 @@
 "use client"
 
 import { useForm } from "@tanstack/react-form"
-import { ArrowRight, CheckCircle2, Loader2, MailCheck, TriangleAlert } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { z } from "zod"
 import { Button, buttonVariants } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { FieldError } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -139,152 +137,118 @@ export function VerifyForm({ initialEmail, codeSent }: { initialEmail: string; c
 
     if (verified) {
         return (
-            <Card>
-                <CardHeader className="justify-items-center text-center">
-                    <span className="grid size-12 place-items-center rounded-full bg-primary/10 text-primary">
-                        <CheckCircle2 className="size-6" />
-                    </span>
-                    <CardTitle>
-                        <h1 className="text-xl font-semibold">
-                            {verified.alreadyVerified ? "Akun sudah terverifikasi" : "Email berhasil diverifikasi"}
-                        </h1>
-                    </CardTitle>
-                    <CardDescription>
+            <>
+                <header className="mb-8 space-y-1.5">
+                    <h1 className="text-2xl font-semibold tracking-tight">
+                        {verified.alreadyVerified ? "Akun sudah terverifikasi" : "Email berhasil diverifikasi"}
+                    </h1>
+                    <p className="text-sm text-muted-foreground">
                         {verified.alreadyVerified
                             ? `${verified.email} sudah aktif sebelumnya. Kamu bisa langsung masuk.`
                             : `${verified.email} sudah aktif. Silakan masuk untuk mulai memakai Responku.`}
-                    </CardDescription>
-                </CardHeader>
+                    </p>
+                </header>
 
-                <CardContent>
-                    <Link href="/login" className={cn(buttonVariants(), "w-full")}>
-                        Masuk ke akun
-                        <ArrowRight />
-                    </Link>
-                </CardContent>
-            </Card>
+                <Link href="/login" className={cn(buttonVariants(), "w-full")}>
+                    Masuk ke akun
+                </Link>
+            </>
         )
     }
 
     return (
         <>
-            <Card>
-                <CardHeader className="justify-items-center text-center">
-                    <span className="grid size-12 place-items-center rounded-full bg-primary/10 text-primary">
-                        <MailCheck className="size-6" />
-                    </span>
-                    <CardTitle>
-                        <h1 className="text-xl font-semibold">Cek email kamu</h1>
-                    </CardTitle>
-                    <CardDescription>
-                        {initialEmail ? (
-                            <>
-                                Kami mengirim kode 6 digit ke <span className="font-medium text-foreground">{initialEmail}</span>.
-                            </>
-                        ) : (
-                            "Masukkan email yang kamu daftarkan, lalu minta kode verifikasinya."
-                        )}
-                    </CardDescription>
-                </CardHeader>
+            <header className="mb-8 space-y-1.5">
+                <h1 className="text-2xl font-semibold tracking-tight">Cek email kamu</h1>
+                <p className="text-sm text-muted-foreground">
+                    {initialEmail ? (
+                        <>
+                            Kami mengirim kode 6 digit ke <span className="font-medium text-foreground">{initialEmail}</span>.
+                        </>
+                    ) : (
+                        "Masukkan email yang kamu daftarkan, lalu minta kode verifikasinya."
+                    )}
+                </p>
+            </header>
 
-                <CardContent>
-                    <form
-                        className="space-y-4"
-                        noValidate
-                        onSubmit={(event) => {
-                            event.preventDefault()
-                            event.stopPropagation()
-                            form.handleSubmit()
+            <form
+                className="space-y-4"
+                noValidate
+                onSubmit={(event) => {
+                    event.preventDefault()
+                    event.stopPropagation()
+                    form.handleSubmit()
+                }}
+            >
+                {warning && <p className="rounded-md border bg-muted px-3 py-2 text-sm text-muted-foreground">{warning}</p>}
+
+                {formError && (
+                    <p role="alert" className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                        {formError}
+                    </p>
+                )}
+
+                {!initialEmail && (
+                    <form.Field name="email">
+                        {(field) => {
+                            const messages = [...field.state.meta.errors, fieldErrors.email]
+
+                            return (
+                                <div className="space-y-2">
+                                    <Label htmlFor={field.name}>Email</Label>
+                                    <Input
+                                        id={field.name}
+                                        name={field.name}
+                                        type="email"
+                                        inputMode="email"
+                                        autoComplete="email"
+                                        placeholder="nama@email.com"
+                                        value={field.state.value}
+                                        onBlur={field.handleBlur}
+                                        onChange={(event) => field.handleChange(event.target.value)}
+                                        aria-invalid={hasFieldError(messages)}
+                                    />
+                                    <FieldError errors={toFieldErrors(messages)} />
+                                </div>
+                            )
                         }}
-                    >
-                        {warning && (
-                            <p className="flex items-start gap-2 rounded-md border bg-muted px-3 py-2 text-sm text-muted-foreground">
-                                <TriangleAlert className="mt-0.5 size-4 shrink-0" />
-                                {warning}
-                            </p>
-                        )}
+                    </form.Field>
+                )}
 
-                        {formError && (
-                            <p role="alert" className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                                {formError}
-                            </p>
-                        )}
+                <form.Field name="code">
+                    {(field) => {
+                        const messages = [...field.state.meta.errors, fieldErrors.code]
 
-                        {!initialEmail && (
-                            <form.Field name="email">
-                                {(field) => {
-                                    const messages = [...field.state.meta.errors, fieldErrors.email]
+                        return (
+                            <div className="space-y-2">
+                                <Label htmlFor={field.name}>Kode verifikasi</Label>
+                                <OtpInput
+                                    id={field.name}
+                                    value={field.state.value}
+                                    onChange={(next) => field.handleChange(next)}
+                                    invalid={hasFieldError(messages)}
+                                />
+                                <FieldError errors={toFieldErrors(messages)} />
+                            </div>
+                        )
+                    }}
+                </form.Field>
 
-                                    return (
-                                        <div className="space-y-2">
-                                            <Label htmlFor={field.name}>Email</Label>
-                                            <Input
-                                                id={field.name}
-                                                name={field.name}
-                                                type="email"
-                                                inputMode="email"
-                                                autoComplete="email"
-                                                placeholder="nama@email.com"
-                                                value={field.state.value}
-                                                onBlur={field.handleBlur}
-                                                onChange={(event) => field.handleChange(event.target.value)}
-                                                aria-invalid={hasFieldError(messages)}
-                                            />
-                                            <FieldError errors={toFieldErrors(messages)} />
-                                        </div>
-                                    )
-                                }}
-                            </form.Field>
-                        )}
-
-                        <form.Field name="code">
-                            {(field) => {
-                                const messages = [...field.state.meta.errors, fieldErrors.code]
-
-                                return (
-                                    <div className="space-y-2">
-                                        <Label htmlFor={field.name} className="justify-center md:justify-start">
-                                            Kode verifikasi
-                                        </Label>
-                                        <OtpInput
-                                            id={field.name}
-                                            value={field.state.value}
-                                            onChange={(next) => field.handleChange(next)}
-                                            invalid={hasFieldError(messages)}
-                                        />
-                                        <FieldError errors={toFieldErrors(messages)} className="text-center md:text-left" />
-                                    </div>
-                                )
-                            }}
-                        </form.Field>
-
-                        <form.Subscribe selector={(state) => [state.isSubmitting, state.values.code] as const}>
-                            {([isSubmitting, code]) => (
-                                <Button type="submit" className="w-full" disabled={isSubmitting || code.length !== OTP_LENGTH}>
-                                    {isSubmitting ? (
-                                        <>
-                                            <Loader2 className="animate-spin" />
-                                            Memverifikasi…
-                                        </>
-                                    ) : (
-                                        <>
-                                            Verifikasi
-                                            <ArrowRight />
-                                        </>
-                                    )}
-                                </Button>
-                            )}
-                        </form.Subscribe>
-                    </form>
-
-                    <div className="mt-4 flex flex-wrap items-center justify-center gap-1 text-sm text-muted-foreground">
-                        <span>Belum menerima kode?</span>
-                        <Button type="button" variant="link" size="sm" disabled={cooldown > 0 || resending} onClick={handleResend}>
-                            {resending ? "Mengirim…" : cooldown > 0 ? `Kirim ulang dalam ${cooldown} detik` : "Kirim ulang kode"}
+                <form.Subscribe selector={(state) => [state.isSubmitting, state.values.code] as const}>
+                    {([isSubmitting, code]) => (
+                        <Button type="submit" className="w-full" disabled={isSubmitting || code.length !== OTP_LENGTH}>
+                            {isSubmitting ? "Memverifikasi…" : "Verifikasi"}
                         </Button>
-                    </div>
-                </CardContent>
-            </Card>
+                    )}
+                </form.Subscribe>
+            </form>
+
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-1 text-sm text-muted-foreground">
+                <span>Belum menerima kode?</span>
+                <Button type="button" variant="link" size="sm" disabled={cooldown > 0 || resending} onClick={handleResend}>
+                    {resending ? "Mengirim…" : cooldown > 0 ? `Kirim ulang dalam ${cooldown} detik` : "Kirim ulang kode"}
+                </Button>
+            </div>
 
             <p className="mt-6 text-center text-sm text-muted-foreground">
                 Sudah terverifikasi?{" "}

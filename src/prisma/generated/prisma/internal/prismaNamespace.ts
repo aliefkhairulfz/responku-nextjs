@@ -1870,7 +1870,6 @@ export const ParticipationAnswerScalarFieldEnum = {
   researchQuestionId: 'researchQuestionId',
   choiceIds: 'choiceIds',
   answerText: 'answerText',
-  answeredAt: 'answeredAt',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
   deletedAt: 'deletedAt'

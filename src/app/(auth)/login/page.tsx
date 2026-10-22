@@ -1,13 +1,11 @@
 "use client"
 
 import { useForm } from "@tanstack/react-form"
-import { ArrowRight, Eye, EyeOff, Loader2, Lock, Mail } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { z } from "zod"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { FieldError } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -66,121 +64,101 @@ export default function LoginPage() {
 
     return (
         <>
-            <Card>
-                <CardHeader>
-                    <CardTitle>
-                        <h1 className="text-xl font-semibold">Masuk ke akun Anda</h1>
-                    </CardTitle>
-                    <CardDescription>Gunakan email dan kata sandi yang kamu daftarkan.</CardDescription>
-                </CardHeader>
+            <header className="mb-8 space-y-1.5">
+                <h1 className="text-2xl font-semibold tracking-tight">Masuk ke akun Anda</h1>
+                <p className="text-sm text-muted-foreground">Gunakan email dan kata sandi yang kamu daftarkan.</p>
+            </header>
 
-                <CardContent>
-                    <form
-                        className="space-y-4"
-                        noValidate
-                        onSubmit={(event) => {
-                            event.preventDefault()
-                            event.stopPropagation()
-                            form.handleSubmit()
-                        }}
-                    >
-                        {formError && (
-                            <p role="alert" className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                                {formError}
-                            </p>
-                        )}
+            <form
+                className="space-y-4"
+                noValidate
+                onSubmit={(event) => {
+                    event.preventDefault()
+                    event.stopPropagation()
+                    form.handleSubmit()
+                }}
+            >
+                {formError && (
+                    <p role="alert" className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                        {formError}
+                    </p>
+                )}
 
-                        <form.Field name="email">
-                            {(field) => {
-                                const messages = [...field.state.meta.errors, fieldErrors.email]
+                <form.Field name="email">
+                    {(field) => {
+                        const messages = [...field.state.meta.errors, fieldErrors.email]
 
-                                return (
-                                    <div className="space-y-2">
-                                        <Label htmlFor={field.name}>Email</Label>
-                                        <div className="relative">
-                                            <Mail className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-                                            <Input
-                                                id={field.name}
-                                                name={field.name}
-                                                type="email"
-                                                inputMode="email"
-                                                autoComplete="email"
-                                                placeholder="nama@email.com"
-                                                className="pl-9"
-                                                value={field.state.value}
-                                                onBlur={field.handleBlur}
-                                                onChange={(event) => field.handleChange(event.target.value)}
-                                                aria-invalid={hasFieldError(messages)}
-                                            />
-                                        </div>
-                                        <FieldError errors={toFieldErrors(messages)} />
-                                    </div>
-                                )
-                            }}
-                        </form.Field>
+                        return (
+                            <div className="space-y-2">
+                                <Label htmlFor={field.name}>Email</Label>
+                                <Input
+                                    id={field.name}
+                                    name={field.name}
+                                    type="email"
+                                    inputMode="email"
+                                    autoComplete="email"
+                                    placeholder="nama@email.com"
+                                    value={field.state.value}
+                                    onBlur={field.handleBlur}
+                                    onChange={(event) => field.handleChange(event.target.value)}
+                                    aria-invalid={hasFieldError(messages)}
+                                />
+                                <FieldError errors={toFieldErrors(messages)} />
+                            </div>
+                        )
+                    }}
+                </form.Field>
 
-                        <form.Field name="password">
-                            {(field) => {
-                                const messages = [...field.state.meta.errors, fieldErrors.password]
+                <form.Field name="password">
+                    {(field) => {
+                        const messages = [...field.state.meta.errors, fieldErrors.password]
 
-                                return (
-                                    <div className="space-y-2">
-                                        <Label htmlFor={field.name}>Kata Sandi</Label>
-                                        <div className="relative">
-                                            <Lock className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-                                            <Input
-                                                id={field.name}
-                                                name={field.name}
-                                                type={showPassword ? "text" : "password"}
-                                                autoComplete="current-password"
-                                                placeholder="••••••••"
-                                                className="pr-10 pl-9"
-                                                value={field.state.value}
-                                                onBlur={field.handleBlur}
-                                                onChange={(event) => field.handleChange(event.target.value)}
-                                                aria-invalid={hasFieldError(messages)}
-                                            />
-                                            <Button
-                                                type="button"
-                                                variant="ghost"
-                                                size="icon-sm"
-                                                onClick={() => setShowPassword((visible) => !visible)}
-                                                aria-label={showPassword ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"}
-                                                className="absolute top-1/2 right-0.5 -translate-y-1/2 text-muted-foreground"
-                                            >
-                                                {showPassword ? <EyeOff /> : <Eye />}
-                                            </Button>
-                                        </div>
-                                        <FieldError errors={toFieldErrors(messages)} />
-                                    </div>
-                                )
-                            }}
-                        </form.Field>
-
-                        <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting] as const}>
-                            {([canSubmit, isSubmitting]) => {
-                                const busy = isSubmitting || redirecting
-
-                                return (
-                                    <Button type="submit" className="w-full" disabled={!canSubmit || busy}>
-                                        {busy ? (
-                                            <>
-                                                <Loader2 className="animate-spin" />
-                                                {redirecting ? "Mengalihkan…" : "Memproses…"}
-                                            </>
-                                        ) : (
-                                            <>
-                                                Masuk
-                                                <ArrowRight />
-                                            </>
-                                        )}
+                        return (
+                            <div className="space-y-2">
+                                <Label htmlFor={field.name}>Kata Sandi</Label>
+                                <div className="relative">
+                                    <Input
+                                        id={field.name}
+                                        name={field.name}
+                                        type={showPassword ? "text" : "password"}
+                                        autoComplete="current-password"
+                                        placeholder="••••••••"
+                                        className="pr-24"
+                                        value={field.state.value}
+                                        onBlur={field.handleBlur}
+                                        onChange={(event) => field.handleChange(event.target.value)}
+                                        aria-invalid={hasFieldError(messages)}
+                                    />
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => setShowPassword((visible) => !visible)}
+                                        aria-pressed={showPassword}
+                                        aria-label={showPassword ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"}
+                                        className="absolute top-1/2 right-1 h-7 -translate-y-1/2 px-2 text-xs text-muted-foreground"
+                                    >
+                                        {showPassword ? "Sembunyikan" : "Tampilkan"}
                                     </Button>
-                                )
-                            }}
-                        </form.Subscribe>
-                    </form>
-                </CardContent>
-            </Card>
+                                </div>
+                                <FieldError errors={toFieldErrors(messages)} />
+                            </div>
+                        )
+                    }}
+                </form.Field>
+
+                <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting] as const}>
+                    {([canSubmit, isSubmitting]) => {
+                        const busy = isSubmitting || redirecting
+
+                        return (
+                            <Button type="submit" className="w-full" disabled={!canSubmit || busy}>
+                                {busy ? (redirecting ? "Mengalihkan…" : "Memproses…") : "Masuk"}
+                            </Button>
+                        )
+                    }}
+                </form.Subscribe>
+            </form>
 
             <p className="mt-6 text-center text-sm text-muted-foreground">
                 Belum punya akun?{" "}

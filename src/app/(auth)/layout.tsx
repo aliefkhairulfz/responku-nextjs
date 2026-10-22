@@ -1,4 +1,3 @@
-import { Coins, Microscope, ShieldCheck } from "lucide-react"
 import Link from "next/link"
 import type { ReactNode } from "react"
 
@@ -12,43 +11,25 @@ import type { ReactNode } from "react"
 
 const highlights = [
     {
-        icon: Microscope,
         title: "Kelola riset di satu tempat",
         description: "Susun kuesioner, kriteria responden, dan target dalam satu alur.",
     },
     {
-        icon: Coins,
         title: "Reward yang transparan",
         description: "Setiap token tercatat di ledger, dari reserve sampai reward responden.",
     },
     {
-        icon: ShieldCheck,
         title: "Data responden terlindungi",
         description: "Consent eksplisit untuk data sensitif, sejalan dengan UU PDP.",
     },
 ]
-
-/** Small mark used where the full panel is hidden. */
-function BrandMark({ className }: { className?: string }) {
-    return (
-        <span className={className}>
-            <Microscope className="size-4" />
-        </span>
-    )
-}
 
 export default function AuthLayout({ children }: { children: ReactNode }) {
     return (
         <div className="grid min-h-dvh lg:grid-cols-2">
             {/* Brand panel — hidden on narrow screens so the form gets the full width. */}
             <aside className="relative hidden overflow-hidden bg-primary p-10 text-primary-foreground lg:flex lg:flex-col lg:justify-between xl:p-14">
-                <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-                    <div className="absolute -top-24 -left-24 size-72 rounded-full bg-primary-foreground/10 blur-3xl" />
-                    <div className="absolute -right-20 -bottom-28 size-80 rounded-full bg-primary-foreground/10 blur-3xl" />
-                </div>
-
                 <Link href="/" className="relative flex w-fit items-center gap-3">
-                    <BrandMark className="grid size-9 place-items-center rounded-lg bg-primary-foreground/15 ring-1 ring-primary-foreground/25" />
                     <span className="text-lg font-bold tracking-tight">Responku</span>
                 </Link>
 
@@ -59,11 +40,8 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
                     </p>
 
                     <ul className="space-y-4">
-                        {highlights.map(({ icon: Icon, title, description }) => (
+                        {highlights.map(({ title, description }) => (
                             <li key={title} className="flex gap-3">
-                                <span className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-lg bg-primary-foreground/10 ring-1 ring-primary-foreground/20">
-                                    <Icon className="size-4" />
-                                </span>
                                 <div className="space-y-0.5">
                                     <p className="font-medium">{title}</p>
                                     <p className="text-sm text-primary-foreground/75">{description}</p>
@@ -80,7 +58,6 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
             <main className="flex items-center justify-center px-4 py-10 sm:px-8">
                 <div className="w-full max-w-sm">
                     <Link href="/" className="mb-8 flex w-fit items-center gap-2 lg:hidden">
-                        <BrandMark className="grid size-9 place-items-center rounded-lg bg-primary text-primary-foreground" />
                         <span className="text-lg font-bold tracking-tight">Responku</span>
                     </Link>
 

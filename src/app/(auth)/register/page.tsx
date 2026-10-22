@@ -1,13 +1,11 @@
 "use client"
 
 import { useForm } from "@tanstack/react-form"
-import { ArrowRight, Eye, EyeOff, Loader2, Lock, Mail, User } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { z } from "zod"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { FieldError } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -88,186 +86,162 @@ export default function RegisterPage() {
 
     return (
         <>
-            <Card>
-                <CardHeader>
-                    <CardTitle>
-                        <h1 className="text-xl font-semibold">Buat akun Responku</h1>
-                    </CardTitle>
-                    <CardDescription>Gratis, dan langsung bisa mulai membuat riset.</CardDescription>
-                </CardHeader>
+            <header className="mb-8 space-y-1.5">
+                <h1 className="text-2xl font-semibold tracking-tight">Buat akun Responku</h1>
+                <p className="text-sm text-muted-foreground">Gratis, dan langsung bisa mulai membuat riset.</p>
+            </header>
 
-                <CardContent>
-                    <form
-                        className="space-y-4"
-                        noValidate
-                        onSubmit={(event) => {
-                            event.preventDefault()
-                            event.stopPropagation()
-                            form.handleSubmit()
-                        }}
-                    >
-                        {formError && (
-                            <p role="alert" className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                                {formError}
-                            </p>
-                        )}
+            <form
+                className="space-y-4"
+                noValidate
+                onSubmit={(event) => {
+                    event.preventDefault()
+                    event.stopPropagation()
+                    form.handleSubmit()
+                }}
+            >
+                {formError && (
+                    <p role="alert" className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                        {formError}
+                    </p>
+                )}
 
-                        <form.Field name="name">
-                            {(field) => {
-                                const messages = [...field.state.meta.errors, fieldErrors.name]
+                <form.Field name="name">
+                    {(field) => {
+                        const messages = [...field.state.meta.errors, fieldErrors.name]
 
-                                return (
-                                    <div className="space-y-2">
-                                        <Label htmlFor={field.name}>Nama</Label>
-                                        <div className="relative">
-                                            <User className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-                                            <Input
-                                                id={field.name}
-                                                name={field.name}
-                                                autoComplete="name"
-                                                placeholder="Nama lengkap"
-                                                className="pl-9"
-                                                value={field.state.value}
-                                                onBlur={field.handleBlur}
-                                                onChange={(event) => field.handleChange(event.target.value)}
-                                                aria-invalid={hasFieldError(messages)}
-                                            />
-                                        </div>
-                                        <FieldError errors={toFieldErrors(messages)} />
-                                    </div>
-                                )
-                            }}
-                        </form.Field>
+                        return (
+                            <div className="space-y-2">
+                                <Label htmlFor={field.name}>Nama</Label>
+                                <Input
+                                    id={field.name}
+                                    name={field.name}
+                                    autoComplete="name"
+                                    placeholder="Nama lengkap"
+                                    value={field.state.value}
+                                    onBlur={field.handleBlur}
+                                    onChange={(event) => field.handleChange(event.target.value)}
+                                    aria-invalid={hasFieldError(messages)}
+                                />
+                                <FieldError errors={toFieldErrors(messages)} />
+                            </div>
+                        )
+                    }}
+                </form.Field>
 
-                        <form.Field name="email">
-                            {(field) => {
-                                const messages = [...field.state.meta.errors, fieldErrors.email]
+                <form.Field name="email">
+                    {(field) => {
+                        const messages = [...field.state.meta.errors, fieldErrors.email]
 
-                                return (
-                                    <div className="space-y-2">
-                                        <Label htmlFor={field.name}>Email</Label>
-                                        <div className="relative">
-                                            <Mail className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-                                            <Input
-                                                id={field.name}
-                                                name={field.name}
-                                                type="email"
-                                                inputMode="email"
-                                                autoComplete="email"
-                                                placeholder="nama@email.com"
-                                                className="pl-9"
-                                                value={field.state.value}
-                                                onBlur={field.handleBlur}
-                                                onChange={(event) => field.handleChange(event.target.value)}
-                                                aria-invalid={hasFieldError(messages)}
-                                            />
-                                        </div>
-                                        <FieldError errors={toFieldErrors(messages)} />
-                                    </div>
-                                )
-                            }}
-                        </form.Field>
+                        return (
+                            <div className="space-y-2">
+                                <Label htmlFor={field.name}>Email</Label>
+                                <Input
+                                    id={field.name}
+                                    name={field.name}
+                                    type="email"
+                                    inputMode="email"
+                                    autoComplete="email"
+                                    placeholder="nama@email.com"
+                                    value={field.state.value}
+                                    onBlur={field.handleBlur}
+                                    onChange={(event) => field.handleChange(event.target.value)}
+                                    aria-invalid={hasFieldError(messages)}
+                                />
+                                <FieldError errors={toFieldErrors(messages)} />
+                            </div>
+                        )
+                    }}
+                </form.Field>
 
-                        <form.Field name="password">
-                            {(field) => {
-                                const messages = [...field.state.meta.errors, fieldErrors.password]
+                <form.Field name="password">
+                    {(field) => {
+                        const messages = [...field.state.meta.errors, fieldErrors.password]
 
-                                return (
-                                    <div className="space-y-2">
-                                        <Label htmlFor={field.name}>Kata Sandi</Label>
-                                        <div className="relative">
-                                            <Lock className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-                                            <Input
-                                                id={field.name}
-                                                name={field.name}
-                                                type={showPassword ? "text" : "password"}
-                                                autoComplete="new-password"
-                                                placeholder="Minimal 8 karakter"
-                                                className="pr-10 pl-9"
-                                                value={field.state.value}
-                                                onBlur={field.handleBlur}
-                                                onChange={(event) => field.handleChange(event.target.value)}
-                                                aria-invalid={hasFieldError(messages)}
-                                            />
-                                            <Button
-                                                type="button"
-                                                variant="ghost"
-                                                size="icon-sm"
-                                                onClick={() => setShowPassword((visible) => !visible)}
-                                                aria-label={showPassword ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"}
-                                                className="absolute top-1/2 right-0.5 -translate-y-1/2 text-muted-foreground"
-                                            >
-                                                {showPassword ? <EyeOff /> : <Eye />}
-                                            </Button>
-                                        </div>
-                                        <FieldError errors={toFieldErrors(messages)} />
-                                    </div>
-                                )
-                            }}
-                        </form.Field>
-
-                        <form.Field name="confirmPassword">
-                            {(field) => {
-                                const messages = [...field.state.meta.errors, fieldErrors.confirmPassword]
-
-                                return (
-                                    <div className="space-y-2">
-                                        <Label htmlFor={field.name}>Ulangi Kata Sandi</Label>
-                                        <div className="relative">
-                                            <Lock className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-                                            <Input
-                                                id={field.name}
-                                                name={field.name}
-                                                type={showConfirmation ? "text" : "password"}
-                                                autoComplete="new-password"
-                                                placeholder="Ulangi kata sandi"
-                                                className="pr-10 pl-9"
-                                                value={field.state.value}
-                                                onBlur={field.handleBlur}
-                                                onChange={(event) => field.handleChange(event.target.value)}
-                                                aria-invalid={hasFieldError(messages)}
-                                            />
-                                            <Button
-                                                type="button"
-                                                variant="ghost"
-                                                size="icon-sm"
-                                                onClick={() => setShowConfirmation((visible) => !visible)}
-                                                aria-label={showConfirmation ? "Sembunyikan ulangi kata sandi" : "Tampilkan ulangi kata sandi"}
-                                                className="absolute top-1/2 right-0.5 -translate-y-1/2 text-muted-foreground"
-                                            >
-                                                {showConfirmation ? <EyeOff /> : <Eye />}
-                                            </Button>
-                                        </div>
-                                        <FieldError errors={toFieldErrors(messages)} />
-                                    </div>
-                                )
-                            }}
-                        </form.Field>
-
-                        <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting] as const}>
-                            {([canSubmit, isSubmitting]) => {
-                                const busy = isSubmitting || redirecting
-
-                                return (
-                                    <Button type="submit" className="w-full" disabled={!canSubmit || busy}>
-                                        {busy ? (
-                                            <>
-                                                <Loader2 className="animate-spin" />
-                                                {redirecting ? "Mengalihkan…" : "Membuat akun…"}
-                                            </>
-                                        ) : (
-                                            <>
-                                                Daftar
-                                                <ArrowRight />
-                                            </>
-                                        )}
+                        return (
+                            <div className="space-y-2">
+                                <Label htmlFor={field.name}>Kata Sandi</Label>
+                                <div className="relative">
+                                    <Input
+                                        id={field.name}
+                                        name={field.name}
+                                        type={showPassword ? "text" : "password"}
+                                        autoComplete="new-password"
+                                        placeholder="Minimal 8 karakter"
+                                        className="pr-24"
+                                        value={field.state.value}
+                                        onBlur={field.handleBlur}
+                                        onChange={(event) => field.handleChange(event.target.value)}
+                                        aria-invalid={hasFieldError(messages)}
+                                    />
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => setShowPassword((visible) => !visible)}
+                                        aria-pressed={showPassword}
+                                        aria-label={showPassword ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"}
+                                        className="absolute top-1/2 right-1 h-7 -translate-y-1/2 px-2 text-xs text-muted-foreground"
+                                    >
+                                        {showPassword ? "Sembunyikan" : "Tampilkan"}
                                     </Button>
-                                )
-                            }}
-                        </form.Subscribe>
-                    </form>
-                </CardContent>
-            </Card>
+                                </div>
+                                <FieldError errors={toFieldErrors(messages)} />
+                            </div>
+                        )
+                    }}
+                </form.Field>
+
+                <form.Field name="confirmPassword">
+                    {(field) => {
+                        const messages = [...field.state.meta.errors, fieldErrors.confirmPassword]
+
+                        return (
+                            <div className="space-y-2">
+                                <Label htmlFor={field.name}>Ulangi Kata Sandi</Label>
+                                <div className="relative">
+                                    <Input
+                                        id={field.name}
+                                        name={field.name}
+                                        type={showConfirmation ? "text" : "password"}
+                                        autoComplete="new-password"
+                                        placeholder="Ulangi kata sandi"
+                                        className="pr-24"
+                                        value={field.state.value}
+                                        onBlur={field.handleBlur}
+                                        onChange={(event) => field.handleChange(event.target.value)}
+                                        aria-invalid={hasFieldError(messages)}
+                                    />
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => setShowConfirmation((visible) => !visible)}
+                                        aria-pressed={showConfirmation}
+                                        aria-label={showConfirmation ? "Sembunyikan ulangi kata sandi" : "Tampilkan ulangi kata sandi"}
+                                        className="absolute top-1/2 right-1 h-7 -translate-y-1/2 px-2 text-xs text-muted-foreground"
+                                    >
+                                        {showConfirmation ? "Sembunyikan" : "Tampilkan"}
+                                    </Button>
+                                </div>
+                                <FieldError errors={toFieldErrors(messages)} />
+                            </div>
+                        )
+                    }}
+                </form.Field>
+
+                <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting] as const}>
+                    {([canSubmit, isSubmitting]) => {
+                        const busy = isSubmitting || redirecting
+
+                        return (
+                            <Button type="submit" className="w-full" disabled={!canSubmit || busy}>
+                                {busy ? (redirecting ? "Mengalihkan…" : "Membuat akun…") : "Daftar"}
+                            </Button>
+                        )
+                    }}
+                </form.Subscribe>
+            </form>
 
             <p className="mt-6 text-center text-sm text-muted-foreground">
                 Sudah punya akun?{" "}
