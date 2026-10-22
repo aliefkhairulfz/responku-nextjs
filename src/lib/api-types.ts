@@ -61,6 +61,8 @@ export type AvailableResearch = {
     rewardIdr: number
     estimatedDurationMinutes: number
     deadline: string
+    /** Whole days until the deadline, worked out on the server so no component reads a clock. */
+    daysLeft: number
     respondentCount: number
     targetRespondentCount: number
 }
@@ -137,4 +139,98 @@ export type SupportTicket = {
     status: string
     createdAt: string
     updatedAt: string
+}
+
+/** The research header a participation carries, wherever it is read. */
+export type ParticipationResearch = {
+    id: string
+    title: string
+    description: string
+    category: string | null
+    externalSurveyUrl: string | null
+    researcherName: string
+    estimatedDurationMinutes: number
+    tokenPerRespondent: number
+    deadline: string
+    status: string
+}
+
+/** What a participation paid, or `null` until it is sent in. */
+export type ParticipationReward = { tokenAmount: number; status: string; paidAt: string | null }
+
+/** `GET /api/participation` → `data.participations[]`. */
+export type Participation = {
+    id: string
+    researchId: string
+    status: string
+    /** Percentage of the criteria the profile met, or `null` when there were none. */
+    screeningScore: number | null
+    screeningResult: string | null
+    /** When the questionnaire was first opened — where the timing clock starts. */
+    startedAt: string | null
+    submittedAt: string | null
+    createdAt: string
+    research: ParticipationResearch
+    reward: ParticipationReward | null
+}
+
+/** One question of a participation, carrying whatever the respondent already saved. */
+export type ParticipationQuestion = {
+    id: string
+    pos: number
+    question: string
+    questionType: string
+    mustFill: boolean
+    choices: Array<{ id: string; pos: number; n: string; choiceText: string | null }>
+    answer: { selected: string[]; text: string | null }
+}
+
+/**
+ * `GET /api/participation/{id}` → `data.participation`, and the shape the join, save,
+ * and submit endpoints answer with as well.
+ */
+export type ParticipationDetail = Participation & { timing: ParticipationTiming; questions: ParticipationQuestion[] }
+
+/**
+ * How long a participation took, against how long the research was expected to take.
+ *
+ * Measured between two server timestamps — joining and sending in — and recomputed on
+ * every read rather than stored.
+ */
+export type ParticipationTiming = {
+    /** Seconds between joining and sending in; `null` while the participation is open. */
+    actualSeconds: number | null
+    actualSecondsPerQuestion: number | null
+    /** The research's own estimate, in seconds. */
+    estimatedSeconds: number
+    /** The estimate spread evenly over the questions; `null` when none are asked. */
+    estimatedSecondsPerQuestion: number | null
+    /**
+     * Initial indicator only — finished far quicker than the estimate. `null` while the
+     * participation is open. Worth reading the answers, not grounds to reject them.
+     */
+    tooFast: boolean | null
+}
+
+/** A reference to the caller's own participation on a research, when they have one. */
+export type ParticipationRef = { id: string; status: string }
+
+/**
+ * `GET /api/research/available` → `data.researches[]`: a card, plus whether the caller has
+ * already begun this research — which is what turns the card into a "carry on".
+ */
+export type AvailableResearchRow = AvailableResearch & { participation: ParticipationRef | null }
+
+/** A research as a respondent sees it, with the criteria they are screened against. */
+export type AvailableResearchDetail = AvailableResearch & { criteria: ResearchCriterion[] }
+
+/**
+ * `GET /api/research/available/{id}` → `data`.
+ *
+ * `participation` is the caller's own attempt, present when they have already joined, so
+ * the page can offer to carry on rather than to start.
+ */
+export type AvailableResearchDetailPayload = {
+    research: AvailableResearchDetail
+    participation: ParticipationRef | null
 }

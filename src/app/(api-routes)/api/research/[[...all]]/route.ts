@@ -6,12 +6,14 @@ import { RESEARCH_STATUSES } from "@/lib/research-status"
 import { exceptionResponse, handleRouteError, parseBody, readJsonBody, successResponse } from "@/lib/server/api"
 import { requireRole } from "@/lib/server/roles"
 import { requireSession, type Session } from "@/service/auth"
+import { joinResearchService } from "@/service/participation"
 import {
     CRITERIA_OPERATORS,
     choiceTextRequired,
     closeResearchService,
     createResearchDraftService,
     deleteResearchService,
+    getAvailableResearchService,
     getResearchService,
     listAvailableResearchService,
     listResearchesService,
@@ -147,6 +149,9 @@ const CLOSE_PATH = "close"
 /** The action path that lists research a respondent can take, rather than owning it. */
 const AVAILABLE_PATH = "available"
 
+/** The action path a respondent takes part through. */
+const PARTICIPATE_PATH = "participate"
+
 /**
  * Whether a segment addresses a research rather than being an action name. Ids are
  * cuids, so an action name in that position is always a mistake.
@@ -265,7 +270,27 @@ async function closeResearchHandler(user: Session["user"], id: string) {
     return successResponse({ message: "Research closed", data: result })
 }
 
-export const POST = withResearcherGuard(async (user, req) => {
+/**
+ * The respondent side of one research.
+ *
+ * Served before the researcher guard: taking part needs a session and the respondent
+ * role, not the role that managing research needs.
+ */
+async function participateResearchHandler(_req: NextRequest, id: string) {
+    try {
+        const { user } = await requireSession()
+        requireRole(user.roles, "respondent")
+
+        const participation = await joinResearchService({ researchId: id, respondentId: user.id })
+
+        return successResponse({ message: "Participation", data: { participation } })
+    } catch (error) {
+        return handleRouteError(error)
+    }
+}
+
+/** The researcher's own writes, every one of which needs the role. */
+const researcherPost = withResearcherGuard(async (user, req) => {
     const segments = getResearchSegments(req)
 
     if (segments.length === 1 && segments[0] === CREATE_PATH) return createResearchHandler(user)
@@ -279,6 +304,20 @@ export const POST = withResearcherGuard(async (user, req) => {
 
     return notFound()
 })
+
+/**
+ * Taking part is the one POST here a respondent makes, so it is routed before the
+ * researcher guard and checked for the role it actually needs.
+ */
+export async function POST(req: NextRequest) {
+    const segments = getResearchSegments(req)
+
+    if (segments.length === 2 && segments[1] === PARTICIPATE_PATH && isResearchId(segments[0])) {
+        return participateResearchHandler(req, segments[0])
+    }
+
+    return researcherPost(req)
+}
 
 /** The researcher's own list, and one of their researches by id. */
 const getOwnResearch = withResearcherGuard(async (user, req) => {
@@ -309,8 +348,34 @@ async function availableResearchHandler(req: NextRequest) {
     }
 }
 
+/**
+ * One research from the respondent's pool, for its detail page.
+ *
+ * Session-guarded like the feed, but not researcher-guarded, so it is routed before that
+ * guard as well.
+ */
+async function availableResearchDetailHandler(_req: NextRequest, id: string) {
+    try {
+        const { user } = await requireSession()
+        const result = await getAvailableResearchService({ id, respondentId: user.id })
+
+        return successResponse({ message: "Available research", data: result })
+    } catch (error) {
+        return handleRouteError(error)
+    }
+}
+
 export async function GET(req: NextRequest) {
-    if (getResearchPath(req) === AVAILABLE_PATH) return availableResearchHandler(req)
+    const segments = getResearchSegments(req)
+
+    // The respondent's pool, and one item in it, are both served before the researcher
+    // guard: browsing other people's published research needs a session, not that role.
+    if (segments[0] === AVAILABLE_PATH) {
+        if (segments.length === 1) return availableResearchHandler(req)
+        if (segments.length === 2) return availableResearchDetailHandler(req, segments[1])
+
+        return notFound()
+    }
 
     return getOwnResearch(req)
 }

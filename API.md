@@ -81,22 +81,25 @@ yang dikirim harus valid.
 
 Nilai-nilai ini dipakai di request dan response:
 
-| Field                 | Nilai                                                                                  |
-| --------------------- | -------------------------------------------------------------------------------------- |
-| `roles`               | `researcher`, `respondent`, `admin`                                                    |
-| `gender`              | `male`, `female`                                                                       |
-| `education`           | `high_school`, `diploma`, `bachelor`, `master`, `doctorate`                            |
-| `religion`            | `islam`, `protestant`, `catholic`, `hindu`, `buddhist`, `confucian`                    |
-| `category` (research) | `fintech`, `retail`, `education`, `health`, `technology`                               |
-| `operator` (criteria) | `EQ`, `NEQ`, `IN`, `NOT_IN`, `GT`, `GTE`, `LT`, `LTE`, `BETWEEN`                       |
-| `questionType`        | `SINGLE_CHOICE`, `MULTIPLE_CHOICE`, `TEXT`, `NUMBER`, `SCALE`                          |
-| `status` (research)   | `DRAFT`, `PENDING_REVIEW`, `PUBLISHED`, `CLOSED`, `COMPLETED`, `REJECTED`, `CANCELLED` |
-| `type` (token mutasi) | `TOPUP`, `RESERVE`, `RELEASE`, `CONSUME`, `REWARD`, `WITHDRAW`, `FEE`, `REFUND`        |
-| `status` (payment)    | `PENDING`, `PAID`, `FAILED`, `EXPIRED`, `REFUNDED`                                     |
-| `category` (ticket)   | `DISPUTE`, `RESEARCH`, `TRANSACTION`, `ACCOUNT`, `OTHER`                               |
-| `status` (ticket)     | `REVIEW`, `RESOLVED`, `REJECTED`                                                       |
-| `language` (setting)  | `id`, `en`                                                                             |
-| `theme` (setting)     | `light`, `system`                                                                      |
+| Field                  | Nilai                                                                                   |
+| ---------------------- | --------------------------------------------------------------------------------------- |
+| `roles`                | `researcher`, `respondent`, `admin`                                                     |
+| `gender`               | `male`, `female`                                                                        |
+| `education`            | `high_school`, `diploma`, `bachelor`, `master`, `doctorate`                             |
+| `religion`             | `islam`, `protestant`, `catholic`, `hindu`, `buddhist`, `confucian`                     |
+| `category` (research)  | `fintech`, `retail`, `education`, `health`, `technology`                                |
+| `operator` (criteria)  | `EQ`, `NEQ`, `IN`, `NOT_IN`, `GT`, `GTE`, `LT`, `LTE`, `BETWEEN`                        |
+| `questionType`         | `SINGLE_CHOICE`, `MULTIPLE_CHOICE`, `TEXT`, `NUMBER`, `SCALE`                           |
+| `status` (research)    | `DRAFT`, `PENDING_REVIEW`, `PUBLISHED`, `CLOSED`, `COMPLETED`, `REJECTED`, `CANCELLED`  |
+| `type` (token mutasi)  | `TOPUP`, `RESERVE`, `RELEASE`, `CONSUME`, `REWARD`, `WITHDRAW`, `FEE`, `REFUND`         |
+| `status` (payment)     | `PENDING`, `PAID`, `FAILED`, `EXPIRED`, `REFUNDED`                                      |
+| `category` (ticket)    | `DISPUTE`, `RESEARCH`, `TRANSACTION`, `ACCOUNT`, `OTHER`                                |
+| `status` (ticket)      | `REVIEW`, `RESOLVED`, `REJECTED`                                                        |
+| `language` (setting)   | `id`, `en`                                                                              |
+| `theme` (setting)      | `light`, `system`                                                                       |
+| `status` (partisipasi) | `JOINED`, `IN_PROGRESS`, `SUBMITTED`, `UNDER_REVIEW`, `APPROVED`, `REJECTED`, `EXPIRED` |
+| `screeningResult`      | `PASS`, `FAIL`, `NEEDS_REVIEW`                                                          |
+| `status` (reward)      | `PENDING`, `HELD`, `PAID`, `CANCELLED`                                                  |
 
 `roles` disimpan sebagai JSON array. User yang baru mendaftar mendapat
 `["researcher", "respondent"]`; admin `["researcher", "respondent", "admin"]`.
@@ -731,7 +734,7 @@ belum dihitung. Bandingkan dengan `targetRespondentCount` untuk progres "respond
 
 ### `GET /api/research/available`
 
-Feed untuk **responden**: riset milik orang lain yang sedang dibuka dan belum pernah dia ikuti. Butuh
+Feed untuk **responden**: riset milik orang lain yang sedang dibuka dan yang belum dia **kirim**. Butuh
 login, tapi **tidak** butuh role `researcher` — ini sisi sebaliknya dari resource yang sama.
 
 Yang tidak ikut masuk daftar:
@@ -740,7 +743,11 @@ Yang tidak ikut masuk daftar:
 - yang statusnya bukan `PUBLISHED`,
 - yang sudah di-archive,
 - yang deadline-nya sudah lewat (statusnya masih `PUBLISHED`, tapi tidak lagi menerima jawaban),
-- yang sudah pernah dia ikuti (baris partisipasi apa pun).
+- yang sudah dia **kirim** (`submittedAt` terisi).
+
+Riset yang sudah dia **mulai tapi belum selesai** justru tetap ada di daftar, membawa `participation`-nya —
+kalau tidak, pekerjaan yang belum selesai akan menghilang dari satu-satunya tempat ia bisa ditemukan lagi.
+Kartunya yang membedakan: badge status plus tombol "Lanjutkan Kuesioner".
 
 **Query**
 
@@ -768,8 +775,10 @@ Yang tidak ikut masuk daftar:
                 "rewardIdr": 2000,
                 "estimatedDurationMinutes": 8,
                 "deadline": "2026-12-31T…",
+                "daysLeft": 30,
                 "respondentCount": 82,
-                "targetRespondentCount": 100
+                "targetRespondentCount": 100,
+                "participation": { "id": "…", "status": "IN_PROGRESS" }
             }
         ]
     }
@@ -777,10 +786,63 @@ Yang tidak ikut masuk daftar:
 ```
 
 `rewardIdr` dihitung di server (`tokenPerRespondent × TOKEN_PRICE_IDR`), supaya client tidak perlu tahu
-harga token. `respondentCount` mengikuti aturan yang sama dengan daftar peneliti: hanya partisipasi yang
-sudah dikirim.
+harga token. `daysLeft` juga dari server, supaya tidak ada komponen yang membaca jam saat render.
+`respondentCount` mengikuti aturan yang sama dengan daftar peneliti: hanya partisipasi yang sudah dikirim.
+
+`participation` adalah milik pemanggil sendiri bila ia sudah mulai, atau `null` — nilai yang sama dengan
+`GET /api/research/available/{id}`. Statusnya yang membuat kartu bisa menuliskan "sedang dikerjakan" dan
+memilih antara mulai atau melanjutkan.
 
 **Error:** `401` · `422` query tidak valid.
+
+---
+
+### `GET /api/research/available/{id}`
+
+Satu riset dari kumpulan yang sama, untuk halaman detailnya. Butuh login; role `researcher` tidak perlu,
+jadi endpoint ini juga dilayani **sebelum** guard peneliti.
+
+Aturan ketersediaannya sama dengan feed yang di atas, hanya diterapkan pada satu id — jadi halaman detail
+tidak mungkin menampilkan sesuatu yang feed-nya sembunyikan. Satu perbedaan yang disengaja: riset yang
+**sudah pemanggil ikuti** tetap dikembalikan beserta partisipasinya, justru supaya halamannya bisa
+menawarkan melanjutkan, bukan memulai. Riset milik pemanggil sendiri, yang belum `PUBLISHED`, yang sudah
+lewat deadline, atau yang di-archive dijawab `404` — satu jawaban yang sama, supaya keberadaannya tidak
+bocor ke orang yang bukan sasarannya.
+
+**Response `200`**
+
+```json
+{
+    "ok": true,
+    "statusCode": 200,
+    "message": "Available research",
+    "data": {
+        "research": {
+            "id": "…",
+            "title": "QRIS dan perilaku belanja",
+            "description": "…",
+            "category": "fintech",
+            "researcherName": "…",
+            "tokenPerRespondent": 2,
+            "rewardIdr": 2000,
+            "estimatedDurationMinutes": 8,
+            "deadline": "2026-12-31T…",
+            "daysLeft": 30,
+            "respondentCount": 82,
+            "targetRespondentCount": 100,
+            "criteria": [{ "id": "…", "field": "occupation", "operator": "EQ", "value": "Guru" }]
+        },
+        "participation": null
+    }
+}
+```
+
+`participation` berisi `{ id, status }` milik pemanggil bila sudah ada, atau `null`. `criteria` dikirim
+sebagai aturan apa adanya; cara membacanya urusan client (lihat **Kriteria (screening)** di bagian
+Participation untuk arti operatornya).
+
+**Error:** `401` · `404` riset tidak ada, bukan milik publik, sudah lewat deadline, atau bukan milik
+pemanggil.
 
 ---
 
@@ -1061,6 +1123,293 @@ berisi jumlah token yang dilepas kembali ke wallet.
 Riset yang sudah di-archive akan terlihat seperti tidak ada (`404`) di semua endpoint.
 
 **Error:** `404` · `401`/`403`.
+
+---
+
+## Participation
+
+Sisi **responden**: mengikuti riset, mengisi kuesionernya, dan mengirimkannya. Semua endpoint di sini
+butuh **login** dan role **`respondent`** — kalau tidak, `401`/`403`.
+
+Satu partisipasi adalah satu percobaan satu responden pada satu riset. Pasangan `(riset, responden)` unik,
+jadi "ikut" bersifat idempoten.
+
+### `POST /api/research/{id}/participate`
+
+Mengikuti riset yang sedang dibuka, atau mengembalikan partisipasi yang sudah dimiliki.
+
+Endpoint ini tinggal di route research karena ia aksi pada sebuah riset, tetapi ia diperiksa dengan role
+`respondent` dan dilayani **sebelum** guard peneliti.
+
+Ikut dua kali bukan error: kalau partisipasinya belum dikirim, yang dikembalikan adalah partisipasi yang
+sama tanpa memeriksa ulang kriteria maupun kuota — yang sudah memegang slot tetap memegangnya. Pemeriksaan
+berikut hanya menjaga **join pertama**:
+
+- riset harus `PUBLISHED`, belum lewat `deadline`, dan bukan milik pemanggil sendiri;
+- kuota `targetRespondentCount` belum penuh — ini juga yang menjaga token, karena pembayaran tidak boleh
+  melebihi reservasi;
+- kriteria profil terpenuhi.
+
+Ini juga panggilan yang **mencatat `startedAt`**: halaman kuesioner membuka partisipasinya lewat endpoint
+ini, jadi jam mulai pengerjaan distempel di sini, sekali saja (lihat **Estimasi durasi**).
+
+Dua permintaan yang datang bersamaan — efek yang dipanggil dua kali, atau tombol yang tertekan dua kali —
+tidak menghasilkan dua baris: pasangan `(riset, responden)` unik, dan yang kalah balapan menjawab dengan
+baris yang menang. `upsert` tidak cukup untuk itu: ia justru melempar `P2002` pada balapan seperti ini.
+
+**Response `200`** — bentuk `participation`-nya sama dengan `GET /api/participation/{id}` di bawah.
+
+**Error:** `401`/`403` · `404` riset tidak ada atau di-archive · `409` riset milik sendiri, tidak terbuka,
+deadline lewat, kuota penuh, atau sudah pernah dikirim · `422` kriteria tidak terpenuhi.
+
+---
+
+### Kriteria (screening)
+
+Kriteria adalah daftar aturan `{field, operator, value}`. Yang bisa **diputuskan** baru field yang memang
+ada di profil: `gender`, `province`, `city`, `occupation`, `education`, `religion`.
+
+Editor juga menawarkan `age` dan `region`, yang **belum tersimpan di mana pun** (profil tidak punya tanggal
+lahir maupun pemetaan provinsi→region). Aturan tentang keduanya dikembalikan sebagai _belum bisa diputuskan_,
+bukan ditebak: tebakan "lolos" akan membelanjakan token peneliti untuk orang yang ia kecualikan, dan tebakan
+"tidak lolos" akan menyembunyikan risetnya tanpa alasan.
+
+**Arti operator:**
+
+| Operator                    | Arti                                                                         |
+| --------------------------- | ---------------------------------------------------------------------------- |
+| `EQ` / `NEQ`                | sama / tidak sama dengan `value`                                             |
+| `IN` / `NOT_IN`             | ada / tidak ada di daftar `value` (dipisah koma)                             |
+| `GT` / `GTE` / `LT` / `LTE` | perbandingan angka; sisi yang tidak terbaca sebagai angka → belum diputuskan |
+| `BETWEEN`                   | angka di antara dua nilai; `value` berisi `min,maks`                         |
+
+Hasilnya disimpan di partisipasinya:
+
+| Field             | Arti                                                                                                                                                                                             |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `screeningScore`  | persentase aturan yang terpenuhi, atau `null` bila risetnya tidak punya kriteria. Aturan yang belum bisa diputuskan dihitung belum terpenuhi                                                     |
+| `screeningResult` | `PASS`, `NEEDS_REVIEW` (ada aturan yang belum bisa diputuskan), atau `null` (tidak ada kriteria). `FAIL` tidak pernah tersimpan: kriteria yang gagal ditolak `422` sebelum partisipasinya dibuat |
+
+---
+
+### `GET /api/participation`
+
+Daftar partisipasi milik pemanggil, terbaru dulu (default 50 baris).
+
+**Query**
+
+| Param    | Aturan                                                                                                 |
+| -------- | ------------------------------------------------------------------------------------------------------ |
+| `status` | opsional, salah satu `JOINED`/`IN_PROGRESS`/`SUBMITTED`/`UNDER_REVIEW`/`APPROVED`/`REJECTED`/`EXPIRED` |
+| `take`   | opsional, bilangan bulat 1–100 (default 50)                                                            |
+
+**Response `200`**
+
+```json
+{
+    "ok": true,
+    "statusCode": 200,
+    "message": "Participations",
+    "data": {
+        "participations": [
+            {
+                "id": "…",
+                "researchId": "…",
+                "status": "SUBMITTED",
+                "screeningScore": 100,
+                "screeningResult": "PASS",
+                "startedAt": "…",
+                "submittedAt": "…",
+                "createdAt": "…",
+                "research": {
+                    "id": "…",
+                    "title": "Kebiasaan kardio",
+                    "description": "Studi pendahuluan.",
+                    "category": "health",
+                    "externalSurveyUrl": null,
+                    "researcherName": "Curl Tester",
+                    "estimatedDurationMinutes": 5,
+                    "tokenPerRespondent": 5,
+                    "deadline": "…",
+                    "status": "PUBLISHED"
+                },
+                "reward": { "tokenAmount": 5, "status": "PAID", "paidAt": "…" }
+            }
+        ]
+    }
+}
+```
+
+**Error:** `401`/`403` · `422` query yang tidak valid.
+
+---
+
+### `GET /api/participation/{id}`
+
+Satu partisipasi milik pemanggil, lengkap dengan kuesioner dan jawaban yang sudah tersimpan — inilah yang
+membuat formulir setengah jadi bisa dilanjutkan. Partisipasi milik orang lain dijawab `404`, bukan `403`,
+supaya keberadaannya tidak bocor.
+
+**Response `200`** — `data.participation`, tiap pertanyaan membawa jawabannya sendiri:
+
+```json
+{
+    "ok": true,
+    "statusCode": 200,
+    "message": "Participation",
+    "data": {
+        "participation": {
+            "id": "…",
+            "researchId": "…",
+            "status": "JOINED",
+            "screeningScore": 100,
+            "screeningResult": "PASS",
+            "startedAt": "…",
+            "submittedAt": null,
+            "createdAt": "…",
+            "research": {
+                "id": "…",
+                "title": "Kebiasaan kardio",
+                "description": "Studi pendahuluan.",
+                "category": "health",
+                "externalSurveyUrl": null,
+                "researcherName": "Curl Tester",
+                "estimatedDurationMinutes": 5,
+                "tokenPerRespondent": 5,
+                "deadline": "…",
+                "status": "PUBLISHED"
+            },
+            "reward": null,
+            "timing": {
+                "actualSeconds": null,
+                "actualSecondsPerQuestion": null,
+                "estimatedSeconds": 300,
+                "estimatedSecondsPerQuestion": 100,
+                "tooFast": null
+            },
+            "questions": [
+                {
+                    "id": "…",
+                    "pos": 1,
+                    "question": "Seberapa sering anda kardio?",
+                    "questionType": "SINGLE_CHOICE",
+                    "mustFill": true,
+                    "choices": [{ "id": "…", "pos": 1, "n": "A", "choiceText": "Sering" }],
+                    "answer": { "selected": [], "text": null }
+                }
+            ]
+        }
+    }
+}
+```
+
+**Error:** `401`/`403` · `404`.
+
+---
+
+### `POST /api/participation/{id}/answers`
+
+Menyimpan jawaban tanpa mengirimkannya; statusnya berpindah ke `IN_PROGRESS`. Halaman kuesioner memanggilnya
+**sekali per halaman** saat responden menekan "Selanjutnya" — bukan sekali per soal, dan bukan pengganti
+kiriman terakhir: jawaban yang lengkap tetap dikirim satu kali lewat `submit`.
+
+Body-nya berisi **seluruh** jawaban: daftar yang dikirim menggantikan yang tersimpan, jadi daftar yang lebih
+pendek berarti jawaban dihapus. Satu jawaban berisi `selected` (id pilihan), `text` (jawaban bebas), atau
+keduanya kosong.
+
+```json
+{
+    "answers": [
+        { "questionId": "…", "selected": ["…"] },
+        { "questionId": "…", "text": "Tidak ada saran." }
+    ]
+}
+```
+
+**Response `200`** — `data.participation`, sama dengan `GET` di atas.
+
+**Error:** `401`/`403` · `404` · `409` partisipasinya sudah dikirim · `422` ada `questionId` yang bukan milik
+riset ini, atau id pilihan yang tidak ditawarkan pertanyaannya.
+
+---
+
+### `POST /api/participation/{id}/submit`
+
+Mengirim partisipasi dan **membayar responden**. Body-nya opsional; bila ada, `answers` diperlakukan sama
+seperti di endpoint sebelumnya _sebelum_ divalidasi, supaya halaman terakhir formulir tidak bisa hilang di
+antara simpan dan kirim.
+
+Yang terjadi, semuanya dalam satu transaksi:
+
+1. jawaban (bila dikirim) menggantikan yang tersimpan;
+2. setiap pertanyaan ber-`mustFill` harus terjawab — kalau tidak, `422` dan tidak ada yang berubah;
+3. risetnya harus masih menerima jawaban **dan deadline-nya belum lewat** — deadline diperiksa di sini
+   maupun saat join;
+4. `tokenPerRespondent` dibayarkan ke wallet responden sebagai baris ledger `REWARD`, dan `Reward` dibuat
+   dengan status `PAID`;
+5. `Research.tokensConsumed` bertambah sebanyak itu — cerminan `RESERVE` saat publish, dan angka yang
+   membuat sisa reservasi bisa dilepas saat riset ditutup;
+6. `submittedAt` diisi dengan waktu server, yang sekaligus menjadi waktu selesai pengerjaan (lihat
+   **Estimasi durasi** di bawah).
+
+**Response `200`** — `data.participation` dengan `status: "SUBMITTED"` dan `reward` yang terisi.
+
+**Error:** `401`/`403` · `404` · `409` sudah pernah dikirim, risetnya sudah tidak menerima jawaban,
+deadline-nya lewat, atau anggaran reward-nya habis · `422` pertanyaan wajib belum terjawab.
+
+Kiriman kedua dijawab `409`, bukan sukses palsu: baris ledger-nya berkunci pada partisipasi, jadi efeknya
+idempoten walaupun bentuk jawabannya bukan.
+
+---
+
+### Estimasi durasi
+
+Riset sudah membawa `estimatedDurationMinutes` dari editor. Itu dipakai untuk menaksir berapa lama tiap
+soal seharusnya dikerjakan:
+
+```
+estimatedSecondsPerQuestion = estimatedDurationMinutes * 60 / totalQuestions
+```
+
+Contoh: 5 menit dan 10 soal → 300 / 10 = **30 detik per soal**.
+
+Waktunya diukur antara dua timestamp **server** di partisipasinya — tidak ada durasi yang disimpan:
+
+| Waktu   | Kolom         | Diisi saat                      |
+| ------- | ------------- | ------------------------------- |
+| Mulai   | `startedAt`   | responden **membuka** kuesioner |
+| Selesai | `submittedAt` | responden mengirim              |
+
+```
+actualSeconds = submittedAt - startedAt
+```
+
+`startedAt` distempel saat halaman kuesioner dibuka (`POST /api/research/{id}/participate`), dan hanya
+sekali: kembali ke formulir yang setengah jadi melanjutkan pengukuran yang sama, bukan memulainya ulang.
+Baris yang dibuat sebelum kolom ini ada tidak punya `startedAt`, dan jamnya jatuh kembali ke `createdAt`
+(jam join) — arah jatuh yang aman, karena jendela yang lebih panjang hanya membuat laju terlihat lebih lambat.
+
+Durasinya dihitung ulang tiap kali dibaca, jadi tidak mungkin berbeda dari kedua timestamp itu. Tidak ada
+kolom `completedAt` yang terpisah karena isinya akan sama persis dengan `submittedAt`.
+
+**Response** membawa blok `timing` pada `data.participation`:
+
+| Field                         | Arti                                                                                                   |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `actualSeconds`               | `submittedAt - startedAt`, atau `null` selama belum dikirim                                            |
+| `actualSecondsPerQuestion`    | `actualSeconds / totalQuestions`, atau `null`                                                          |
+| `estimatedSeconds`            | `estimatedDurationMinutes * 60`                                                                        |
+| `estimatedSecondsPerQuestion` | `estimatedSeconds / totalQuestions`, atau `null` kalau risetnya tidak punya soal (bukan pembagian nol) |
+| `tooFast`                     | `true` bila `actualSeconds` di bawah sepertiga `estimatedSeconds`, atau `null` selama belum dikirim    |
+
+**`tooFast` hanyalah penanda awal, bukan penilaian.** Jamnya berjalan dari saat kuesioner **dibuka**, bukan
+saat jawaban terakhir diketik, jadi jendelanya sudah termasuk waktu responden meninggalkan halaman di
+tengah-tengah — tesnya konservatif dan hanya menyala untuk kiriman yang selesai hampir seketika. Angka
+sepertiganya sengaja longgar dan ada di `TOO_FAST_PACE_PERCENT` (`src/service/participation.ts`) untuk
+disetel. Yang perlu dilakukan pada kiriman bertanda adalah **membaca jawabannya**, bukan menolaknya.
+
+Kalau nanti penanda ini perlu disaring atau ditindaklanjuti, tempatnya adalah `QualityCheck.signalFlags`
+(`SPEEDING`, `STRAIGHT_LINING`) — belum dipakai, lihat catatan di bawah.
 
 ---
 
@@ -1350,7 +1699,8 @@ riwayat satu akun tidak pernah terlihat akun lain.
 **Yang sudah berjalan:** register/login/confirm/logout/me, profil demografi (dengan aturan consent
 UU PDP) + unggah foto profil ke Cloudinary, preferensi Account Settings (umum, notifikasi, privasi &
 keamanan) + sesi aktif, draft riset + detail + update + criteria + kuesioner + publish + close +
-delete, tiket bantuan (pusat bantuan), serta wallet token (top-up, reserve, dan release).
+delete, alur responden (ikut riset + screening kriteria + jawab + kirim + dibayar), tiket bantuan
+(pusat bantuan), serta wallet token (top-up, reserve, bayar responden, dan release).
 
 **Yang belum ada:**
 
@@ -1370,9 +1720,28 @@ delete, tiket bantuan (pusat bantuan), serta wallet token (top-up, reserve, dan 
   tapi belum ada endpoint verifikasinya karena belum ada penyedia SMS/WhatsApp (baru Resend untuk
   email).
 - **Endpoint untuk mengubah `roles`** (promote ke admin) — masih manual lewat database.
-- **Sisa alur token** — top-up (`TOPUP`), reserve (`RESERVE`), dan pelepasan sisa reservasi (`RELEASE`,
-  lewat `close` maupun archive) sudah jalan; **pembayaran responden** (`REWARD`/`CONSUME`) belum,
-  karena alur partisipasi responden belum ada.
+- **Sisa alur token** — top-up (`TOPUP`), reserve (`RESERVE`), pembayaran responden (`REWARD`), dan
+  pelepasan sisa reservasi (`RELEASE`, lewat `close` maupun archive) sudah jalan. Yang belum: `CONSUME`,
+  `WITHDRAW`, `FEE`, dan `REFUND` — penarikan saldo dan pembalikan kredit belum ada.
+- **Pembagian reward peneliti vs platform** — `REWARD_SPLIT_RESPONDENT_PERCENT` dan
+  `REWARD_SPLIT_PLATFORM_PERCENT` **belum dipakai**: responden menerima `tokenPerRespondent` penuh dan
+  `Reward.platformTokenAmount` diisi `0`. Itu pilihan yang menjaga dua hal yang sudah terlanjur rilis —
+  komentar schema menyebut `tokenPerRespondent` sebagai token yang diterima responden, dan feed responden
+  menampilkan `rewardIdr` sebesar nilai itu — sekaligus menjaga ledger: potongan platform tidak punya
+  wallet tujuan, jadi menerapkannya akan membuat token keluar dari pembukuan tanpa jejak. Perlu keputusan
+  produk: potong dari `tokenPerRespondent` (dan perbaiki `rewardIdr`), atau tagih di atasnya saat publish.
+- **Auto-screening kualitas jawaban** — kolom `QualityCheck`, `signalFlags` (`SPEEDING`,
+  `STRAIGHT_LINING`), dan `autoScore` belum diisi, dan belum ada endpoint yang membuatnya. Yang sudah ada
+  hanya blok `timing` pada response partisipasi: `tooFast` dihitung saat dibaca dari dua timestamp yang
+  sudah tersimpan, jadi tidak perlu ditulis ke kolom mana pun. Kalau nanti perlu disaring atau
+  ditindaklanjuti, `signalFlags` adalah tempatnya. `screeningScore`/`screeningResult` yang terisi berasal
+  dari kriteria saat join, bukan dari mutu jawaban.
+- **Penahanan reward dan alur review** — `Reward` selalu `PAID` begitu dikirim; `PENDING`/`HELD`,
+  `QUALITY_HOLD_RELEASE_HOURS`, serta `ParticipationStatus.UNDER_REVIEW`/`APPROVED`/`REJECTED` dengan
+  `adminReviewedBy`/`holdReleaseAt` belum dipakai. Belum ada cara menolak jawaban atau membalik bayaran.
+- **Feed responden belum menyaring kriteria** — `GET /api/research/available` masih menampilkan riset
+  yang kriterianya tidak dipenuhi profil; responden baru tahu saat mencoba ikut (`422`). Menyaring di
+  feed butuh `age` dan `region` yang belum tersimpan.
 - **Midtrans** — gateway pembayaran sudah terpasang: `POST /api/payment/topup` mendaftarkan order ke
   Snap, dan webhook memverifikasi signature Midtrans. Env yang dipakai: `MIDTRANS_SERVER_KEY` (wajib
   untuk mengaktifkan), `MIDTRANS_IS_PRODUCTION` (default `false` = sandbox), dan `MIDTRANS_SNAP_BASE_URL`
@@ -1396,9 +1765,13 @@ delete, tiket bantuan (pusat bantuan), serta wallet token (top-up, reserve, dan 
   menawarkannya (baru 4 tipe: `SINGLE_CHOICE`, `MULTIPLE_CHOICE`, `TEXT`, `SCALE`), dan halaman
   responden belum merender input angkanya.
 - **Skor “cocok” dan institusi peneliti** — kartu survei di feed responden versi awal menampilkan
-  badge “99% cocok” dan nama institusi; keduanya belum ada datanya. Skor kecocokan butuh evaluasi
-  kriteria terhadap profil (dan profil belum menyimpan usia), sedangkan institusi belum punya kolom —
-  jadi yang tampil sekarang nama peneliti, dan badge kecocokannya dibuang daripada dikarang.
+  badge “99% cocok” dan nama institusi; keduanya belum ada datanya. Kecocokan sekarang hanya dihitung
+  saat **join** (`screeningScore`), bukan di feed — dan `age`/`region` yang dipakai editor masih belum
+  bisa diputuskan karena profilnya belum menyimpannya. Institusi juga belum punya kolom, jadi yang tampil
+  nama peneliti. Halaman detail riset juga tidak lagi menampilkan badge “Riset Terverifikasi” dan blok
+  “uji perhatian” beserta tombol kirimnya: status verifikasi tidak punya datanya, dan pengiriman jawaban
+  sekarang hanya terjadi di halaman kuesioner — jadi tidak ada lagi jalur kirim palsu yang mengira
+  jawaban sudah terkirim padahal belum dijawab.
 
 **Perilaku yang mudah bikin bingung:**
 
@@ -1406,6 +1779,13 @@ delete, tiket bantuan (pusat bantuan), serta wallet token (top-up, reserve, dan 
 - Key body yang tidak dikenal dibuang tanpa error.
 - Untuk semua endpoint research, guard session + role jalan **sebelum** routing, jadi request tanpa
   login ke path yang tidak dikenal tetap `401` (bukan `404`) — supaya nama route tidak bocor.
+  Pengecualiannya `GET /api/research/available`, `GET /api/research/available/{id}`, dan
+  `POST /api/research/{id}/participate`, yang memang bukan milik peneliti dan diperiksa dengan role
+  `respondent` sebelum guard itu.
+- `POST /api/participation/{id}/submit` boleh tanpa body sama sekali; body `{}` dan body kosong sama
+  artinya, yaitu "tidak ada jawaban baru, kirim yang sudah tersimpan".
+- Deadline riset diperiksa **dua kali**: saat join dan saat submit. Yang kedua itu yang menutup celah
+  responden yang join sebelum deadline lalu mengirim setelahnya.
 
 ---
 
@@ -1413,6 +1793,8 @@ delete, tiket bantuan (pusat bantuan), serta wallet token (top-up, reserve, dan 
 
 `scripts/api-smoke.sh` menjalankan semua endpoint di atas dengan curl terhadap dev server
 (`bun run dev`) dan mencetak satu baris per request: method, path, status HTTP, dan cuplikan response.
+Alur responden (ikut → jawab → kirim → dibayar) dijalankan dengan **akun kedua**, karena satu akun tidak
+bisa menjadi dua sisi sekaligus.
 
 ```sh
 MIDTRANS_SERVER_KEY=local-dev-midtrans-server-key \

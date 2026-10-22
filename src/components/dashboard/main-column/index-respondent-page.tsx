@@ -11,7 +11,7 @@ import YourWalletBalanceCard from "@/components/shared/your-wallet-balance-card"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { getJson } from "@/lib/api-client"
-import type { AvailableResearch } from "@/lib/api-types"
+import type { AvailableResearchRow, CurrentUser } from "@/lib/api-types"
 import { formatIdr } from "@/lib/currency"
 import { RESEARCH_CATEGORY_ITEMS } from "@/lib/research-category"
 
@@ -24,23 +24,34 @@ const LIST_LIMIT = 100
  */
 type FeedState =
     | { status: "loading" }
-    | { status: "ready"; researches: AvailableResearch[]; balance: number | null; balanceIdr: number | null }
+    | {
+          status: "ready"
+          researches: AvailableResearchRow[]
+          /** The caller's own id, which the "carry on" link addresses the questionnaire with. */
+          respondentId: string | null
+          balance: number | null
+          balanceIdr: number | null
+      }
     | { status: "unauthorized" }
     | { status: "error"; message: string }
 
 /**
- * Reads what this respondent can still take, plus their wallet.
+ * Reads what this respondent can still take, plus their wallet and their own account.
  *
- * The feed is other people's published research — never their own, and never one they
- * have already joined; the endpoint decides that, not the browser. Answering with the
- * state rather than setting it keeps this free of React, and lets the effect apply it in
- * a callback — which is where an effect is allowed to put state.
+ * The feed is other people's published research — never their own, and never one they have
+ * already sent in; the endpoint decides that, not the browser. A research they have begun but
+ * not finished stays in it, carrying its participation, so the card can offer to carry on.
+ * The account is read alongside because that link needs the respondent's own id.
+ *
+ * Answering with the state rather than setting it keeps this free of React, and lets the
+ * effect apply it in a callback — which is where an effect is allowed to put state.
  */
 async function readFeed(): Promise<FeedState> {
-    const [available, wallet] = await Promise.all([
-        getJson<{ researches: AvailableResearch[] }>(`/api/research/available?take=${LIST_LIMIT}`),
+    const [available, wallet, me] = await Promise.all([
+        getJson<{ researches: AvailableResearchRow[] }>(`/api/research/available?take=${LIST_LIMIT}`),
         // The wallet needs no role of its own, so it is read alongside rather than after.
         getJson<{ wallet: { balance: number; balanceIdr: number } }>("/api/payment/wallet"),
+        getJson<{ user: CurrentUser }>("/api/auth/me"),
     ])
 
     if (available.statusCode === 401) return { status: "unauthorized" }
@@ -49,6 +60,9 @@ async function readFeed(): Promise<FeedState> {
     return {
         status: "ready",
         researches: available.data.researches,
+        // An account that could not be read only costs the shortcut; the card falls back to
+        // the detail page.
+        respondentId: me.ok ? (me.data?.user.id ?? null) : null,
         // A wallet that could not be read reads as unknown, never as zero.
         balance: wallet.ok ? (wallet.data?.wallet.balance ?? null) : null,
         balanceIdr: wallet.ok ? (wallet.data?.wallet.balanceIdr ?? null) : null,
@@ -85,6 +99,7 @@ export default function DashboardMainColumnIndexRespondentPage() {
     }, [state.status, router])
 
     const researches = state.status === "ready" ? state.researches : []
+    const respondentId = state.status === "ready" ? state.respondentId : null
     // Only the categories actually on offer, so a badge is never empty.
     const categories = RESEARCH_CATEGORY_ITEMS.filter((item) => researches.some((research) => research.category === item.value))
     const countOf = (category: string) => researches.filter((research) => research.category === category).length
@@ -179,7 +194,7 @@ export default function DashboardMainColumnIndexRespondentPage() {
                         ) : (
                             <div className="space-y-4">
                                 {visible.map((research) => (
-                                    <BrowseSurveyCard key={research.id} research={research} />
+                                    <BrowseSurveyCard key={research.id} research={research} respondentId={respondentId} />
                                 ))}
                             </div>
                         ))}

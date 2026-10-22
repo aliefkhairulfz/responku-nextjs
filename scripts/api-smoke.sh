@@ -71,11 +71,48 @@ call() {
     printf '%-6s %-44s %s  %s\n' "$method" "$path" "$status" "$(printf '%s' "$payload" | cut -c1-165)"
 }
 
+# The same call, made as a second signed-in account — needed wherever two sides of a
+# flow cannot be the same user (a respondent taking somebody else's research).
+call_as() {
+    method=$1
+    path=$2
+    jar=$3
+    body=${4:-}
+
+    if [ -n "$body" ]; then
+        raw=$(curl -sS -X "$method" "$BASE$path" -H 'content-type: application/json' -b "$jar" -c "$jar" -d "$body" -w '\n%{http_code}')
+    else
+        raw=$(curl -sS -X "$method" "$BASE$path" -H 'content-type: application/json' -b "$jar" -c "$jar" -w '\n%{http_code}')
+    fi
+
+    status=$(printf '%s' "$raw" | tail -n 1)
+    LAST=$(printf '%s' "$raw" | sed '$d')
+    payload=$(printf '%s' "$LAST" | tr -d '\n' | tr -s ' ')
+    printf '%-6s %-44s %s  %s\n' "$method" "$path" "$status" "$(printf '%s' "$payload" | cut -c1-165)"
+}
+
+# Registers and signs in a second account into its own cookie jar.
+signin_as() {
+    email=$1
+    jar=$2
+
+    : > "$jar"
+    curl -sS -c "$jar" -X POST "$BASE/api/auth/register" -H 'content-type: application/json' \
+        -d "{\"name\":\"Curl Respondent\",\"email\":\"$email\",\"password\":\"supersecret1\"}" -o /dev/null
+    curl -sS -b "$jar" -c "$jar" -X POST "$BASE/api/auth/login" -H 'content-type: application/json' \
+        -d "{\"email\":\"$email\",\"password\":\"supersecret1\"}" -o /dev/null
+}
+
 # Reads a pending OTP straight from the database, since the code is stored in the clear.
 code() { bun run scripts/db-peek.ts code "$1" "${2:-EMAIL_VERIFICATION}"; }
 
 json_field() {
     node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{try{let v=JSON.parse(s);for(const k of process.argv[1].split('.').filter(Boolean))v=v?.[k];console.log(v??'')}catch{console.log('')}})" "$1"
+}
+
+# The caller's participation on one feed row, or `absent` when the row is not in the feed.
+feed_participation() {
+    node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{const row=JSON.parse(s).data.researches.find(r=>r.id===process.argv[1]);console.log(row?JSON.stringify(row.participation):'absent')})" "$1"
 }
 
 # Signs a Midtrans notification the way Midtrans would: sha512 of
@@ -162,6 +199,58 @@ call POST "/api/research/$RID/create-questions" '{"questions":[{"pos":1,"questio
 call PATCH "/api/research/$RID" '{"criteria":[]}'
 call PATCH "/api/research/$RID" '{"title":"Judul setelah publish"}'
 
+step "6a. Participation: a respondent joins, answers, and is paid"
+RESPONDENT="curl-respondent-$STAMP@example.com"
+JAR_P=tmp-cookies-respondent.txt
+signin_as "$RESPONDENT" "$JAR_P"
+# The research screens on `occupation EQ Guru`, so the profile has to match it before joining.
+call_as PATCH /api/user/profile "$JAR_P" '{"gender":"male","education":"bachelor","province":"DKI Jakarta","city":"Jakarta Selatan","latitude":-6.261493,"longitude":106.8106,"occupation":"Guru"}'
+# The detail page reads the same pool one item at a time, and the researcher's own research
+# is not in it.
+call_as GET  "/api/research/available/$RID" "$JAR_P"
+printf 'detail before joining: participation=%s criteria=%s\n' "$(printf '%s' "$LAST" | json_field '.data.participation')" "$(printf '%s' "$LAST" | json_field '.data.research.criteria.0.field')"
+call_as GET  "/api/research/available/$RID" "$JAR"
+call_as GET  "/api/research/available/tidak-ada" "$JAR_P"
+call_as POST "/api/research/$RID/participate" "$JAR_P"
+PID=$(printf '%s' "$LAST" | json_field '.data.participation.id')
+printf 'participation: %s | screening: %s (%s)\n' "$PID" "$(printf '%s' "$LAST" | json_field '.data.participation.screeningResult')" "$(printf '%s' "$LAST" | json_field '.data.participation.screeningScore')"
+printf 'startedAt: %s\n' "$(printf '%s' "$LAST" | json_field '.data.participation.startedAt')"
+call_as GET  "/api/research/available/$RID" "$JAR_P"
+printf 'detail after joining: participation=%s\n' "$(printf '%s' "$LAST" | json_field '.data.participation.status')"
+# Joining twice hands back the same participation rather than making a second one.
+call_as POST "/api/research/$RID/participate" "$JAR_P"
+printf 'same participation on re-join: %s\n' "$(printf '%s' "$LAST" | json_field '.data.participation.id')"
+call_as GET  "/api/participation/$PID" "$JAR_P"
+QS=$(printf '%s' "$LAST" | json_field '.data.participation.questions.0.id')
+CS=$(printf '%s' "$LAST" | json_field '.data.participation.questions.0.choices.0.id')
+QT=$(printf '%s' "$LAST" | json_field '.data.participation.questions.1.id')
+call_as POST "/api/participation/$PID/answers" "$JAR_P" "{\"answers\":[{\"questionId\":\"$QS\",\"selected\":[\"$CS\"]}]}"
+# A research that has been started stays in the feed, carrying its status, so the card can
+# offer to carry on.
+call_as GET  "/api/research/available?take=100" "$JAR_P"
+printf 'feed while in progress: %s\n' "$(printf '%s' "$LAST" | feed_participation "$RID")"
+# A required question is still blank, so sending it in has to be refused.
+call_as POST "/api/participation/$PID/submit" "$JAR_P"
+call_as POST "/api/participation/$PID/submit" "$JAR_P" "{\"answers\":[{\"questionId\":\"$QS\",\"selected\":[\"$CS\"]},{\"questionId\":\"$QT\",\"text\":\"Saran singkat.\"}]}"
+printf 'timing: actual=%ss estimated=%ss perQuestion=%ss tooFast=%s\n' \
+    "$(printf '%s' "$LAST" | json_field '.data.participation.timing.actualSeconds')" \
+    "$(printf '%s' "$LAST" | json_field '.data.participation.timing.estimatedSeconds')" \
+    "$(printf '%s' "$LAST" | json_field '.data.participation.timing.estimatedSecondsPerQuestion')" \
+    "$(printf '%s' "$LAST" | json_field '.data.participation.timing.tooFast')"
+# The reward is already credited, so the second send is refused instead of paying twice.
+call_as POST "/api/participation/$PID/submit" "$JAR_P"
+call_as POST "/api/participation/$PID/answers" "$JAR_P" '{"answers":[]}'
+call_as GET  /api/participation "$JAR_P"
+call_as GET  /api/payment/wallet "$JAR_P"
+# Once it is sent in it leaves the feed again.
+call_as GET  "/api/research/available?take=100" "$JAR_P"
+printf 'feed after submitting: %s\n' "$(printf '%s' "$LAST" | feed_participation "$RID")"
+# A POST on the participation itself is not an action, so it is a 404 rather than a write.
+call_as POST "/api/participation/$PID" "$JAR_P"
+# The researcher's own research is the one thing they cannot take part in.
+call_as POST "/api/research/$RID/participate" "$JAR"
+call GET "/api/research/$RID"
+
 step "6b. Close returns the unused budget, archiving a closed research releases nothing more"
 call POST "/api/research/$RID/close"
 call GET  /api/payment/wallet
@@ -198,5 +287,5 @@ call GET /api/payment/wallet
 # Comment this out when you would rather inspect the rows it produced.
 bun run scripts/db-peek.ts purge "$STAMP"
 
-rm -f "$JAR"
+rm -f "$JAR" "$JAR_P"
 printf '\nselesai\n'

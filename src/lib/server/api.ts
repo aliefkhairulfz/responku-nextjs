@@ -37,6 +37,24 @@ export async function readFormData(req: NextRequest): Promise<FormData> {
     }
 }
 
+/**
+ * Reads a JSON body that is allowed to be absent, as `{}` when there is none.
+ *
+ * For endpoints whose payload is entirely optional, where `req.json()` throwing on an
+ * empty body would turn "I have nothing to send" into a validation error.
+ */
+export async function readOptionalJsonBody(req: NextRequest): Promise<unknown> {
+    const body = await req.text()
+
+    if (body.trim().length === 0) return {}
+
+    try {
+        return JSON.parse(body)
+    } catch {
+        throw new BadRequestException("Request body must be valid JSON")
+    }
+}
+
 /** Validates `body` against `schema`, throwing a 422 with per-field errors. */
 export function parseBody<T extends z.ZodType>(schema: T, body: unknown): z.infer<T> {
     const result = schema.safeParse(body)

@@ -30,6 +30,18 @@ const TOKEN_TOTAL_LIMIT = 1_000_000
 /** How many rows a list returns when the caller does not say. */
 const DEFAULT_RESEARCH_LIMIT = 50
 
+const DAY_MS = 86_400_000
+
+/**
+ * Whole days until a deadline, never negative.
+ *
+ * Derived on the server for the same reason the reward is: it reads a clock, and a
+ * component that reads one during render is not a pure component.
+ */
+function daysUntil(deadline: Date): number {
+    return Math.max(0, Math.ceil((deadline.getTime() - Date.now()) / DAY_MS))
+}
+
 /** Criteria operators the API accepts, mirroring the Prisma enum. */
 export const CRITERIA_OPERATORS = ["EQ", "NEQ", "IN", "NOT_IN", "GT", "GTE", "LT", "LTE", "BETWEEN"] as const
 
@@ -305,13 +317,69 @@ export async function createResearchDraftService({ researcherId }: { researcherI
 
 /* ========== Available to respondents ========== */
 
+/** The research header the respondent's feed and its detail page share. */
+const AVAILABLE_RESEARCH_SELECT = {
+    id: true,
+    title: true,
+    description: true,
+    category: true,
+    tokenPerRespondent: true,
+    estimatedDurationMinutes: true,
+    deadline: true,
+    targetRespondentCount: true,
+    researcher: { select: { name: true } },
+    _count: {
+        select: {
+            // Same rule as the researcher's list: only answers actually sent in.
+            participations: { where: { submittedAt: { not: null } } },
+        },
+    },
+} satisfies Prisma.ResearchSelect
+
+/**
+ * The same header plus the caller's own participation.
+ *
+ * Both places that read a research need to know whether the respondent has already started
+ * it — the feed so its card can offer to carry on, the detail page so its button can say so.
+ * Spread from the static base so Prisma keeps the literal types it needs to type the result.
+ */
+function availableResearchSelect(respondentId: string) {
+    return {
+        ...AVAILABLE_RESEARCH_SELECT,
+        participations: { where: { respondentId, deletedAt: null }, select: { id: true, status: true }, take: 1 },
+    } satisfies Prisma.ResearchSelect
+}
+
+type AvailableResearchRow = Prisma.ResearchGetPayload<{ select: typeof AVAILABLE_RESEARCH_SELECT }>
+
+/** Maps a research onto what a respondent's card and detail page read. */
+function toAvailableResearchResponse(research: AvailableResearchRow) {
+    return {
+        id: research.id,
+        title: research.title,
+        description: research.description,
+        category: research.category,
+        researcherName: research.researcher.name,
+        tokenPerRespondent: research.tokenPerRespondent,
+        // Priced here rather than in the browser: the token price is a server variable,
+        // and a client should not have to know it to show a reward.
+        rewardIdr: research.tokenPerRespondent * IDR_PER_TOKEN,
+        estimatedDurationMinutes: research.estimatedDurationMinutes,
+        deadline: research.deadline,
+        daysLeft: daysUntil(research.deadline),
+        respondentCount: research._count.participations,
+        targetRespondentCount: research.targetRespondentCount,
+    }
+}
+
 /**
  * Lists the research a respondent can still take.
  *
- * Published only, never their own, and never one they have already joined: the feed is
- * what is left to do, not a catalogue of everything. A deadline that has passed drops
- * out on its own, since such a research is no longer taking answers even though its
- * status is still `PUBLISHED`.
+ * Published only, never their own, and never one they have already **sent in** — a research
+ * they have begun but not finished stays in the feed, so the card can offer to carry on
+ * instead of the work quietly becoming unreachable. A deadline that has passed drops out on
+ * its own, since such a research is no longer taking answers even though its status is still
+ * `PUBLISHED`.
  */
 export async function listAvailableResearchService({
     respondentId,
@@ -329,44 +397,61 @@ export async function listAvailableResearchService({
             deadline: { gt: new Date() },
             researcherId: { not: respondentId },
             ...(category === undefined ? {} : { category }),
-            participations: { none: { respondentId, deletedAt: null } },
+            participations: { none: { respondentId, deletedAt: null, submittedAt: { not: null } } },
         },
         orderBy: { publishedAt: "desc" },
         take: take ?? DEFAULT_RESEARCH_LIMIT,
-        select: {
-            id: true,
-            title: true,
-            description: true,
-            category: true,
-            tokenPerRespondent: true,
-            estimatedDurationMinutes: true,
-            deadline: true,
-            targetRespondentCount: true,
-            researcher: { select: { name: true } },
-            _count: {
-                select: {
-                    // Same rule as the researcher's list: only answers actually sent in.
-                    participations: { where: { submittedAt: { not: null } } },
-                },
-            },
-        },
+        select: availableResearchSelect(respondentId),
     })
 
     return researches.map((research) => ({
-        id: research.id,
-        title: research.title,
-        description: research.description,
-        category: research.category,
-        researcherName: research.researcher.name,
-        tokenPerRespondent: research.tokenPerRespondent,
-        // Priced here rather than in the browser: the token price is a server variable,
-        // and a client should not have to know it to show a reward.
-        rewardIdr: research.tokenPerRespondent * IDR_PER_TOKEN,
-        estimatedDurationMinutes: research.estimatedDurationMinutes,
-        deadline: research.deadline,
-        respondentCount: research._count.participations,
-        targetRespondentCount: research.targetRespondentCount,
+        ...toAvailableResearchResponse(research),
+        participation: research.participations[0] ?? null,
     }))
+}
+
+/**
+ * One research from the respondent's pool, for its detail page.
+ *
+ * The availability rules are the feed's, applied to a single id, so the detail page
+ * cannot show something the feed would have hidden. The one deliberate difference is
+ * that a research the caller has already joined is still returned, together with their
+ * participation: that is exactly the case where the page should offer to carry on
+ * rather than to start.
+ *
+ * The criteria travel as the stored rules; how they read is the client's business.
+ */
+export async function getAvailableResearchService({ id, respondentId }: { id: string; respondentId: string }) {
+    const research = await prisma.research.findFirst({
+        where: {
+            id,
+            status: ResearchStatus.PUBLISHED,
+            deletedAt: null,
+            deadline: { gt: new Date() },
+            researcherId: { not: respondentId },
+        },
+        select: {
+            ...availableResearchSelect(respondentId),
+            criteria: { select: { id: true, field: true, operator: true, value: true } },
+        },
+    })
+
+    // Not published, past its deadline, archived, their own, or simply unknown: all the
+    // same answer, so a respondent never learns that a research exists but is not theirs.
+    if (research === null) throw new NotFoundException("Research not found")
+
+    return {
+        research: {
+            ...toAvailableResearchResponse(research),
+            criteria: research.criteria.map((criterion) => ({
+                id: criterion.id,
+                field: criterion.field,
+                operator: criterion.operator,
+                value: criterion.value,
+            })),
+        },
+        participation: research.participations[0] ?? null,
+    }
 }
 
 /* ========== Read ========== */

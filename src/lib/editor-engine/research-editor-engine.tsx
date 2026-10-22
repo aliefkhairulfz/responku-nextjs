@@ -8,7 +8,8 @@ import * as Select from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 import { ChevronDown, ChevronUp, Copy, Plus, Trash2 } from "lucide-react"
-import { MAX_AGE, MIN_AGE, type QuestionSchema, categoryItems, questionTypeItems, timeLimitOptions } from "./research-editor-schema"
+import { useRef } from "react"
+import { MAX_AGE, MIN_AGE, type QuestionSchema, categoryItems, estimateMinutes, questionTypeItems, timeLimitOptions } from "./research-editor-schema"
 import type { UseResearchEditorForm } from "./research-editor-schema"
 
 /** CONSTANTS & HELPERS */
@@ -90,6 +91,24 @@ export default function RisetEditorEngine({ researchEditorForm: { form }, disabl
         { value: "jawa-lainnya", label: "Jawa (selain Jabodetabek)" },
         { value: "luar-jawa", label: "Luar Jawa" },
     ]
+
+    /**
+     * The estimate we last derived, so a hand-set one is not overwritten by the next change.
+     *
+     * The duration follows the questionnaire — thirty seconds a question — but the researcher
+     * can still set their own; once they have, adding or removing a question leaves it alone.
+     */
+    const derivedMinutes = useRef<number | null>(null)
+
+    /** Re-derives the estimate after the question count changes. */
+    function syncEstimate(questionCount: number) {
+        const derived = estimateMinutes(questionCount)
+
+        if (derivedMinutes.current !== null && form.state.values.identity.estimatedMinutes !== derivedMinutes.current) return
+
+        derivedMinutes.current = derived
+        form.setFieldValue("identity.estimatedMinutes", derived)
+    }
 
     return (
         <form
@@ -250,7 +269,7 @@ export default function RisetEditorEngine({ researchEditorForm: { form }, disabl
 
                     <form.Field name="identity.estimatedMinutes">
                         {(field) => (
-                            <FieldWrapper label="Estimasi Durasi (menit per responden)" htmlFor={field.name}>
+                            <FieldWrapper label="Estimasi Waktu Pengerjaan (menit)" htmlFor={field.name}>
                                 <Input
                                     id={field.name}
                                     type="number"
@@ -260,6 +279,7 @@ export default function RisetEditorEngine({ researchEditorForm: { form }, disabl
                                     onBlur={field.handleBlur}
                                     onChange={(e) => field.handleChange(e.target.valueAsNumber)}
                                 />
+                                <p className="text-muted-foreground text-xs">Disesuaikan otomatis dari jumlah soal (sekitar 30 detik per soal).</p>
                                 <FieldError errors={field.state.meta.errors} />
                             </FieldWrapper>
                         )}
@@ -412,6 +432,7 @@ export default function RisetEditorEngine({ researchEditorForm: { form }, disabl
                                                                 })),
                                                             } as QuestionItem
                                                             questionsField.insertValue(questionItemIdx + 1, copy)
+                                                            syncEstimate(total + 1)
                                                         }}
                                                     >
                                                         <Copy />
@@ -421,7 +442,10 @@ export default function RisetEditorEngine({ researchEditorForm: { form }, disabl
                                                         variant="ghost"
                                                         size="icon"
                                                         disabled={total <= 1}
-                                                        onClick={() => questionsField.removeValue(questionItemIdx)}
+                                                        onClick={() => {
+                                                            questionsField.removeValue(questionItemIdx)
+                                                            syncEstimate(total - 1)
+                                                        }}
                                                     >
                                                         <Trash2 />
                                                     </Button>
@@ -574,7 +598,10 @@ export default function RisetEditorEngine({ researchEditorForm: { form }, disabl
                                 type="button"
                                 variant="outline"
                                 disabled={total >= MAX_QUESTIONS}
-                                onClick={() => questionsField.pushValue(makeQuestion(total + 1))}
+                                onClick={() => {
+                                    questionsField.pushValue(makeQuestion(total + 1))
+                                    syncEstimate(total + 1)
+                                }}
                             >
                                 <Plus /> Tambah Pertanyaan ({total}/{MAX_QUESTIONS})
                             </Button>

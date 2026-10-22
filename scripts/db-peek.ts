@@ -70,10 +70,12 @@ if (command === "wallet") {
  * hang off it.
  *
  * Children go first because most of these relations are `RESTRICT`, not `CASCADE`:
- * a research, a payment, or a support ticket would refuse to let its owner go. Criteria,
- * questions, and choices do cascade from the research, and the profile, accounts, sessions,
- * and verifications cascade from the user. Participations restrict from both ends — the
- * research and the respondent — so they are cleared before either.
+ * a research, a payment, or a support ticket would refuse to let its owner go, and a
+ * reward, a quality check, or a content report would hold on to its participation or
+ * research the same way. Criteria, questions, choices, and answers do cascade — from the
+ * research and the participation — and the profile, accounts, sessions, and verifications
+ * cascade from the user. Participations restrict from both ends — the research and the
+ * respondent — so they are cleared before either.
  *
  * Everything runs in one transaction, so a run that hits an unexpected relation
  * removes nothing at all rather than leaving half an account behind.
@@ -94,9 +96,30 @@ if (command === "purge") {
     const walletIds = wallets.map((wallet) => wallet.id)
     const researches = await prisma.research.findMany({ where: { researcherId: { in: userIds } }, select: { id: true } })
     const researchIds = researches.map((research) => research.id)
+    // Answers cascade from a participation, but rewards and quality checks restrict, so
+    // their ids have to be known before the participations can go.
+    const participationRows = await prisma.respondentParticipation.findMany({
+        where: { OR: [{ researchId: { in: researchIds } }, { respondentId: { in: userIds } }] },
+        select: { id: true },
+    })
+    const participationIds = participationRows.map((participation) => participation.id)
 
-    const [transactions, participations, payments, removedTickets, removedWallets, removedResearches, removedUsers] = await prisma.$transaction([
+    const [
+        transactions,
+        removedRewards,
+        removedQualityChecks,
+        removedReports,
+        participations,
+        payments,
+        removedTickets,
+        removedWallets,
+        removedResearches,
+        removedUsers,
+    ] = await prisma.$transaction([
         prisma.tokenTransaction.deleteMany({ where: { walletId: { in: walletIds } } }),
+        prisma.reward.deleteMany({ where: { participationId: { in: participationIds } } }),
+        prisma.qualityCheck.deleteMany({ where: { participationId: { in: participationIds } } }),
+        prisma.contentReport.deleteMany({ where: { OR: [{ researchId: { in: researchIds } }, { reportedBy: { in: userIds } }] } }),
         prisma.respondentParticipation.deleteMany({
             where: { OR: [{ researchId: { in: researchIds } }, { respondentId: { in: userIds } }] },
         }),
@@ -111,7 +134,8 @@ if (command === "purge") {
 
     console.log(
         `removed ${removedUsers.count} users, ${removedResearches.count} researches, ${removedWallets.count} wallets, ` +
-            `${transactions.count} token transactions, ${participations.count} participations, ${payments.count} payments, ` +
+            `${transactions.count} token transactions, ${participations.count} participations, ${removedRewards.count} rewards, ` +
+            `${removedQualityChecks.count} quality checks, ${removedReports.count} content reports, ${payments.count} payments, ` +
             `${removedTickets.count} support tickets`,
     )
 }

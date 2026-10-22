@@ -1,7 +1,13 @@
 import { deleteJson, patchJson, postJson } from "@/lib/api-client"
 import type { ResearchCriterion, ResearchDetail, ResearchQuestion } from "@/lib/api-types"
 import { RESEARCH_CATEGORIES } from "@/lib/research-category"
-import { criteriaSchemaDefaultValue, identitySchemaDefaultValue, timeLimitOptions, type EditorValues } from "./research-editor-schema"
+import {
+    criteriaSchemaDefaultValue,
+    estimateMinutes,
+    identitySchemaDefaultValue,
+    timeLimitOptions,
+    type EditorValues,
+} from "./research-editor-schema"
 
 /**
  * Translation between the editor's form and the research API.
@@ -94,7 +100,9 @@ export function toEditorValues(research: ResearchDetail): EditorValues {
             title: research.title,
             description: research.description,
             category: categoryOf(research.category),
-            estimatedMinutes: research.estimatedDurationMinutes,
+            // Derived rather than read back: the estimate belongs to the questionnaire's length, so
+            // a draft saved under the old fixed default opens with the figure its questions imply.
+            estimatedMinutes: estimateMinutes(research.questions.length),
         },
         allocationToken: {
             targetResponden: research.targetRespondentCount,

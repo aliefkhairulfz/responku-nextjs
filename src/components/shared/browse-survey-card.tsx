@@ -6,28 +6,34 @@ import { Button } from "@/components/ui/button"
 import * as Card from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
-import type { AvailableResearch } from "@/lib/api-types"
+import type { AvailableResearchRow } from "@/lib/api-types"
+import { participationStatusLabel } from "@/lib/participation-status"
 import { RESEARCH_CATEGORY_ITEMS } from "@/lib/research-category"
-
-const DAY_MS = 86_400_000
 
 function categoryLabel(category: string | null) {
     return RESEARCH_CATEGORY_ITEMS.find((item) => item.value === category)?.label ?? "Tanpa kategori"
 }
 
 /**
- * One survey a respondent can take.
+ * One survey a respondent can take, or carry on.
  *
- * Everything here comes from the feed endpoint, including the reward in rupiah — the
- * token price is a server variable, so the conversion happens there rather than in the
- * browser. Who *answered* is counted from submitted participations, the same rule the
+ * Everything here comes from the feed endpoint, including the reward in rupiah and the
+ * days left — the token price is a server variable, and the clock is not a component's to
+ * read. Who *answered* is counted from submitted participations, the same rule the
  * researcher's own list uses.
+ *
+ * A row the caller has already begun keeps its place in the feed, carrying its status, so
+ * unfinished work cannot quietly become unreachable.
  */
-export default function BrowseSurveyCard({ research }: { research: AvailableResearch }) {
-    const daysLeft = Math.ceil((new Date(research.deadline).getTime() - Date.now()) / DAY_MS)
+export default function BrowseSurveyCard({ research, respondentId }: { research: AvailableResearchRow; respondentId: string | null }) {
     const percent =
         research.targetRespondentCount === 0 ? 0 : Math.min(100, Math.round((research.respondentCount / research.targetRespondentCount) * 100))
     const reward = new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(research.rewardIdr)
+
+    const participation = research.participation
+    // Carrying on goes straight into the questionnaire; starting goes through the detail page,
+    // where the criteria and the reward can be read first.
+    const href = participation !== null && respondentId !== null ? `/research/${research.id}/work-on/${respondentId}` : `/research/${research.id}`
 
     return (
         <div className="flex w-full items-center justify-center">
@@ -38,6 +44,7 @@ export default function BrowseSurveyCard({ research }: { research: AvailableRese
                         <span>
                             oleh <b>{research.researcherName}</b>
                         </span>
+                        {participation !== null && <Badge className="rounded-full">{participationStatusLabel(participation.status)}</Badge>}
                     </div>
                 </Card.CardHeader>
 
@@ -51,7 +58,7 @@ export default function BrowseSurveyCard({ research }: { research: AvailableRese
                         <Badge variant="secondary">Reward: {reward}</Badge>
                         <Badge variant="secondary">~{research.estimatedDurationMinutes} Menit</Badge>
                         <Badge variant="secondary">
-                            Batas pengisian: <b>{daysLeft} hari lagi</b>
+                            Batas pengisian: <b>{research.daysLeft} hari lagi</b>
                         </Badge>
                     </div>
                 </Card.CardContent>
@@ -70,8 +77,8 @@ export default function BrowseSurveyCard({ research }: { research: AvailableRese
                         <Progress value={percent} className="w-full" />
                     </div>
 
-                    <Button className="w-full" nativeButton={false} render={<Link href={`/research/${research.id}`} />}>
-                        Mulai Isi Kuesioner
+                    <Button className="w-full" nativeButton={false} render={<Link href={href} />}>
+                        {participation === null ? "Mulai Isi Kuesioner" : "Lanjutkan Kuesioner"}
                     </Button>
                 </Card.CardFooter>
             </Card.Card>

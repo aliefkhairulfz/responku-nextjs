@@ -28,6 +28,7 @@ export type ParticipationAnswerMinAggregateOutputType = {
   id: string | null
   respondentParticipationId: string | null
   researchQuestionId: string | null
+  answerText: string | null
   answeredAt: Date | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -38,6 +39,7 @@ export type ParticipationAnswerMaxAggregateOutputType = {
   id: string | null
   respondentParticipationId: string | null
   researchQuestionId: string | null
+  answerText: string | null
   answeredAt: Date | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -49,6 +51,7 @@ export type ParticipationAnswerCountAggregateOutputType = {
   respondentParticipationId: number
   researchQuestionId: number
   choiceIds: number
+  answerText: number
   answeredAt: number
   createdAt: number
   updatedAt: number
@@ -61,6 +64,7 @@ export type ParticipationAnswerMinAggregateInputType = {
   id?: true
   respondentParticipationId?: true
   researchQuestionId?: true
+  answerText?: true
   answeredAt?: true
   createdAt?: true
   updatedAt?: true
@@ -71,6 +75,7 @@ export type ParticipationAnswerMaxAggregateInputType = {
   id?: true
   respondentParticipationId?: true
   researchQuestionId?: true
+  answerText?: true
   answeredAt?: true
   createdAt?: true
   updatedAt?: true
@@ -82,6 +87,7 @@ export type ParticipationAnswerCountAggregateInputType = {
   respondentParticipationId?: true
   researchQuestionId?: true
   choiceIds?: true
+  answerText?: true
   answeredAt?: true
   createdAt?: true
   updatedAt?: true
@@ -166,6 +172,7 @@ export type ParticipationAnswerGroupByOutputType = {
   respondentParticipationId: string
   researchQuestionId: string
   choiceIds: runtime.JsonValue | null
+  answerText: string | null
   answeredAt: Date | null
   createdAt: Date
   updatedAt: Date
@@ -198,6 +205,7 @@ export type ParticipationAnswerWhereInput = {
   respondentParticipationId?: Prisma.StringFilter<"ParticipationAnswer"> | string
   researchQuestionId?: Prisma.StringFilter<"ParticipationAnswer"> | string
   choiceIds?: Prisma.JsonNullableFilter<"ParticipationAnswer">
+  answerText?: Prisma.StringNullableFilter<"ParticipationAnswer"> | string | null
   answeredAt?: Prisma.DateTimeNullableFilter<"ParticipationAnswer"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"ParticipationAnswer"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"ParticipationAnswer"> | Date | string
@@ -211,6 +219,7 @@ export type ParticipationAnswerOrderByWithRelationInput = {
   respondentParticipationId?: Prisma.SortOrder
   researchQuestionId?: Prisma.SortOrder
   choiceIds?: Prisma.SortOrderInput | Prisma.SortOrder
+  answerText?: Prisma.SortOrderInput | Prisma.SortOrder
   answeredAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -229,6 +238,7 @@ export type ParticipationAnswerWhereUniqueInput = Prisma.AtLeast<{
   respondentParticipationId?: Prisma.StringFilter<"ParticipationAnswer"> | string
   researchQuestionId?: Prisma.StringFilter<"ParticipationAnswer"> | string
   choiceIds?: Prisma.JsonNullableFilter<"ParticipationAnswer">
+  answerText?: Prisma.StringNullableFilter<"ParticipationAnswer"> | string | null
   answeredAt?: Prisma.DateTimeNullableFilter<"ParticipationAnswer"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"ParticipationAnswer"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"ParticipationAnswer"> | Date | string
@@ -242,6 +252,7 @@ export type ParticipationAnswerOrderByWithAggregationInput = {
   respondentParticipationId?: Prisma.SortOrder
   researchQuestionId?: Prisma.SortOrder
   choiceIds?: Prisma.SortOrderInput | Prisma.SortOrder
+  answerText?: Prisma.SortOrderInput | Prisma.SortOrder
   answeredAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -259,6 +270,7 @@ export type ParticipationAnswerScalarWhereWithAggregatesInput = {
   respondentParticipationId?: Prisma.StringWithAggregatesFilter<"ParticipationAnswer"> | string
   researchQuestionId?: Prisma.StringWithAggregatesFilter<"ParticipationAnswer"> | string
   choiceIds?: Prisma.JsonNullableWithAggregatesFilter<"ParticipationAnswer">
+  answerText?: Prisma.StringNullableWithAggregatesFilter<"ParticipationAnswer"> | string | null
   answeredAt?: Prisma.DateTimeNullableWithAggregatesFilter<"ParticipationAnswer"> | Date | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"ParticipationAnswer"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"ParticipationAnswer"> | Date | string
@@ -268,6 +280,7 @@ export type ParticipationAnswerScalarWhereWithAggregatesInput = {
 export type ParticipationAnswerCreateInput = {
   id?: string
   choiceIds?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  answerText?: string | null
   answeredAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -281,6 +294,7 @@ export type ParticipationAnswerUncheckedCreateInput = {
   respondentParticipationId: string
   researchQuestionId: string
   choiceIds?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  answerText?: string | null
   answeredAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -290,6 +304,7 @@ export type ParticipationAnswerUncheckedCreateInput = {
 export type ParticipationAnswerUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   choiceIds?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  answerText?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   answeredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -303,6 +318,7 @@ export type ParticipationAnswerUncheckedUpdateInput = {
   respondentParticipationId?: Prisma.StringFieldUpdateOperationsInput | string
   researchQuestionId?: Prisma.StringFieldUpdateOperationsInput | string
   choiceIds?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  answerText?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   answeredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -314,6 +330,7 @@ export type ParticipationAnswerCreateManyInput = {
   respondentParticipationId: string
   researchQuestionId: string
   choiceIds?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  answerText?: string | null
   answeredAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -323,6 +340,7 @@ export type ParticipationAnswerCreateManyInput = {
 export type ParticipationAnswerUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   choiceIds?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  answerText?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   answeredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -334,6 +352,7 @@ export type ParticipationAnswerUncheckedUpdateManyInput = {
   respondentParticipationId?: Prisma.StringFieldUpdateOperationsInput | string
   researchQuestionId?: Prisma.StringFieldUpdateOperationsInput | string
   choiceIds?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  answerText?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   answeredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -366,6 +385,7 @@ export type ParticipationAnswerCountOrderByAggregateInput = {
   respondentParticipationId?: Prisma.SortOrder
   researchQuestionId?: Prisma.SortOrder
   choiceIds?: Prisma.SortOrder
+  answerText?: Prisma.SortOrder
   answeredAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -376,6 +396,7 @@ export type ParticipationAnswerMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   respondentParticipationId?: Prisma.SortOrder
   researchQuestionId?: Prisma.SortOrder
+  answerText?: Prisma.SortOrder
   answeredAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -386,6 +407,7 @@ export type ParticipationAnswerMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   respondentParticipationId?: Prisma.SortOrder
   researchQuestionId?: Prisma.SortOrder
+  answerText?: Prisma.SortOrder
   answeredAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -479,6 +501,7 @@ export type ParticipationAnswerUncheckedUpdateManyWithoutQuestionNestedInput = {
 export type ParticipationAnswerCreateWithoutParticipationInput = {
   id?: string
   choiceIds?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  answerText?: string | null
   answeredAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -490,6 +513,7 @@ export type ParticipationAnswerUncheckedCreateWithoutParticipationInput = {
   id?: string
   researchQuestionId: string
   choiceIds?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  answerText?: string | null
   answeredAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -530,6 +554,7 @@ export type ParticipationAnswerScalarWhereInput = {
   respondentParticipationId?: Prisma.StringFilter<"ParticipationAnswer"> | string
   researchQuestionId?: Prisma.StringFilter<"ParticipationAnswer"> | string
   choiceIds?: Prisma.JsonNullableFilter<"ParticipationAnswer">
+  answerText?: Prisma.StringNullableFilter<"ParticipationAnswer"> | string | null
   answeredAt?: Prisma.DateTimeNullableFilter<"ParticipationAnswer"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"ParticipationAnswer"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"ParticipationAnswer"> | Date | string
@@ -539,6 +564,7 @@ export type ParticipationAnswerScalarWhereInput = {
 export type ParticipationAnswerCreateWithoutQuestionInput = {
   id?: string
   choiceIds?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  answerText?: string | null
   answeredAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -550,6 +576,7 @@ export type ParticipationAnswerUncheckedCreateWithoutQuestionInput = {
   id?: string
   respondentParticipationId: string
   choiceIds?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  answerText?: string | null
   answeredAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -586,6 +613,7 @@ export type ParticipationAnswerCreateManyParticipationInput = {
   id?: string
   researchQuestionId: string
   choiceIds?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  answerText?: string | null
   answeredAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -595,6 +623,7 @@ export type ParticipationAnswerCreateManyParticipationInput = {
 export type ParticipationAnswerUpdateWithoutParticipationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   choiceIds?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  answerText?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   answeredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -606,6 +635,7 @@ export type ParticipationAnswerUncheckedUpdateWithoutParticipationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   researchQuestionId?: Prisma.StringFieldUpdateOperationsInput | string
   choiceIds?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  answerText?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   answeredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -616,6 +646,7 @@ export type ParticipationAnswerUncheckedUpdateManyWithoutParticipationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   researchQuestionId?: Prisma.StringFieldUpdateOperationsInput | string
   choiceIds?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  answerText?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   answeredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -626,6 +657,7 @@ export type ParticipationAnswerCreateManyQuestionInput = {
   id?: string
   respondentParticipationId: string
   choiceIds?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  answerText?: string | null
   answeredAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -635,6 +667,7 @@ export type ParticipationAnswerCreateManyQuestionInput = {
 export type ParticipationAnswerUpdateWithoutQuestionInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   choiceIds?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  answerText?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   answeredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -646,6 +679,7 @@ export type ParticipationAnswerUncheckedUpdateWithoutQuestionInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   respondentParticipationId?: Prisma.StringFieldUpdateOperationsInput | string
   choiceIds?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  answerText?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   answeredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -656,6 +690,7 @@ export type ParticipationAnswerUncheckedUpdateManyWithoutQuestionInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   respondentParticipationId?: Prisma.StringFieldUpdateOperationsInput | string
   choiceIds?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  answerText?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   answeredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -669,6 +704,7 @@ export type ParticipationAnswerSelect<ExtArgs extends runtime.Types.Extensions.I
   respondentParticipationId?: boolean
   researchQuestionId?: boolean
   choiceIds?: boolean
+  answerText?: boolean
   answeredAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -684,13 +720,14 @@ export type ParticipationAnswerSelectScalar = {
   respondentParticipationId?: boolean
   researchQuestionId?: boolean
   choiceIds?: boolean
+  answerText?: boolean
   answeredAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   deletedAt?: boolean
 }
 
-export type ParticipationAnswerOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "respondentParticipationId" | "researchQuestionId" | "choiceIds" | "answeredAt" | "createdAt" | "updatedAt" | "deletedAt", ExtArgs["result"]["participationAnswer"]>
+export type ParticipationAnswerOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "respondentParticipationId" | "researchQuestionId" | "choiceIds" | "answerText" | "answeredAt" | "createdAt" | "updatedAt" | "deletedAt", ExtArgs["result"]["participationAnswer"]>
 export type ParticipationAnswerInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   participation?: boolean | Prisma.RespondentParticipationDefaultArgs<ExtArgs>
   question?: boolean | Prisma.ResearchQuestionDefaultArgs<ExtArgs>
@@ -707,6 +744,7 @@ export type $ParticipationAnswerPayload<ExtArgs extends runtime.Types.Extensions
     respondentParticipationId: string
     researchQuestionId: string
     choiceIds: runtime.JsonValue | null
+    answerText: string | null
     answeredAt: Date | null
     createdAt: Date
     updatedAt: Date
@@ -1086,6 +1124,7 @@ export interface ParticipationAnswerFieldRefs {
   readonly respondentParticipationId: Prisma.FieldRef<"ParticipationAnswer", 'String'>
   readonly researchQuestionId: Prisma.FieldRef<"ParticipationAnswer", 'String'>
   readonly choiceIds: Prisma.FieldRef<"ParticipationAnswer", 'Json'>
+  readonly answerText: Prisma.FieldRef<"ParticipationAnswer", 'String'>
   readonly answeredAt: Prisma.FieldRef<"ParticipationAnswer", 'DateTime'>
   readonly createdAt: Prisma.FieldRef<"ParticipationAnswer", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"ParticipationAnswer", 'DateTime'>

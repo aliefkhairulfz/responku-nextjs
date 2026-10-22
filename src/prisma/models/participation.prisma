@@ -26,6 +26,10 @@ model RespondentParticipation {
   status              ParticipationStatus  @default(JOINED)
   screeningScore      Int?
   autoScreeningResult AutoScreeningResult?
+  // Kapan responden pertama kali membuka kuesionernya — jam mulai pengerjaan, bukan jam
+  // join. Tidak ada kolom durasi: durasinya dihitung dari startedAt dan submittedAt
+  // saat dibaca, jadi tidak mungkin berbeda dari kedua timestamp itu.
+  startedAt           DateTime?            @db.DateTime(3)
   submittedAt         DateTime?            @db.DateTime(3)
 
   adminReviewedBy String?   @db.VarChar(36)
@@ -60,6 +64,9 @@ model ParticipationAnswer {
 
   // Array id pilihan, mis. ["id1","id2"]; null untuk jawaban non-pilihan
   choiceIds  Json?
+  // Jawaban bebas untuk soal yang tidak memakai pilihan (TEXT/NUMBER/SCALE);
+  // null untuk jawaban pilihan, jadi salah satu dari choiceIds/answerText yang terisi
+  answerText String? @db.Text
   answeredAt DateTime? @db.DateTime(3)
 
   createdAt DateTime  @default(now()) @db.DateTime(3)

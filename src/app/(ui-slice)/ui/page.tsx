@@ -4,7 +4,7 @@ import YourWalletBalanceCard from "@/components/shared/your-wallet-balance-card"
 import DistributeQuestionnaireCard from "@/components/shared/distribute-questionnaire-card"
 import BasicStatisticsCard from "@/components/shared/basic-statistics-card"
 import MySurveysCard from "@/components/shared/my-surveys-card"
-import type { AvailableResearch, ResearchSummary } from "@/lib/api-types"
+import type { AvailableResearchRow, ResearchSummary } from "@/lib/api-types"
 
 /** Sample data for the gallery — real rows come from `GET /api/research`. */
 const sampleResearch: ResearchSummary = {
@@ -20,7 +20,7 @@ const sampleResearch: ResearchSummary = {
 }
 
 /** Sample data for the gallery — real rows come from `GET /api/research/available`. */
-const sampleAvailable: AvailableResearch = {
+const sampleAvailable: AvailableResearchRow = {
     id: "sample-available",
     title: "Survei Preferensi Penggunaan Aplikasi Finansial & Dompet Digital 2026",
     description: "Riset pola transaksi nontunai, fitur transfer instan, dan kebiasaan menabung generasi muda Indonesia.",
@@ -30,14 +30,16 @@ const sampleAvailable: AvailableResearch = {
     rewardIdr: 2000,
     estimatedDurationMinutes: 8,
     deadline: "2026-12-31T00:00:00.000Z",
+    daysLeft: 30,
     respondentCount: 82,
     targetRespondentCount: 100,
+    participation: { id: "sample-participation", status: "IN_PROGRESS" },
 }
 
 export default function UiPage() {
     return (
         <div className="flex flex-col space-y-4">
-            <BrowseSurveyCard research={sampleAvailable} />
+            <BrowseSurveyCard research={sampleAvailable} respondentId="sample-respondent" />
             <MySurveysCard research={sampleResearch} />
             <YourWalletBalanceCard balance={100} balanceIdr={100_000} />
             <DistributeQuestionnaireCard />

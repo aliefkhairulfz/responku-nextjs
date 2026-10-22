@@ -210,6 +210,7 @@ export const RespondentParticipationScalarFieldEnum = {
   status: 'status',
   screeningScore: 'screeningScore',
   autoScreeningResult: 'autoScreeningResult',
+  startedAt: 'startedAt',
   submittedAt: 'submittedAt',
   adminReviewedBy: 'adminReviewedBy',
   adminReviewedAt: 'adminReviewedAt',
@@ -228,6 +229,7 @@ export const ParticipationAnswerScalarFieldEnum = {
   respondentParticipationId: 'respondentParticipationId',
   researchQuestionId: 'researchQuestionId',
   choiceIds: 'choiceIds',
+  answerText: 'answerText',
   answeredAt: 'answeredAt',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
@@ -543,7 +545,8 @@ export type RespondentParticipationOrderByRelevanceFieldEnum = (typeof Responden
 export const ParticipationAnswerOrderByRelevanceFieldEnum = {
   id: 'id',
   respondentParticipationId: 'respondentParticipationId',
-  researchQuestionId: 'researchQuestionId'
+  researchQuestionId: 'researchQuestionId',
+  answerText: 'answerText'
 } as const
 
 export type ParticipationAnswerOrderByRelevanceFieldEnum = (typeof ParticipationAnswerOrderByRelevanceFieldEnum)[keyof typeof ParticipationAnswerOrderByRelevanceFieldEnum]

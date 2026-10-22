@@ -41,6 +41,7 @@ export type RespondentParticipationMinAggregateOutputType = {
   status: $Enums.ParticipationStatus | null
   screeningScore: number | null
   autoScreeningResult: $Enums.AutoScreeningResult | null
+  startedAt: Date | null
   submittedAt: Date | null
   adminReviewedBy: string | null
   adminReviewedAt: Date | null
@@ -58,6 +59,7 @@ export type RespondentParticipationMaxAggregateOutputType = {
   status: $Enums.ParticipationStatus | null
   screeningScore: number | null
   autoScreeningResult: $Enums.AutoScreeningResult | null
+  startedAt: Date | null
   submittedAt: Date | null
   adminReviewedBy: string | null
   adminReviewedAt: Date | null
@@ -75,6 +77,7 @@ export type RespondentParticipationCountAggregateOutputType = {
   status: number
   screeningScore: number
   autoScreeningResult: number
+  startedAt: number
   submittedAt: number
   adminReviewedBy: number
   adminReviewedAt: number
@@ -102,6 +105,7 @@ export type RespondentParticipationMinAggregateInputType = {
   status?: true
   screeningScore?: true
   autoScreeningResult?: true
+  startedAt?: true
   submittedAt?: true
   adminReviewedBy?: true
   adminReviewedAt?: true
@@ -119,6 +123,7 @@ export type RespondentParticipationMaxAggregateInputType = {
   status?: true
   screeningScore?: true
   autoScreeningResult?: true
+  startedAt?: true
   submittedAt?: true
   adminReviewedBy?: true
   adminReviewedAt?: true
@@ -136,6 +141,7 @@ export type RespondentParticipationCountAggregateInputType = {
   status?: true
   screeningScore?: true
   autoScreeningResult?: true
+  startedAt?: true
   submittedAt?: true
   adminReviewedBy?: true
   adminReviewedAt?: true
@@ -240,6 +246,7 @@ export type RespondentParticipationGroupByOutputType = {
   status: $Enums.ParticipationStatus
   screeningScore: number | null
   autoScreeningResult: $Enums.AutoScreeningResult | null
+  startedAt: Date | null
   submittedAt: Date | null
   adminReviewedBy: string | null
   adminReviewedAt: Date | null
@@ -280,6 +287,7 @@ export type RespondentParticipationWhereInput = {
   status?: Prisma.EnumParticipationStatusFilter<"RespondentParticipation"> | $Enums.ParticipationStatus
   screeningScore?: Prisma.IntNullableFilter<"RespondentParticipation"> | number | null
   autoScreeningResult?: Prisma.EnumAutoScreeningResultNullableFilter<"RespondentParticipation"> | $Enums.AutoScreeningResult | null
+  startedAt?: Prisma.DateTimeNullableFilter<"RespondentParticipation"> | Date | string | null
   submittedAt?: Prisma.DateTimeNullableFilter<"RespondentParticipation"> | Date | string | null
   adminReviewedBy?: Prisma.StringNullableFilter<"RespondentParticipation"> | string | null
   adminReviewedAt?: Prisma.DateTimeNullableFilter<"RespondentParticipation"> | Date | string | null
@@ -304,6 +312,7 @@ export type RespondentParticipationOrderByWithRelationInput = {
   status?: Prisma.SortOrder
   screeningScore?: Prisma.SortOrderInput | Prisma.SortOrder
   autoScreeningResult?: Prisma.SortOrderInput | Prisma.SortOrder
+  startedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   submittedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   adminReviewedBy?: Prisma.SortOrderInput | Prisma.SortOrder
   adminReviewedAt?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -333,6 +342,7 @@ export type RespondentParticipationWhereUniqueInput = Prisma.AtLeast<{
   status?: Prisma.EnumParticipationStatusFilter<"RespondentParticipation"> | $Enums.ParticipationStatus
   screeningScore?: Prisma.IntNullableFilter<"RespondentParticipation"> | number | null
   autoScreeningResult?: Prisma.EnumAutoScreeningResultNullableFilter<"RespondentParticipation"> | $Enums.AutoScreeningResult | null
+  startedAt?: Prisma.DateTimeNullableFilter<"RespondentParticipation"> | Date | string | null
   submittedAt?: Prisma.DateTimeNullableFilter<"RespondentParticipation"> | Date | string | null
   adminReviewedBy?: Prisma.StringNullableFilter<"RespondentParticipation"> | string | null
   adminReviewedAt?: Prisma.DateTimeNullableFilter<"RespondentParticipation"> | Date | string | null
@@ -357,6 +367,7 @@ export type RespondentParticipationOrderByWithAggregationInput = {
   status?: Prisma.SortOrder
   screeningScore?: Prisma.SortOrderInput | Prisma.SortOrder
   autoScreeningResult?: Prisma.SortOrderInput | Prisma.SortOrder
+  startedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   submittedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   adminReviewedBy?: Prisma.SortOrderInput | Prisma.SortOrder
   adminReviewedAt?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -382,6 +393,7 @@ export type RespondentParticipationScalarWhereWithAggregatesInput = {
   status?: Prisma.EnumParticipationStatusWithAggregatesFilter<"RespondentParticipation"> | $Enums.ParticipationStatus
   screeningScore?: Prisma.IntNullableWithAggregatesFilter<"RespondentParticipation"> | number | null
   autoScreeningResult?: Prisma.EnumAutoScreeningResultNullableWithAggregatesFilter<"RespondentParticipation"> | $Enums.AutoScreeningResult | null
+  startedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"RespondentParticipation"> | Date | string | null
   submittedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"RespondentParticipation"> | Date | string | null
   adminReviewedBy?: Prisma.StringNullableWithAggregatesFilter<"RespondentParticipation"> | string | null
   adminReviewedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"RespondentParticipation"> | Date | string | null
@@ -397,6 +409,7 @@ export type RespondentParticipationCreateInput = {
   status?: $Enums.ParticipationStatus
   screeningScore?: number | null
   autoScreeningResult?: $Enums.AutoScreeningResult | null
+  startedAt?: Date | string | null
   submittedAt?: Date | string | null
   adminReviewedAt?: Date | string | null
   holdReleaseAt?: Date | string | null
@@ -420,6 +433,7 @@ export type RespondentParticipationUncheckedCreateInput = {
   status?: $Enums.ParticipationStatus
   screeningScore?: number | null
   autoScreeningResult?: $Enums.AutoScreeningResult | null
+  startedAt?: Date | string | null
   submittedAt?: Date | string | null
   adminReviewedBy?: string | null
   adminReviewedAt?: Date | string | null
@@ -439,6 +453,7 @@ export type RespondentParticipationUpdateInput = {
   status?: Prisma.EnumParticipationStatusFieldUpdateOperationsInput | $Enums.ParticipationStatus
   screeningScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoScreeningResult?: Prisma.NullableEnumAutoScreeningResultFieldUpdateOperationsInput | $Enums.AutoScreeningResult | null
+  startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   adminReviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   holdReleaseAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -462,6 +477,7 @@ export type RespondentParticipationUncheckedUpdateInput = {
   status?: Prisma.EnumParticipationStatusFieldUpdateOperationsInput | $Enums.ParticipationStatus
   screeningScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoScreeningResult?: Prisma.NullableEnumAutoScreeningResultFieldUpdateOperationsInput | $Enums.AutoScreeningResult | null
+  startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   adminReviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   adminReviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -483,6 +499,7 @@ export type RespondentParticipationCreateManyInput = {
   status?: $Enums.ParticipationStatus
   screeningScore?: number | null
   autoScreeningResult?: $Enums.AutoScreeningResult | null
+  startedAt?: Date | string | null
   submittedAt?: Date | string | null
   adminReviewedBy?: string | null
   adminReviewedAt?: Date | string | null
@@ -498,6 +515,7 @@ export type RespondentParticipationUpdateManyMutationInput = {
   status?: Prisma.EnumParticipationStatusFieldUpdateOperationsInput | $Enums.ParticipationStatus
   screeningScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoScreeningResult?: Prisma.NullableEnumAutoScreeningResultFieldUpdateOperationsInput | $Enums.AutoScreeningResult | null
+  startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   adminReviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   holdReleaseAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -514,6 +532,7 @@ export type RespondentParticipationUncheckedUpdateManyInput = {
   status?: Prisma.EnumParticipationStatusFieldUpdateOperationsInput | $Enums.ParticipationStatus
   screeningScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoScreeningResult?: Prisma.NullableEnumAutoScreeningResultFieldUpdateOperationsInput | $Enums.AutoScreeningResult | null
+  startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   adminReviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   adminReviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -557,6 +576,7 @@ export type RespondentParticipationCountOrderByAggregateInput = {
   status?: Prisma.SortOrder
   screeningScore?: Prisma.SortOrder
   autoScreeningResult?: Prisma.SortOrder
+  startedAt?: Prisma.SortOrder
   submittedAt?: Prisma.SortOrder
   adminReviewedBy?: Prisma.SortOrder
   adminReviewedAt?: Prisma.SortOrder
@@ -578,6 +598,7 @@ export type RespondentParticipationMaxOrderByAggregateInput = {
   status?: Prisma.SortOrder
   screeningScore?: Prisma.SortOrder
   autoScreeningResult?: Prisma.SortOrder
+  startedAt?: Prisma.SortOrder
   submittedAt?: Prisma.SortOrder
   adminReviewedBy?: Prisma.SortOrder
   adminReviewedAt?: Prisma.SortOrder
@@ -595,6 +616,7 @@ export type RespondentParticipationMinOrderByAggregateInput = {
   status?: Prisma.SortOrder
   screeningScore?: Prisma.SortOrder
   autoScreeningResult?: Prisma.SortOrder
+  startedAt?: Prisma.SortOrder
   submittedAt?: Prisma.SortOrder
   adminReviewedBy?: Prisma.SortOrder
   adminReviewedAt?: Prisma.SortOrder
@@ -819,6 +841,7 @@ export type RespondentParticipationCreateWithoutRespondentInput = {
   status?: $Enums.ParticipationStatus
   screeningScore?: number | null
   autoScreeningResult?: $Enums.AutoScreeningResult | null
+  startedAt?: Date | string | null
   submittedAt?: Date | string | null
   adminReviewedAt?: Date | string | null
   holdReleaseAt?: Date | string | null
@@ -840,6 +863,7 @@ export type RespondentParticipationUncheckedCreateWithoutRespondentInput = {
   status?: $Enums.ParticipationStatus
   screeningScore?: number | null
   autoScreeningResult?: $Enums.AutoScreeningResult | null
+  startedAt?: Date | string | null
   submittedAt?: Date | string | null
   adminReviewedBy?: string | null
   adminReviewedAt?: Date | string | null
@@ -869,6 +893,7 @@ export type RespondentParticipationCreateWithoutAdminReviewerInput = {
   status?: $Enums.ParticipationStatus
   screeningScore?: number | null
   autoScreeningResult?: $Enums.AutoScreeningResult | null
+  startedAt?: Date | string | null
   submittedAt?: Date | string | null
   adminReviewedAt?: Date | string | null
   holdReleaseAt?: Date | string | null
@@ -891,6 +916,7 @@ export type RespondentParticipationUncheckedCreateWithoutAdminReviewerInput = {
   status?: $Enums.ParticipationStatus
   screeningScore?: number | null
   autoScreeningResult?: $Enums.AutoScreeningResult | null
+  startedAt?: Date | string | null
   submittedAt?: Date | string | null
   adminReviewedAt?: Date | string | null
   holdReleaseAt?: Date | string | null
@@ -940,6 +966,7 @@ export type RespondentParticipationScalarWhereInput = {
   status?: Prisma.EnumParticipationStatusFilter<"RespondentParticipation"> | $Enums.ParticipationStatus
   screeningScore?: Prisma.IntNullableFilter<"RespondentParticipation"> | number | null
   autoScreeningResult?: Prisma.EnumAutoScreeningResultNullableFilter<"RespondentParticipation"> | $Enums.AutoScreeningResult | null
+  startedAt?: Prisma.DateTimeNullableFilter<"RespondentParticipation"> | Date | string | null
   submittedAt?: Prisma.DateTimeNullableFilter<"RespondentParticipation"> | Date | string | null
   adminReviewedBy?: Prisma.StringNullableFilter<"RespondentParticipation"> | string | null
   adminReviewedAt?: Prisma.DateTimeNullableFilter<"RespondentParticipation"> | Date | string | null
@@ -971,6 +998,7 @@ export type RespondentParticipationCreateWithoutQualityChecksInput = {
   status?: $Enums.ParticipationStatus
   screeningScore?: number | null
   autoScreeningResult?: $Enums.AutoScreeningResult | null
+  startedAt?: Date | string | null
   submittedAt?: Date | string | null
   adminReviewedAt?: Date | string | null
   holdReleaseAt?: Date | string | null
@@ -993,6 +1021,7 @@ export type RespondentParticipationUncheckedCreateWithoutQualityChecksInput = {
   status?: $Enums.ParticipationStatus
   screeningScore?: number | null
   autoScreeningResult?: $Enums.AutoScreeningResult | null
+  startedAt?: Date | string | null
   submittedAt?: Date | string | null
   adminReviewedBy?: string | null
   adminReviewedAt?: Date | string | null
@@ -1027,6 +1056,7 @@ export type RespondentParticipationUpdateWithoutQualityChecksInput = {
   status?: Prisma.EnumParticipationStatusFieldUpdateOperationsInput | $Enums.ParticipationStatus
   screeningScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoScreeningResult?: Prisma.NullableEnumAutoScreeningResultFieldUpdateOperationsInput | $Enums.AutoScreeningResult | null
+  startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   adminReviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   holdReleaseAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1049,6 +1079,7 @@ export type RespondentParticipationUncheckedUpdateWithoutQualityChecksInput = {
   status?: Prisma.EnumParticipationStatusFieldUpdateOperationsInput | $Enums.ParticipationStatus
   screeningScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoScreeningResult?: Prisma.NullableEnumAutoScreeningResultFieldUpdateOperationsInput | $Enums.AutoScreeningResult | null
+  startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   adminReviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   adminReviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1067,6 +1098,7 @@ export type RespondentParticipationCreateWithoutAnswersInput = {
   status?: $Enums.ParticipationStatus
   screeningScore?: number | null
   autoScreeningResult?: $Enums.AutoScreeningResult | null
+  startedAt?: Date | string | null
   submittedAt?: Date | string | null
   adminReviewedAt?: Date | string | null
   holdReleaseAt?: Date | string | null
@@ -1089,6 +1121,7 @@ export type RespondentParticipationUncheckedCreateWithoutAnswersInput = {
   status?: $Enums.ParticipationStatus
   screeningScore?: number | null
   autoScreeningResult?: $Enums.AutoScreeningResult | null
+  startedAt?: Date | string | null
   submittedAt?: Date | string | null
   adminReviewedBy?: string | null
   adminReviewedAt?: Date | string | null
@@ -1123,6 +1156,7 @@ export type RespondentParticipationUpdateWithoutAnswersInput = {
   status?: Prisma.EnumParticipationStatusFieldUpdateOperationsInput | $Enums.ParticipationStatus
   screeningScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoScreeningResult?: Prisma.NullableEnumAutoScreeningResultFieldUpdateOperationsInput | $Enums.AutoScreeningResult | null
+  startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   adminReviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   holdReleaseAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1145,6 +1179,7 @@ export type RespondentParticipationUncheckedUpdateWithoutAnswersInput = {
   status?: Prisma.EnumParticipationStatusFieldUpdateOperationsInput | $Enums.ParticipationStatus
   screeningScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoScreeningResult?: Prisma.NullableEnumAutoScreeningResultFieldUpdateOperationsInput | $Enums.AutoScreeningResult | null
+  startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   adminReviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   adminReviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1163,6 +1198,7 @@ export type RespondentParticipationCreateWithoutResearchInput = {
   status?: $Enums.ParticipationStatus
   screeningScore?: number | null
   autoScreeningResult?: $Enums.AutoScreeningResult | null
+  startedAt?: Date | string | null
   submittedAt?: Date | string | null
   adminReviewedAt?: Date | string | null
   holdReleaseAt?: Date | string | null
@@ -1184,6 +1220,7 @@ export type RespondentParticipationUncheckedCreateWithoutResearchInput = {
   status?: $Enums.ParticipationStatus
   screeningScore?: number | null
   autoScreeningResult?: $Enums.AutoScreeningResult | null
+  startedAt?: Date | string | null
   submittedAt?: Date | string | null
   adminReviewedBy?: string | null
   adminReviewedAt?: Date | string | null
@@ -1229,6 +1266,7 @@ export type RespondentParticipationCreateWithoutRewardInput = {
   status?: $Enums.ParticipationStatus
   screeningScore?: number | null
   autoScreeningResult?: $Enums.AutoScreeningResult | null
+  startedAt?: Date | string | null
   submittedAt?: Date | string | null
   adminReviewedAt?: Date | string | null
   holdReleaseAt?: Date | string | null
@@ -1251,6 +1289,7 @@ export type RespondentParticipationUncheckedCreateWithoutRewardInput = {
   status?: $Enums.ParticipationStatus
   screeningScore?: number | null
   autoScreeningResult?: $Enums.AutoScreeningResult | null
+  startedAt?: Date | string | null
   submittedAt?: Date | string | null
   adminReviewedBy?: string | null
   adminReviewedAt?: Date | string | null
@@ -1285,6 +1324,7 @@ export type RespondentParticipationUpdateWithoutRewardInput = {
   status?: Prisma.EnumParticipationStatusFieldUpdateOperationsInput | $Enums.ParticipationStatus
   screeningScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoScreeningResult?: Prisma.NullableEnumAutoScreeningResultFieldUpdateOperationsInput | $Enums.AutoScreeningResult | null
+  startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   adminReviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   holdReleaseAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1307,6 +1347,7 @@ export type RespondentParticipationUncheckedUpdateWithoutRewardInput = {
   status?: Prisma.EnumParticipationStatusFieldUpdateOperationsInput | $Enums.ParticipationStatus
   screeningScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoScreeningResult?: Prisma.NullableEnumAutoScreeningResultFieldUpdateOperationsInput | $Enums.AutoScreeningResult | null
+  startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   adminReviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   adminReviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1325,6 +1366,7 @@ export type RespondentParticipationCreateWithoutTransactionsInput = {
   status?: $Enums.ParticipationStatus
   screeningScore?: number | null
   autoScreeningResult?: $Enums.AutoScreeningResult | null
+  startedAt?: Date | string | null
   submittedAt?: Date | string | null
   adminReviewedAt?: Date | string | null
   holdReleaseAt?: Date | string | null
@@ -1347,6 +1389,7 @@ export type RespondentParticipationUncheckedCreateWithoutTransactionsInput = {
   status?: $Enums.ParticipationStatus
   screeningScore?: number | null
   autoScreeningResult?: $Enums.AutoScreeningResult | null
+  startedAt?: Date | string | null
   submittedAt?: Date | string | null
   adminReviewedBy?: string | null
   adminReviewedAt?: Date | string | null
@@ -1381,6 +1424,7 @@ export type RespondentParticipationUpdateWithoutTransactionsInput = {
   status?: Prisma.EnumParticipationStatusFieldUpdateOperationsInput | $Enums.ParticipationStatus
   screeningScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoScreeningResult?: Prisma.NullableEnumAutoScreeningResultFieldUpdateOperationsInput | $Enums.AutoScreeningResult | null
+  startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   adminReviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   holdReleaseAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1403,6 +1447,7 @@ export type RespondentParticipationUncheckedUpdateWithoutTransactionsInput = {
   status?: Prisma.EnumParticipationStatusFieldUpdateOperationsInput | $Enums.ParticipationStatus
   screeningScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoScreeningResult?: Prisma.NullableEnumAutoScreeningResultFieldUpdateOperationsInput | $Enums.AutoScreeningResult | null
+  startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   adminReviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   adminReviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1422,6 +1467,7 @@ export type RespondentParticipationCreateManyRespondentInput = {
   status?: $Enums.ParticipationStatus
   screeningScore?: number | null
   autoScreeningResult?: $Enums.AutoScreeningResult | null
+  startedAt?: Date | string | null
   submittedAt?: Date | string | null
   adminReviewedBy?: string | null
   adminReviewedAt?: Date | string | null
@@ -1439,6 +1485,7 @@ export type RespondentParticipationCreateManyAdminReviewerInput = {
   status?: $Enums.ParticipationStatus
   screeningScore?: number | null
   autoScreeningResult?: $Enums.AutoScreeningResult | null
+  startedAt?: Date | string | null
   submittedAt?: Date | string | null
   adminReviewedAt?: Date | string | null
   holdReleaseAt?: Date | string | null
@@ -1453,6 +1500,7 @@ export type RespondentParticipationUpdateWithoutRespondentInput = {
   status?: Prisma.EnumParticipationStatusFieldUpdateOperationsInput | $Enums.ParticipationStatus
   screeningScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoScreeningResult?: Prisma.NullableEnumAutoScreeningResultFieldUpdateOperationsInput | $Enums.AutoScreeningResult | null
+  startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   adminReviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   holdReleaseAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1474,6 +1522,7 @@ export type RespondentParticipationUncheckedUpdateWithoutRespondentInput = {
   status?: Prisma.EnumParticipationStatusFieldUpdateOperationsInput | $Enums.ParticipationStatus
   screeningScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoScreeningResult?: Prisma.NullableEnumAutoScreeningResultFieldUpdateOperationsInput | $Enums.AutoScreeningResult | null
+  startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   adminReviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   adminReviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1494,6 +1543,7 @@ export type RespondentParticipationUncheckedUpdateManyWithoutRespondentInput = {
   status?: Prisma.EnumParticipationStatusFieldUpdateOperationsInput | $Enums.ParticipationStatus
   screeningScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoScreeningResult?: Prisma.NullableEnumAutoScreeningResultFieldUpdateOperationsInput | $Enums.AutoScreeningResult | null
+  startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   adminReviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   adminReviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1509,6 +1559,7 @@ export type RespondentParticipationUpdateWithoutAdminReviewerInput = {
   status?: Prisma.EnumParticipationStatusFieldUpdateOperationsInput | $Enums.ParticipationStatus
   screeningScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoScreeningResult?: Prisma.NullableEnumAutoScreeningResultFieldUpdateOperationsInput | $Enums.AutoScreeningResult | null
+  startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   adminReviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   holdReleaseAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1531,6 +1582,7 @@ export type RespondentParticipationUncheckedUpdateWithoutAdminReviewerInput = {
   status?: Prisma.EnumParticipationStatusFieldUpdateOperationsInput | $Enums.ParticipationStatus
   screeningScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoScreeningResult?: Prisma.NullableEnumAutoScreeningResultFieldUpdateOperationsInput | $Enums.AutoScreeningResult | null
+  startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   adminReviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   holdReleaseAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1551,6 +1603,7 @@ export type RespondentParticipationUncheckedUpdateManyWithoutAdminReviewerInput 
   status?: Prisma.EnumParticipationStatusFieldUpdateOperationsInput | $Enums.ParticipationStatus
   screeningScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoScreeningResult?: Prisma.NullableEnumAutoScreeningResultFieldUpdateOperationsInput | $Enums.AutoScreeningResult | null
+  startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   adminReviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   holdReleaseAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1566,6 +1619,7 @@ export type RespondentParticipationCreateManyResearchInput = {
   status?: $Enums.ParticipationStatus
   screeningScore?: number | null
   autoScreeningResult?: $Enums.AutoScreeningResult | null
+  startedAt?: Date | string | null
   submittedAt?: Date | string | null
   adminReviewedBy?: string | null
   adminReviewedAt?: Date | string | null
@@ -1581,6 +1635,7 @@ export type RespondentParticipationUpdateWithoutResearchInput = {
   status?: Prisma.EnumParticipationStatusFieldUpdateOperationsInput | $Enums.ParticipationStatus
   screeningScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoScreeningResult?: Prisma.NullableEnumAutoScreeningResultFieldUpdateOperationsInput | $Enums.AutoScreeningResult | null
+  startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   adminReviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   holdReleaseAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1602,6 +1657,7 @@ export type RespondentParticipationUncheckedUpdateWithoutResearchInput = {
   status?: Prisma.EnumParticipationStatusFieldUpdateOperationsInput | $Enums.ParticipationStatus
   screeningScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoScreeningResult?: Prisma.NullableEnumAutoScreeningResultFieldUpdateOperationsInput | $Enums.AutoScreeningResult | null
+  startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   adminReviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   adminReviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1622,6 +1678,7 @@ export type RespondentParticipationUncheckedUpdateManyWithoutResearchInput = {
   status?: Prisma.EnumParticipationStatusFieldUpdateOperationsInput | $Enums.ParticipationStatus
   screeningScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoScreeningResult?: Prisma.NullableEnumAutoScreeningResultFieldUpdateOperationsInput | $Enums.AutoScreeningResult | null
+  startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   adminReviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   adminReviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1688,6 +1745,7 @@ export type RespondentParticipationSelect<ExtArgs extends runtime.Types.Extensio
   status?: boolean
   screeningScore?: boolean
   autoScreeningResult?: boolean
+  startedAt?: boolean
   submittedAt?: boolean
   adminReviewedBy?: boolean
   adminReviewedAt?: boolean
@@ -1715,6 +1773,7 @@ export type RespondentParticipationSelectScalar = {
   status?: boolean
   screeningScore?: boolean
   autoScreeningResult?: boolean
+  startedAt?: boolean
   submittedAt?: boolean
   adminReviewedBy?: boolean
   adminReviewedAt?: boolean
@@ -1725,7 +1784,7 @@ export type RespondentParticipationSelectScalar = {
   deletedAt?: boolean
 }
 
-export type RespondentParticipationOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "researchId" | "respondentId" | "status" | "screeningScore" | "autoScreeningResult" | "submittedAt" | "adminReviewedBy" | "adminReviewedAt" | "holdReleaseAt" | "rewardedAt" | "createdAt" | "updatedAt" | "deletedAt", ExtArgs["result"]["respondentParticipation"]>
+export type RespondentParticipationOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "researchId" | "respondentId" | "status" | "screeningScore" | "autoScreeningResult" | "startedAt" | "submittedAt" | "adminReviewedBy" | "adminReviewedAt" | "holdReleaseAt" | "rewardedAt" | "createdAt" | "updatedAt" | "deletedAt", ExtArgs["result"]["respondentParticipation"]>
 export type RespondentParticipationInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   research?: boolean | Prisma.ResearchDefaultArgs<ExtArgs>
   respondent?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -1755,6 +1814,7 @@ export type $RespondentParticipationPayload<ExtArgs extends runtime.Types.Extens
     status: $Enums.ParticipationStatus
     screeningScore: number | null
     autoScreeningResult: $Enums.AutoScreeningResult | null
+    startedAt: Date | null
     submittedAt: Date | null
     adminReviewedBy: string | null
     adminReviewedAt: Date | null
@@ -2145,6 +2205,7 @@ export interface RespondentParticipationFieldRefs {
   readonly status: Prisma.FieldRef<"RespondentParticipation", 'ParticipationStatus'>
   readonly screeningScore: Prisma.FieldRef<"RespondentParticipation", 'Int'>
   readonly autoScreeningResult: Prisma.FieldRef<"RespondentParticipation", 'AutoScreeningResult'>
+  readonly startedAt: Prisma.FieldRef<"RespondentParticipation", 'DateTime'>
   readonly submittedAt: Prisma.FieldRef<"RespondentParticipation", 'DateTime'>
   readonly adminReviewedBy: Prisma.FieldRef<"RespondentParticipation", 'String'>
   readonly adminReviewedAt: Prisma.FieldRef<"RespondentParticipation", 'DateTime'>

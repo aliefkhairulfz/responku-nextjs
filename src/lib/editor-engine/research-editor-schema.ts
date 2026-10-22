@@ -4,6 +4,22 @@ import { QUESTION_TYPE_LABELS } from "@/lib/research-question"
 import { useState } from "react"
 import z from "zod"
 
+/**
+ * How long a questionnaire is expected to take, from how many questions it asks.
+ *
+ * Thirty seconds a question: ten questions is five minutes, fifty is twenty-five. Deriving it
+ * keeps the number honest — a fixed default says the same thing about a two-question survey as
+ * a fifty-question one — and the same figure is what the respondent-side timing measures a
+ * submission against (`estimatedSecondsPerQuestion`), so the two can never disagree.
+ *
+ * Clamped to the range the schema and the API accept.
+ */
+const SECONDS_PER_QUESTION = 30
+
+export function estimateMinutes(questionCount: number): number {
+    return Math.min(180, Math.max(1, Math.ceil((questionCount * SECONDS_PER_QUESTION) / 60)))
+}
+
 /** IDENTITY SCHEMA */
 const identitySchema = z.object({
     title: z.string().min(1, "Judul kuesioner wajib diisi.").max(120, "Judul maksimal 120 karakter."),
@@ -19,7 +35,9 @@ const identitySchemaDefaultValue: z.infer<typeof identitySchema> = {
     title: "",
     description: "",
     category: "fintech",
-    estimatedMinutes: 10,
+    // Derived from the one question a fresh draft starts with, so the fallback agrees with the
+    // rule the editor applies as questions are added.
+    estimatedMinutes: estimateMinutes(1),
 }
 
 /** CRITERIA SCHEMA */
