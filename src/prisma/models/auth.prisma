@@ -27,6 +27,9 @@ model User {
   participations         RespondentParticipation[] @relation("RespondentParticipations")
   reviewedParticipations RespondentParticipation[] @relation("ParticipationAdminReviewer")
 
+  // payment
+  payments Payment[]
+
   // token
   tokenWallet TokenWallet?
 

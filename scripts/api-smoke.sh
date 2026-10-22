@@ -15,6 +15,9 @@ JAR=tmp-cookies.txt
 STAMP=$(date +%s)
 EMAIL="curl-test-$STAMP@example.com"
 NEW_EMAIL="curl-test-baru-$STAMP@example.com"
+# Must match the dev server's own PAYMENT_WEBHOOK_SECRET; the webhook refuses to
+# run at all while the server has none.
+PAYMENT_WEBHOOK_SECRET=${PAYMENT_WEBHOOK_SECRET:-local-dev-webhook-secret}
 LAST=""
 
 : > "$JAR"
@@ -27,9 +30,9 @@ call() {
     body=${3:-}
 
     if [ -n "$body" ]; then
-        raw=$(curl -sS -X "$method" "$BASE$path" -H 'content-type: application/json' -b "$JAR" -c "$JAR" -d "$body" -w '\n%{http_code}')
+        raw=$(curl -sS -X "$method" "$BASE$path" -H 'content-type: application/json' -H "x-webhook-secret: $PAYMENT_WEBHOOK_SECRET" -b "$JAR" -c "$JAR" -d "$body" -w '\n%{http_code}')
     else
-        raw=$(curl -sS -X "$method" "$BASE$path" -b "$JAR" -c "$JAR" -w '\n%{http_code}')
+        raw=$(curl -sS -X "$method" "$BASE$path" -H 'content-type: application/json' -H "x-webhook-secret: $PAYMENT_WEBHOOK_SECRET" -b "$JAR" -c "$JAR" -w '\n%{http_code}')
     fi
 
     status=$(printf '%s' "$raw" | tail -n 1)
@@ -77,7 +80,7 @@ RID=$(printf '%s' "$LAST" | json_field '.data.research.id')
 printf 'research id: %s\n' "$RID"
 call GET   "/api/research/$RID"
 call PATCH "/api/research/$RID" '{"category":"Fintech & Perbankan"}'
-call PATCH "/api/research/$RID" '{"title":"QRIS dan perilaku belanja","category":"fintech","targetRespondentCount":25,"description":"Studi pendahuluan."}'
+call PATCH "/api/research/$RID" '{"title":"QRIS dan perilaku belanja","category":"fintech","targetRespondentCount":25,"tokenPerRespondent":2,"description":"Studi pendahuluan."}'
 
 step "5. Research: criteria and questionnaire"
 call POST "/api/research/$RID/create-criteria" '{"criteria":[{"field":"occupation","operator":"EQ","value":"Guru"}]}'
@@ -85,13 +88,31 @@ call POST "/api/research/$RID/create-questions" '{"questions":[{"pos":1,"questio
 call POST "/api/research/$RID/create-questions" '{"questions":[{"pos":1,"question":"Seberapa sering memakai QRIS?","questionType":"SINGLE_CHOICE","choices":[{"pos":1,"n":"A","choiceText":"Sering"},{"pos":2,"n":"B","choiceText":"Jarang"}]},{"pos":2,"question":"Saran","questionType":"TEXT"}]}'
 call GET  "/api/research/$RID"
 
-step "6. Research: publish, freeze, archive"
+step "6. Wallet, top-up, then publish reserves tokens"
+call GET  /api/payment/wallet
 call POST "/api/research/$RID/publish"
+call POST /api/payment/topup '{"tokenAmount":0}'
+call POST /api/payment/topup '{"tokenAmount":1000}'
+PAYMENT_ID=$(printf '%s' "$LAST" | json_field '.data.payment.id')
+PROVIDER_REF=$(printf '%s' "$LAST" | json_field '.data.payment.providerRef')
+printf 'payment id: %s | provider ref: %s\n' "$PAYMENT_ID" "$PROVIDER_REF"
+call GET "/api/payment/$PAYMENT_ID"
+call POST /api/payment/webhook "{\"providerRef\":\"$PROVIDER_REF\",\"status\":\"PAID\"}"
+call POST /api/payment/webhook "{\"providerRef\":\"$PROVIDER_REF\",\"status\":\"PAID\"}"
+call GET  /api/payment/wallet
+call POST "/api/research/$RID/publish"
+call GET  /api/payment/wallet
 call POST "/api/research/$RID/create-questions" '{"questions":[{"pos":1,"question":"baru","questionType":"TEXT"}]}'
 call PATCH "/api/research/$RID" '{"criteria":[]}'
 call PATCH "/api/research/$RID" '{"title":"Judul setelah publish"}'
+
+step "6b. Close returns the unused budget, archiving a closed research releases nothing more"
+call POST "/api/research/$RID/close"
+call GET  /api/payment/wallet
+call POST "/api/research/$RID/close"
 call DELETE "/api/research/$RID"
 call GET "/api/research/$RID"
+call GET "/api/payment/$PAYMENT_ID"
 
 step "7. Email change"
 call POST /api/auth/change-email "{\"email\":\"$NEW_EMAIL\",\"password\":\"salah\"}"
@@ -112,6 +133,12 @@ call POST /api/auth/logout
 call GET /api/auth/me
 call POST /api/research/create
 call DELETE "/api/research/apa-saja"
+call POST /api/payment/topup '{"tokenAmount":10}'
+call GET /api/payment/wallet
+
+# Clean up after itself — every account this run created carries the timestamp.
+# Comment this out when you would rather inspect the rows it produced.
+bun run scripts/db-peek.ts purge "$STAMP"
 
 rm -f "$JAR"
 printf '\nselesai\n'

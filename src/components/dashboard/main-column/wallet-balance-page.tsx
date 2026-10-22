@@ -1,14 +1,15 @@
-"use client";
+"use client"
 
-import { ArrowDownLeft, ArrowUpRight, Coins, History, Wallet } from "lucide-react";
-import { useState } from "react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
+import { ArrowDownLeft, ArrowUpRight, Coins, History, Wallet } from "lucide-react"
+import { useState } from "react"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Separator } from "@/components/ui/separator"
+import { IDR_PER_TOKEN } from "@/lib/token-price"
 
 const transactions = [
     {
@@ -43,20 +44,20 @@ const transactions = [
         amount: "-50",
         type: "expense",
     },
-] as const;
+] as const
 
 function TokenDialog({ type }: { type: "topup" | "withdraw" }) {
-    const [open, setOpen] = useState(false);
-    const [amount, setAmount] = useState("");
-    const isTopup = type === "topup";
+    const [open, setOpen] = useState(false)
+    const [amount, setAmount] = useState("")
+    const isTopup = type === "topup"
 
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        console.log({ type, amount: Number(amount) });
+        event.preventDefault()
+        console.log({ type, amount: Number(amount) })
 
-        setOpen(false);
-        setAmount("");
-    };
+        setOpen(false)
+        setAmount("")
+    }
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
@@ -89,13 +90,13 @@ function TokenDialog({ type }: { type: "topup" | "withdraw" }) {
                             id={`${type}-amount`}
                             type="number"
                             min="1"
-                            step="0.1"
+                            step="1"
                             placeholder="Contoh: 50"
                             value={amount}
                             onChange={(event) => setAmount(event.target.value)}
                             required
                         />
-                        <p className="text-sm text-muted-foreground">1 Token = Rp1.000</p>
+                        <p className="text-sm text-muted-foreground">1 Token = Rp{IDR_PER_TOKEN.toLocaleString("id-ID")}</p>
                     </div>
 
                     {amount && Number(amount) > 0 && (
@@ -106,7 +107,7 @@ function TokenDialog({ type }: { type: "topup" | "withdraw" }) {
                                     style: "currency",
                                     currency: "IDR",
                                     maximumFractionDigits: 0,
-                                }).format(Number(amount) * 1000)}
+                                }).format(Number(amount) * IDR_PER_TOKEN)}
                             </p>
                         </div>
                     )}
@@ -122,11 +123,11 @@ function TokenDialog({ type }: { type: "topup" | "withdraw" }) {
                 </form>
             </DialogContent>
         </Dialog>
-    );
+    )
 }
 
 export default function WalletBalancePage() {
-    const balance = 32;
+    const balance = 32
 
     return (
         <div className="space-y-4">
@@ -154,8 +155,8 @@ export default function WalletBalancePage() {
                                 style: "currency",
                                 currency: "IDR",
                                 maximumFractionDigits: 0,
-                            }).format(balance * 1000)}{" "}
-                            (1 Token = Rp1.000)
+                            }).format(balance * IDR_PER_TOKEN)}{" "}
+                            (1 Token = Rp{IDR_PER_TOKEN.toLocaleString("id-ID")})
                         </p>
                     </div>
 
@@ -217,5 +218,5 @@ export default function WalletBalancePage() {
                 </CardContent>
             </Card>
         </div>
-    );
+    )
 }

@@ -45,16 +45,36 @@ export const env = createEnv({
         /** Sending domain suffix, e.g. `"@email.example.com"`. */
         APP_MAIL_NAME: z.string().min(1).optional(),
 
+        /* --- Payment --- */
+
+        /** Gateway recorded on each payment; `manual` until one is wired up. */
+        PAYMENT_PROVIDER: z.string().min(1).default("manual"),
+        /**
+         * Shared secret a gateway callback has to present. Leaving it unset keeps
+         * the webhook refusing every call, rather than accepting them openly.
+         */
+        PAYMENT_WEBHOOK_SECRET: z.string().min(16).optional(),
+
         /* --- App --- */
 
         /** Declared for completeness; nothing reads this yet. */
         APP_ENV: z.string().min(1).default("local"),
     },
-    client: {},
-    // This app has no client-side variables yet. Next.js (>= 13.4.4) reads
-    // server variables from `process.env` directly, so only client variables
-    // would ever need destructuring here.
-    experimental__runtimeEnv: {},
+    client: {
+        /**
+         * Price of one token in rupiah, shared by the API and the wallet UI.
+         *
+         * Public because the UI has to display it. Being `NEXT_PUBLIC_`, it is baked
+         * in at build time: changing it only at runtime would leave the server and the
+         * browser disagreeing about the price.
+         */
+        NEXT_PUBLIC_IDR_PER_TOKEN: z.coerce.number().int().positive().default(1_000),
+    },
+    // Next.js reads server variables from `process.env` directly; only client
+    // variables have to be destructured here so they are inlined into the bundle.
+    experimental__runtimeEnv: {
+        NEXT_PUBLIC_IDR_PER_TOKEN: process.env.NEXT_PUBLIC_IDR_PER_TOKEN,
+    },
     // Treat `KEY=` in a `.env` file as unset, so `default()` and `optional()`
     // behave as written instead of receiving an empty string.
     emptyStringAsUndefined: true,

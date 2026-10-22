@@ -8,6 +8,7 @@ import { requireSession, type Session } from "@/service/auth"
 import {
     CRITERIA_OPERATORS,
     choiceTextRequired,
+    closeResearchService,
     createResearchDraftService,
     deleteResearchService,
     getResearchService,
@@ -42,6 +43,7 @@ const updateResearchSchema = z
         category: z.enum(RESEARCH_CATEGORIES).nullable().optional(),
         externalSurveyUrl: z.url("A valid URL is required").max(2048, "URL must be at most 2048 characters").nullable().optional(),
         targetRespondentCount: z.number().int("Target must be a whole number").min(0, "Target cannot be negative").optional(),
+        tokenPerRespondent: z.number().int("Tokens per respondent must be a whole number").min(1, "At least 1 token per respondent").optional(),
         estimatedDurationMinutes: z
             .number()
             .int("Duration must be a whole number")
@@ -120,6 +122,9 @@ const CREATE_QUESTIONS_PATH = "create-questions"
 
 /** The action path that publishes a draft. */
 const PUBLISH_PATH = "publish"
+
+/** The action path a published research is closed through. */
+const CLOSE_PATH = "close"
 
 /**
  * Whether a segment addresses a research rather than being an action name. Ids are
@@ -224,6 +229,13 @@ async function publishResearchHandler(user: Session["user"], id: string) {
     return successResponse({ message: "Research published", data: { research } })
 }
 
+/** close one published research owned by the caller */
+async function closeResearchHandler(user: Session["user"], id: string) {
+    const result = await closeResearchService({ id, researcherId: user.id })
+
+    return successResponse({ message: "Research closed", data: result })
+}
+
 export const POST = withResearcherGuard(async (user, req) => {
     const segments = getResearchSegments(req)
 
@@ -233,6 +245,7 @@ export const POST = withResearcherGuard(async (user, req) => {
         if (segments[1] === CREATE_CRITERIA_PATH) return createCriteriaHandler(user, req, segments[0])
         if (segments[1] === CREATE_QUESTIONS_PATH) return createQuestionsHandler(user, req, segments[0])
         if (segments[1] === PUBLISH_PATH) return publishResearchHandler(user, segments[0])
+        if (segments[1] === CLOSE_PATH) return closeResearchHandler(user, segments[0])
     }
 
     return notFound()

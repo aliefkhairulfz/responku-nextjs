@@ -71,6 +71,25 @@ export const AutoScreeningResult = {
 export type AutoScreeningResult = (typeof AutoScreeningResult)[keyof typeof AutoScreeningResult]
 
 
+export const PaymentType = {
+  TOKEN_TOPUP: 'TOKEN_TOPUP',
+  WITHDRAWAL: 'WITHDRAWAL'
+} as const
+
+export type PaymentType = (typeof PaymentType)[keyof typeof PaymentType]
+
+
+export const PaymentStatus = {
+  PENDING: 'PENDING',
+  PAID: 'PAID',
+  FAILED: 'FAILED',
+  EXPIRED: 'EXPIRED',
+  REFUNDED: 'REFUNDED'
+} as const
+
+export type PaymentStatus = (typeof PaymentStatus)[keyof typeof PaymentStatus]
+
+
 export const ResearchStatus = {
   DRAFT: 'DRAFT',
   PENDING_REVIEW: 'PENDING_REVIEW',

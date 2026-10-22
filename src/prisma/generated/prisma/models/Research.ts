@@ -28,6 +28,7 @@ export type AggregateResearch = {
 
 export type ResearchAvgAggregateOutputType = {
   targetRespondentCount: number | null
+  tokenPerRespondent: number | null
   estimatedDurationMinutes: number | null
   tokensReserved: number | null
   tokensConsumed: number | null
@@ -35,6 +36,7 @@ export type ResearchAvgAggregateOutputType = {
 
 export type ResearchSumAggregateOutputType = {
   targetRespondentCount: number | null
+  tokenPerRespondent: number | null
   estimatedDurationMinutes: number | null
   tokensReserved: number | null
   tokensConsumed: number | null
@@ -48,6 +50,7 @@ export type ResearchMinAggregateOutputType = {
   category: string | null
   externalSurveyUrl: string | null
   targetRespondentCount: number | null
+  tokenPerRespondent: number | null
   estimatedDurationMinutes: number | null
   deadline: Date | null
   status: $Enums.ResearchStatus | null
@@ -67,6 +70,7 @@ export type ResearchMaxAggregateOutputType = {
   category: string | null
   externalSurveyUrl: string | null
   targetRespondentCount: number | null
+  tokenPerRespondent: number | null
   estimatedDurationMinutes: number | null
   deadline: Date | null
   status: $Enums.ResearchStatus | null
@@ -86,6 +90,7 @@ export type ResearchCountAggregateOutputType = {
   category: number
   externalSurveyUrl: number
   targetRespondentCount: number
+  tokenPerRespondent: number
   estimatedDurationMinutes: number
   deadline: number
   status: number
@@ -101,6 +106,7 @@ export type ResearchCountAggregateOutputType = {
 
 export type ResearchAvgAggregateInputType = {
   targetRespondentCount?: true
+  tokenPerRespondent?: true
   estimatedDurationMinutes?: true
   tokensReserved?: true
   tokensConsumed?: true
@@ -108,6 +114,7 @@ export type ResearchAvgAggregateInputType = {
 
 export type ResearchSumAggregateInputType = {
   targetRespondentCount?: true
+  tokenPerRespondent?: true
   estimatedDurationMinutes?: true
   tokensReserved?: true
   tokensConsumed?: true
@@ -121,6 +128,7 @@ export type ResearchMinAggregateInputType = {
   category?: true
   externalSurveyUrl?: true
   targetRespondentCount?: true
+  tokenPerRespondent?: true
   estimatedDurationMinutes?: true
   deadline?: true
   status?: true
@@ -140,6 +148,7 @@ export type ResearchMaxAggregateInputType = {
   category?: true
   externalSurveyUrl?: true
   targetRespondentCount?: true
+  tokenPerRespondent?: true
   estimatedDurationMinutes?: true
   deadline?: true
   status?: true
@@ -159,6 +168,7 @@ export type ResearchCountAggregateInputType = {
   category?: true
   externalSurveyUrl?: true
   targetRespondentCount?: true
+  tokenPerRespondent?: true
   estimatedDurationMinutes?: true
   deadline?: true
   status?: true
@@ -265,6 +275,7 @@ export type ResearchGroupByOutputType = {
   category: string | null
   externalSurveyUrl: string | null
   targetRespondentCount: number
+  tokenPerRespondent: number
   estimatedDurationMinutes: number
   deadline: Date
   status: $Enums.ResearchStatus
@@ -307,6 +318,7 @@ export type ResearchWhereInput = {
   category?: Prisma.StringNullableFilter<"Research"> | string | null
   externalSurveyUrl?: Prisma.StringNullableFilter<"Research"> | string | null
   targetRespondentCount?: Prisma.IntFilter<"Research"> | number
+  tokenPerRespondent?: Prisma.IntFilter<"Research"> | number
   estimatedDurationMinutes?: Prisma.IntFilter<"Research"> | number
   deadline?: Prisma.DateTimeFilter<"Research"> | Date | string
   status?: Prisma.EnumResearchStatusFilter<"Research"> | $Enums.ResearchStatus
@@ -332,6 +344,7 @@ export type ResearchOrderByWithRelationInput = {
   category?: Prisma.SortOrderInput | Prisma.SortOrder
   externalSurveyUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   targetRespondentCount?: Prisma.SortOrder
+  tokenPerRespondent?: Prisma.SortOrder
   estimatedDurationMinutes?: Prisma.SortOrder
   deadline?: Prisma.SortOrder
   status?: Prisma.SortOrder
@@ -361,6 +374,7 @@ export type ResearchWhereUniqueInput = Prisma.AtLeast<{
   category?: Prisma.StringNullableFilter<"Research"> | string | null
   externalSurveyUrl?: Prisma.StringNullableFilter<"Research"> | string | null
   targetRespondentCount?: Prisma.IntFilter<"Research"> | number
+  tokenPerRespondent?: Prisma.IntFilter<"Research"> | number
   estimatedDurationMinutes?: Prisma.IntFilter<"Research"> | number
   deadline?: Prisma.DateTimeFilter<"Research"> | Date | string
   status?: Prisma.EnumResearchStatusFilter<"Research"> | $Enums.ResearchStatus
@@ -386,6 +400,7 @@ export type ResearchOrderByWithAggregationInput = {
   category?: Prisma.SortOrderInput | Prisma.SortOrder
   externalSurveyUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   targetRespondentCount?: Prisma.SortOrder
+  tokenPerRespondent?: Prisma.SortOrder
   estimatedDurationMinutes?: Prisma.SortOrder
   deadline?: Prisma.SortOrder
   status?: Prisma.SortOrder
@@ -413,6 +428,7 @@ export type ResearchScalarWhereWithAggregatesInput = {
   category?: Prisma.StringNullableWithAggregatesFilter<"Research"> | string | null
   externalSurveyUrl?: Prisma.StringNullableWithAggregatesFilter<"Research"> | string | null
   targetRespondentCount?: Prisma.IntWithAggregatesFilter<"Research"> | number
+  tokenPerRespondent?: Prisma.IntWithAggregatesFilter<"Research"> | number
   estimatedDurationMinutes?: Prisma.IntWithAggregatesFilter<"Research"> | number
   deadline?: Prisma.DateTimeWithAggregatesFilter<"Research"> | Date | string
   status?: Prisma.EnumResearchStatusWithAggregatesFilter<"Research"> | $Enums.ResearchStatus
@@ -431,6 +447,7 @@ export type ResearchCreateInput = {
   category?: string | null
   externalSurveyUrl?: string | null
   targetRespondentCount: number
+  tokenPerRespondent?: number
   estimatedDurationMinutes: number
   deadline: Date | string
   status?: $Enums.ResearchStatus
@@ -456,6 +473,7 @@ export type ResearchUncheckedCreateInput = {
   category?: string | null
   externalSurveyUrl?: string | null
   targetRespondentCount: number
+  tokenPerRespondent?: number
   estimatedDurationMinutes: number
   deadline: Date | string
   status?: $Enums.ResearchStatus
@@ -479,6 +497,7 @@ export type ResearchUpdateInput = {
   category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   externalSurveyUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   targetRespondentCount?: Prisma.IntFieldUpdateOperationsInput | number
+  tokenPerRespondent?: Prisma.IntFieldUpdateOperationsInput | number
   estimatedDurationMinutes?: Prisma.IntFieldUpdateOperationsInput | number
   deadline?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   status?: Prisma.EnumResearchStatusFieldUpdateOperationsInput | $Enums.ResearchStatus
@@ -504,6 +523,7 @@ export type ResearchUncheckedUpdateInput = {
   category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   externalSurveyUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   targetRespondentCount?: Prisma.IntFieldUpdateOperationsInput | number
+  tokenPerRespondent?: Prisma.IntFieldUpdateOperationsInput | number
   estimatedDurationMinutes?: Prisma.IntFieldUpdateOperationsInput | number
   deadline?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   status?: Prisma.EnumResearchStatusFieldUpdateOperationsInput | $Enums.ResearchStatus
@@ -528,6 +548,7 @@ export type ResearchCreateManyInput = {
   category?: string | null
   externalSurveyUrl?: string | null
   targetRespondentCount: number
+  tokenPerRespondent?: number
   estimatedDurationMinutes: number
   deadline: Date | string
   status?: $Enums.ResearchStatus
@@ -546,6 +567,7 @@ export type ResearchUpdateManyMutationInput = {
   category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   externalSurveyUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   targetRespondentCount?: Prisma.IntFieldUpdateOperationsInput | number
+  tokenPerRespondent?: Prisma.IntFieldUpdateOperationsInput | number
   estimatedDurationMinutes?: Prisma.IntFieldUpdateOperationsInput | number
   deadline?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   status?: Prisma.EnumResearchStatusFieldUpdateOperationsInput | $Enums.ResearchStatus
@@ -565,6 +587,7 @@ export type ResearchUncheckedUpdateManyInput = {
   category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   externalSurveyUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   targetRespondentCount?: Prisma.IntFieldUpdateOperationsInput | number
+  tokenPerRespondent?: Prisma.IntFieldUpdateOperationsInput | number
   estimatedDurationMinutes?: Prisma.IntFieldUpdateOperationsInput | number
   deadline?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   status?: Prisma.EnumResearchStatusFieldUpdateOperationsInput | $Enums.ResearchStatus
@@ -605,6 +628,7 @@ export type ResearchCountOrderByAggregateInput = {
   category?: Prisma.SortOrder
   externalSurveyUrl?: Prisma.SortOrder
   targetRespondentCount?: Prisma.SortOrder
+  tokenPerRespondent?: Prisma.SortOrder
   estimatedDurationMinutes?: Prisma.SortOrder
   deadline?: Prisma.SortOrder
   status?: Prisma.SortOrder
@@ -618,6 +642,7 @@ export type ResearchCountOrderByAggregateInput = {
 
 export type ResearchAvgOrderByAggregateInput = {
   targetRespondentCount?: Prisma.SortOrder
+  tokenPerRespondent?: Prisma.SortOrder
   estimatedDurationMinutes?: Prisma.SortOrder
   tokensReserved?: Prisma.SortOrder
   tokensConsumed?: Prisma.SortOrder
@@ -631,6 +656,7 @@ export type ResearchMaxOrderByAggregateInput = {
   category?: Prisma.SortOrder
   externalSurveyUrl?: Prisma.SortOrder
   targetRespondentCount?: Prisma.SortOrder
+  tokenPerRespondent?: Prisma.SortOrder
   estimatedDurationMinutes?: Prisma.SortOrder
   deadline?: Prisma.SortOrder
   status?: Prisma.SortOrder
@@ -650,6 +676,7 @@ export type ResearchMinOrderByAggregateInput = {
   category?: Prisma.SortOrder
   externalSurveyUrl?: Prisma.SortOrder
   targetRespondentCount?: Prisma.SortOrder
+  tokenPerRespondent?: Prisma.SortOrder
   estimatedDurationMinutes?: Prisma.SortOrder
   deadline?: Prisma.SortOrder
   status?: Prisma.SortOrder
@@ -663,6 +690,7 @@ export type ResearchMinOrderByAggregateInput = {
 
 export type ResearchSumOrderByAggregateInput = {
   targetRespondentCount?: Prisma.SortOrder
+  tokenPerRespondent?: Prisma.SortOrder
   estimatedDurationMinutes?: Prisma.SortOrder
   tokensReserved?: Prisma.SortOrder
   tokensConsumed?: Prisma.SortOrder
@@ -798,6 +826,7 @@ export type ResearchCreateWithoutResearcherInput = {
   category?: string | null
   externalSurveyUrl?: string | null
   targetRespondentCount: number
+  tokenPerRespondent?: number
   estimatedDurationMinutes: number
   deadline: Date | string
   status?: $Enums.ResearchStatus
@@ -821,6 +850,7 @@ export type ResearchUncheckedCreateWithoutResearcherInput = {
   category?: string | null
   externalSurveyUrl?: string | null
   targetRespondentCount: number
+  tokenPerRespondent?: number
   estimatedDurationMinutes: number
   deadline: Date | string
   status?: $Enums.ResearchStatus
@@ -874,6 +904,7 @@ export type ResearchScalarWhereInput = {
   category?: Prisma.StringNullableFilter<"Research"> | string | null
   externalSurveyUrl?: Prisma.StringNullableFilter<"Research"> | string | null
   targetRespondentCount?: Prisma.IntFilter<"Research"> | number
+  tokenPerRespondent?: Prisma.IntFilter<"Research"> | number
   estimatedDurationMinutes?: Prisma.IntFilter<"Research"> | number
   deadline?: Prisma.DateTimeFilter<"Research"> | Date | string
   status?: Prisma.EnumResearchStatusFilter<"Research"> | $Enums.ResearchStatus
@@ -892,6 +923,7 @@ export type ResearchCreateWithoutReportsInput = {
   category?: string | null
   externalSurveyUrl?: string | null
   targetRespondentCount: number
+  tokenPerRespondent?: number
   estimatedDurationMinutes: number
   deadline: Date | string
   status?: $Enums.ResearchStatus
@@ -916,6 +948,7 @@ export type ResearchUncheckedCreateWithoutReportsInput = {
   category?: string | null
   externalSurveyUrl?: string | null
   targetRespondentCount: number
+  tokenPerRespondent?: number
   estimatedDurationMinutes: number
   deadline: Date | string
   status?: $Enums.ResearchStatus
@@ -954,6 +987,7 @@ export type ResearchUpdateWithoutReportsInput = {
   category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   externalSurveyUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   targetRespondentCount?: Prisma.IntFieldUpdateOperationsInput | number
+  tokenPerRespondent?: Prisma.IntFieldUpdateOperationsInput | number
   estimatedDurationMinutes?: Prisma.IntFieldUpdateOperationsInput | number
   deadline?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   status?: Prisma.EnumResearchStatusFieldUpdateOperationsInput | $Enums.ResearchStatus
@@ -978,6 +1012,7 @@ export type ResearchUncheckedUpdateWithoutReportsInput = {
   category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   externalSurveyUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   targetRespondentCount?: Prisma.IntFieldUpdateOperationsInput | number
+  tokenPerRespondent?: Prisma.IntFieldUpdateOperationsInput | number
   estimatedDurationMinutes?: Prisma.IntFieldUpdateOperationsInput | number
   deadline?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   status?: Prisma.EnumResearchStatusFieldUpdateOperationsInput | $Enums.ResearchStatus
@@ -1000,6 +1035,7 @@ export type ResearchCreateWithoutParticipationsInput = {
   category?: string | null
   externalSurveyUrl?: string | null
   targetRespondentCount: number
+  tokenPerRespondent?: number
   estimatedDurationMinutes: number
   deadline: Date | string
   status?: $Enums.ResearchStatus
@@ -1024,6 +1060,7 @@ export type ResearchUncheckedCreateWithoutParticipationsInput = {
   category?: string | null
   externalSurveyUrl?: string | null
   targetRespondentCount: number
+  tokenPerRespondent?: number
   estimatedDurationMinutes: number
   deadline: Date | string
   status?: $Enums.ResearchStatus
@@ -1062,6 +1099,7 @@ export type ResearchUpdateWithoutParticipationsInput = {
   category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   externalSurveyUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   targetRespondentCount?: Prisma.IntFieldUpdateOperationsInput | number
+  tokenPerRespondent?: Prisma.IntFieldUpdateOperationsInput | number
   estimatedDurationMinutes?: Prisma.IntFieldUpdateOperationsInput | number
   deadline?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   status?: Prisma.EnumResearchStatusFieldUpdateOperationsInput | $Enums.ResearchStatus
@@ -1086,6 +1124,7 @@ export type ResearchUncheckedUpdateWithoutParticipationsInput = {
   category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   externalSurveyUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   targetRespondentCount?: Prisma.IntFieldUpdateOperationsInput | number
+  tokenPerRespondent?: Prisma.IntFieldUpdateOperationsInput | number
   estimatedDurationMinutes?: Prisma.IntFieldUpdateOperationsInput | number
   deadline?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   status?: Prisma.EnumResearchStatusFieldUpdateOperationsInput | $Enums.ResearchStatus
@@ -1108,6 +1147,7 @@ export type ResearchCreateWithoutCriteriaInput = {
   category?: string | null
   externalSurveyUrl?: string | null
   targetRespondentCount: number
+  tokenPerRespondent?: number
   estimatedDurationMinutes: number
   deadline: Date | string
   status?: $Enums.ResearchStatus
@@ -1132,6 +1172,7 @@ export type ResearchUncheckedCreateWithoutCriteriaInput = {
   category?: string | null
   externalSurveyUrl?: string | null
   targetRespondentCount: number
+  tokenPerRespondent?: number
   estimatedDurationMinutes: number
   deadline: Date | string
   status?: $Enums.ResearchStatus
@@ -1170,6 +1211,7 @@ export type ResearchUpdateWithoutCriteriaInput = {
   category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   externalSurveyUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   targetRespondentCount?: Prisma.IntFieldUpdateOperationsInput | number
+  tokenPerRespondent?: Prisma.IntFieldUpdateOperationsInput | number
   estimatedDurationMinutes?: Prisma.IntFieldUpdateOperationsInput | number
   deadline?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   status?: Prisma.EnumResearchStatusFieldUpdateOperationsInput | $Enums.ResearchStatus
@@ -1194,6 +1236,7 @@ export type ResearchUncheckedUpdateWithoutCriteriaInput = {
   category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   externalSurveyUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   targetRespondentCount?: Prisma.IntFieldUpdateOperationsInput | number
+  tokenPerRespondent?: Prisma.IntFieldUpdateOperationsInput | number
   estimatedDurationMinutes?: Prisma.IntFieldUpdateOperationsInput | number
   deadline?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   status?: Prisma.EnumResearchStatusFieldUpdateOperationsInput | $Enums.ResearchStatus
@@ -1216,6 +1259,7 @@ export type ResearchCreateWithoutQuestionsInput = {
   category?: string | null
   externalSurveyUrl?: string | null
   targetRespondentCount: number
+  tokenPerRespondent?: number
   estimatedDurationMinutes: number
   deadline: Date | string
   status?: $Enums.ResearchStatus
@@ -1240,6 +1284,7 @@ export type ResearchUncheckedCreateWithoutQuestionsInput = {
   category?: string | null
   externalSurveyUrl?: string | null
   targetRespondentCount: number
+  tokenPerRespondent?: number
   estimatedDurationMinutes: number
   deadline: Date | string
   status?: $Enums.ResearchStatus
@@ -1278,6 +1323,7 @@ export type ResearchUpdateWithoutQuestionsInput = {
   category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   externalSurveyUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   targetRespondentCount?: Prisma.IntFieldUpdateOperationsInput | number
+  tokenPerRespondent?: Prisma.IntFieldUpdateOperationsInput | number
   estimatedDurationMinutes?: Prisma.IntFieldUpdateOperationsInput | number
   deadline?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   status?: Prisma.EnumResearchStatusFieldUpdateOperationsInput | $Enums.ResearchStatus
@@ -1302,6 +1348,7 @@ export type ResearchUncheckedUpdateWithoutQuestionsInput = {
   category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   externalSurveyUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   targetRespondentCount?: Prisma.IntFieldUpdateOperationsInput | number
+  tokenPerRespondent?: Prisma.IntFieldUpdateOperationsInput | number
   estimatedDurationMinutes?: Prisma.IntFieldUpdateOperationsInput | number
   deadline?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   status?: Prisma.EnumResearchStatusFieldUpdateOperationsInput | $Enums.ResearchStatus
@@ -1324,6 +1371,7 @@ export type ResearchCreateWithoutTransactionsInput = {
   category?: string | null
   externalSurveyUrl?: string | null
   targetRespondentCount: number
+  tokenPerRespondent?: number
   estimatedDurationMinutes: number
   deadline: Date | string
   status?: $Enums.ResearchStatus
@@ -1348,6 +1396,7 @@ export type ResearchUncheckedCreateWithoutTransactionsInput = {
   category?: string | null
   externalSurveyUrl?: string | null
   targetRespondentCount: number
+  tokenPerRespondent?: number
   estimatedDurationMinutes: number
   deadline: Date | string
   status?: $Enums.ResearchStatus
@@ -1386,6 +1435,7 @@ export type ResearchUpdateWithoutTransactionsInput = {
   category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   externalSurveyUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   targetRespondentCount?: Prisma.IntFieldUpdateOperationsInput | number
+  tokenPerRespondent?: Prisma.IntFieldUpdateOperationsInput | number
   estimatedDurationMinutes?: Prisma.IntFieldUpdateOperationsInput | number
   deadline?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   status?: Prisma.EnumResearchStatusFieldUpdateOperationsInput | $Enums.ResearchStatus
@@ -1410,6 +1460,7 @@ export type ResearchUncheckedUpdateWithoutTransactionsInput = {
   category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   externalSurveyUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   targetRespondentCount?: Prisma.IntFieldUpdateOperationsInput | number
+  tokenPerRespondent?: Prisma.IntFieldUpdateOperationsInput | number
   estimatedDurationMinutes?: Prisma.IntFieldUpdateOperationsInput | number
   deadline?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   status?: Prisma.EnumResearchStatusFieldUpdateOperationsInput | $Enums.ResearchStatus
@@ -1432,6 +1483,7 @@ export type ResearchCreateManyResearcherInput = {
   category?: string | null
   externalSurveyUrl?: string | null
   targetRespondentCount: number
+  tokenPerRespondent?: number
   estimatedDurationMinutes: number
   deadline: Date | string
   status?: $Enums.ResearchStatus
@@ -1450,6 +1502,7 @@ export type ResearchUpdateWithoutResearcherInput = {
   category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   externalSurveyUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   targetRespondentCount?: Prisma.IntFieldUpdateOperationsInput | number
+  tokenPerRespondent?: Prisma.IntFieldUpdateOperationsInput | number
   estimatedDurationMinutes?: Prisma.IntFieldUpdateOperationsInput | number
   deadline?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   status?: Prisma.EnumResearchStatusFieldUpdateOperationsInput | $Enums.ResearchStatus
@@ -1473,6 +1526,7 @@ export type ResearchUncheckedUpdateWithoutResearcherInput = {
   category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   externalSurveyUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   targetRespondentCount?: Prisma.IntFieldUpdateOperationsInput | number
+  tokenPerRespondent?: Prisma.IntFieldUpdateOperationsInput | number
   estimatedDurationMinutes?: Prisma.IntFieldUpdateOperationsInput | number
   deadline?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   status?: Prisma.EnumResearchStatusFieldUpdateOperationsInput | $Enums.ResearchStatus
@@ -1496,6 +1550,7 @@ export type ResearchUncheckedUpdateManyWithoutResearcherInput = {
   category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   externalSurveyUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   targetRespondentCount?: Prisma.IntFieldUpdateOperationsInput | number
+  tokenPerRespondent?: Prisma.IntFieldUpdateOperationsInput | number
   estimatedDurationMinutes?: Prisma.IntFieldUpdateOperationsInput | number
   deadline?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   status?: Prisma.EnumResearchStatusFieldUpdateOperationsInput | $Enums.ResearchStatus
@@ -1582,6 +1637,7 @@ export type ResearchSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   category?: boolean
   externalSurveyUrl?: boolean
   targetRespondentCount?: boolean
+  tokenPerRespondent?: boolean
   estimatedDurationMinutes?: boolean
   deadline?: boolean
   status?: boolean
@@ -1610,6 +1666,7 @@ export type ResearchSelectScalar = {
   category?: boolean
   externalSurveyUrl?: boolean
   targetRespondentCount?: boolean
+  tokenPerRespondent?: boolean
   estimatedDurationMinutes?: boolean
   deadline?: boolean
   status?: boolean
@@ -1621,7 +1678,7 @@ export type ResearchSelectScalar = {
   deletedAt?: boolean
 }
 
-export type ResearchOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "researcherId" | "title" | "description" | "category" | "externalSurveyUrl" | "targetRespondentCount" | "estimatedDurationMinutes" | "deadline" | "status" | "tokensReserved" | "tokensConsumed" | "publishedAt" | "createdAt" | "updatedAt" | "deletedAt", ExtArgs["result"]["research"]>
+export type ResearchOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "researcherId" | "title" | "description" | "category" | "externalSurveyUrl" | "targetRespondentCount" | "tokenPerRespondent" | "estimatedDurationMinutes" | "deadline" | "status" | "tokensReserved" | "tokensConsumed" | "publishedAt" | "createdAt" | "updatedAt" | "deletedAt", ExtArgs["result"]["research"]>
 export type ResearchInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   researcher?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   criteria?: boolean | Prisma.Research$criteriaArgs<ExtArgs>
@@ -1650,6 +1707,7 @@ export type $ResearchPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     category: string | null
     externalSurveyUrl: string | null
     targetRespondentCount: number
+    tokenPerRespondent: number
     estimatedDurationMinutes: number
     deadline: Date
     status: $Enums.ResearchStatus
@@ -2041,6 +2099,7 @@ export interface ResearchFieldRefs {
   readonly category: Prisma.FieldRef<"Research", 'String'>
   readonly externalSurveyUrl: Prisma.FieldRef<"Research", 'String'>
   readonly targetRespondentCount: Prisma.FieldRef<"Research", 'Int'>
+  readonly tokenPerRespondent: Prisma.FieldRef<"Research", 'Int'>
   readonly estimatedDurationMinutes: Prisma.FieldRef<"Research", 'Int'>
   readonly deadline: Prisma.FieldRef<"Research", 'DateTime'>
   readonly status: Prisma.FieldRef<"Research", 'ResearchStatus'>

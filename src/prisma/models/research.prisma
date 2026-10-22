@@ -44,6 +44,8 @@ model Research {
   externalSurveyUrl String? @db.VarChar(2048)
 
   targetRespondentCount    Int
+  // Token yang diterima tiap responden; dikalikan target saat publish untuk reserve
+  tokenPerRespondent       Int      @default(1)
   estimatedDurationMinutes Int
   deadline                 DateTime @db.DateTime(3)
 

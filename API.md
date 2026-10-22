@@ -10,6 +10,7 @@ harus mengirim cookie (`credentials: "include"` pada `fetch`).
 - [Auth](#auth)
 - [User](#user)
 - [Research](#research)
+- [Payment & wallet](#payment--wallet)
 - [Catatan & yang belum ada](#catatan--yang-belum-ada)
 
 ---
@@ -90,6 +91,8 @@ Nilai-nilai ini dipakai di request dan response:
 | `operator` (criteria) | `EQ`, `NEQ`, `IN`, `NOT_IN`, `GT`, `GTE`, `LT`, `LTE`, `BETWEEN`                       |
 | `questionType`        | `SINGLE_CHOICE`, `MULTIPLE_CHOICE`, `TEXT`, `NUMBER`, `SCALE`                          |
 | `status` (research)   | `DRAFT`, `PENDING_REVIEW`, `PUBLISHED`, `CLOSED`, `COMPLETED`, `REJECTED`, `CANCELLED` |
+| `type` (token mutasi) | `TOPUP`, `RESERVE`, `RELEASE`, `CONSUME`, `REWARD`, `WITHDRAW`, `FEE`, `REFUND`        |
+| `status` (payment)    | `PENDING`, `PAID`, `FAILED`, `EXPIRED`, `REFUNDED`                                     |
 
 `roles` disimpan sebagai JSON array. User yang baru mendaftar mendapat
 `["researcher", "respondent"]`; admin `["researcher", "respondent", "admin"]`.
@@ -508,6 +511,7 @@ Memperbarui sebagian field editor. Semua field opsional; yang tidak dikirim tida
 | `category`                 | enum **atau** `null` (untuk mengosongkan)                  |
 | `externalSurveyUrl`        | URL valid, maks 2048, **atau** `null`                      |
 | `targetRespondentCount`    | integer ≥ 0                                                |
+| `tokenPerRespondent`       | integer ≥ 1 — reward tiap responden, dipakai saat publish  |
 | `estimatedDurationMinutes` | integer 1–180                                              |
 | `deadline`                 | tanggal/waktu — menerima `"2026-12-01"` maupun ISO lengkap |
 | `criteria`                 | array; bila dikirim, **menggantikan seluruh criteria**     |
@@ -632,12 +636,50 @@ Draft harus lengkap, kalau tidak `422` dengan error per-field:
 
 Criteria tidak wajib — riset boleh menyasar semua responden.
 
+Publish juga **mengunci anggaran reward**: `targetRespondentCount × tokenPerRespondent` token diambil
+dari wallet peneliti sebagai baris `RESERVE` (amount negatif), dan `research.tokensReserved` diisi
+dengan total itu. Baris ledger-nya memakai `idempotencyKey: "research-reserve:{id}"`, jadi publish yang
+di-retry tidak mungkin menarik token dua kali — dan reservasi, baris ledger, serta perubahan status
+berada dalam **satu transaksi**.
+
 **Response `200`** — bentuknya sama dengan `GET /api/research/{id}`, dengan `status: "PUBLISHED"` dan
 `publishedAt` terisi.
 
 `publishedAt` inilah yang nanti membekukan kuesioner dan mengubah delete menjadi archive.
 
-**Error:** `404` · `409` bila bukan draft · `422` bila belum lengkap.
+**Error:** `404` · `409` bila bukan draft · `422` bila belum lengkap, alokasi melebihi 1.000.000
+token, atau saldo token tidak cukup.
+
+---
+
+### `POST /api/research/{id}/close`
+
+Menutup riset yang sudah dipublish. Tidak butuh body. Hanya riset berstatus `PUBLISHED` yang bisa
+ditutup (`409` bila bukan); setelahnya statusnya jadi `CLOSED`.
+
+Menutup sekaligus **mengembalikan sisa anggaran reward** ke wallet peneliti, sebesar
+`tokensReserved - tokensConsumed`. Yang sudah dibayarkan ke responden tidak ikut kembali,
+`tokensReserved` direset ke `0`, dan `tokensConsumed` dibiarkan apa adanya. Pengembaliannya dicatat
+sebagai baris ledger `RELEASE` (amount positif) dengan `idempotencyKey: "research-release:{id}"`, dan
+seluruhnya berada dalam **satu transaksi** — menutup dua kali tidak mungkin mengembalikan token dua kali.
+
+**Response `200`**
+
+```json
+{
+    "ok": true,
+    "statusCode": 200,
+    "message": "Research closed",
+    "data": {
+        "research": { "…": "bentuk sama seperti GET /api/research/{id}, status: CLOSED" },
+        "tokensReleased": 50
+    }
+}
+```
+
+`tokensReleased` bernilai `0` bila tidak ada sisa yang masih tertahan.
+
+**Error:** `404` · `409` bila bukan `PUBLISHED` · `401`/`403`.
 
 ---
 
@@ -650,6 +692,10 @@ Menghapus riset. Tidak butuh body.
 | Belum pernah dipublish | **dihapus permanen**, criteria & soal ikut terhapus                                                                 |
 | Sudah pernah dipublish | **di-archive** (`deletedAt` diisi), baris tetap ada agar data partisipasi, jawaban, dan transaksi token tidak putus |
 
+Archive juga melepas sisa anggaran reward yang belum terpakai, sama seperti `close` di atas — dan
+melepasnya lagi setelah riset ditutup tidak menggandakan apa pun, karena baris `RELEASE`-nya memakai
+`idempotencyKey: "research-release:{id}"`.
+
 **Response `200`**
 
 ```json
@@ -657,11 +703,12 @@ Menghapus riset. Tidak butuh body.
     "ok": true,
     "statusCode": 200,
     "message": "Research deleted",
-    "data": { "id": "…", "softDeleted": false }
+    "data": { "id": "…", "softDeleted": false, "tokensReleased": 0 }
 }
 ```
 
-`message` bernilai `"Research archived"` dan `softDeleted: true` untuk kasus archive.
+`message` bernilai `"Research archived"` dan `softDeleted: true` untuk kasus archive; `tokensReleased`
+berisi jumlah token yang dilepas kembali ke wallet.
 
 Riset yang sudah di-archive akan terlihat seperti tidak ada (`404`) di semua endpoint.
 
@@ -669,10 +716,172 @@ Riset yang sudah di-archive akan terlihat seperti tidak ada (`404`) di semua end
 
 ---
 
+## Payment & wallet
+
+Saldo dinyatakan dalam **token**, dengan harga per token yang bisa diatur lewat env
+`NEXT_PUBLIC_IDR_PER_TOKEN` (default `1000`, jadi Rp1.000/token) — nilai yang sama dipakai halaman
+wallet. Semua endpoint di bagian ini butuh login, kecuali webhook.
+
+### `GET /api/payment`
+
+Daftar payment milik pemanggil, terbaru dulu (default 20 baris).
+
+**Query**
+
+| Param    | Aturan                                                              |
+| -------- | ------------------------------------------------------------------- |
+| `status` | opsional, salah satu `PENDING`/`PAID`/`FAILED`/`EXPIRED`/`REFUNDED` |
+| `take`   | opsional, bilangan bulat 1–100 (default 20)                         |
+
+**Response `200`**
+
+```json
+{
+    "ok": true,
+    "statusCode": 200,
+    "message": "Payments",
+    "data": {
+        "payments": [
+            {
+                "id": "…",
+                "type": "TOKEN_TOPUP",
+                "provider": "manual",
+                "providerRef": "topup-…",
+                "amountIdr": 50000,
+                "tokenAmount": 50,
+                "status": "PENDING",
+                "createdAt": "…",
+                "updatedAt": "…"
+            }
+        ]
+    }
+}
+```
+
+Query yang tidak valid dijawab `422` dengan key `status`/`take`, sama seperti body yang salah.
+
+**Error:** `401` · `422`.
+
+---
+
+### `POST /api/payment/topup`
+
+Membuka order top-up. **Belum ada token yang masuk di langkah ini** — saldo baru bertambah setelah
+gateway melaporkan pembayarannya lunas (lihat webhook di bawah). Belum ada gateway yang terpasang, jadi
+order dicatat dengan `PAYMENT_PROVIDER` (default `manual`) dan `providerRef` yang dibuat backend.
+
+**Request**
+
+```json
+{ "tokenAmount": 50 }
+```
+
+| Field         | Aturan                             |
+| ------------- | ---------------------------------- |
+| `tokenAmount` | wajib, bilangan bulat, 1–1.000.000 |
+
+**Response `201`**
+
+```json
+{
+    "ok": true,
+    "statusCode": 201,
+    "message": "Top-up created",
+    "data": {
+        "payment": {
+            "id": "…",
+            "type": "TOKEN_TOPUP",
+            "provider": "manual",
+            "providerRef": "topup-…",
+            "amountIdr": 50000,
+            "tokenAmount": 50,
+            "status": "PENDING",
+            "createdAt": "…",
+            "updatedAt": "…"
+        }
+    }
+}
+```
+
+**Error:** `401` · `422` validasi.
+
+---
+
+### `POST /api/payment/webhook`
+
+Callback gateway. Ini **bukan** endpoint session — gateway tidak punya cookie — jadi diamankan dengan
+header `x-webhook-secret` yang harus sama dengan `PAYMENT_WEBHOOK_SECRET`. Selama variabel itu belum
+diisi, endpoint ini menolak **semua** panggilan (`503`) alih-alih menerimanya terbuka. Setelah gateway
+asli dipasang, ganti pemeriksaan secret ini dengan verifikasi signature dari gateway tersebut.
+
+`PAID` menambah saldo; `FAILED` dan `EXPIRED` hanya menutup ordernya. `REFUNDED` sengaja tidak diterima,
+karena membalik kredit adalah alur tersendiri.
+
+**Request**
+
+```json
+{ "providerRef": "topup-…", "status": "PAID" }
+```
+
+**Response `200`**
+
+```json
+{
+    "ok": true,
+    "statusCode": 200,
+    "message": "Payment settled and wallet credited",
+    "data": { "id": "…", "status": "PAID", "credited": true }
+}
+```
+
+Idempoten: order yang sudah `PAID` dijawab `credited: false`, dan saldo tidak bertambah lagi.
+
+**Error:** `401` secret salah · `404` `providerRef` tidak dikenal · `422` payload atau status tidak valid
+· `503` webhook belum dikonfigurasi.
+
+---
+
+### `GET /api/payment/wallet`
+
+Saldo pemanggil beserta mutasi terakhirnya (maksimal 50 baris).
+
+**Response `200`**
+
+```json
+{
+    "ok": true,
+    "statusCode": 200,
+    "message": "Wallet",
+    "data": {
+        "wallet": {
+            "balance": 950,
+            "balanceIdr": 950000,
+            "transactions": [{ "id": "…", "type": "RESERVE", "amount": -50, "researchId": "…", "participationId": null, "createdAt": "…" }]
+        }
+    }
+}
+```
+
+`amount` bertanda: kredit positif (`TOPUP`), debit negatif (`RESERVE`). Akun lama yang belum punya wallet
+dibaca sebagai saldo 0.
+
+**Error:** `401`.
+
+---
+
+### `GET /api/payment/{id}`
+
+Status satu payment milik pemanggil — dipakai untuk memeriksa hasil top-up sebelum saldonya masuk.
+
+**Error:** `401` · `404`.
+
+---
+
 ## Catatan & yang belum ada
 
 **Yang sudah berjalan:** register/login/confirm/logout/me, profil demografi (dengan aturan consent
-UU PDP), draft riset + detail + update + criteria + kuesioner + publish + delete.
+UU PDP), draft riset + detail + update + criteria + kuesioner + publish + close + delete, serta wallet
+token (top-up, reserve, dan release).
 
 **Yang belum ada:**
 
@@ -680,9 +889,13 @@ UU PDP), draft riset + detail + update + criteria + kuesioner + publish + delete
   ada endpoint-nya, karena dua hal belum tersedia: kolom nomor telepon di schema (tidak ada sama
   sekali) dan penyedia SMS/WhatsApp (baru Resend untuk email).
 - **Endpoint untuk mengubah `roles`** (promote ke admin) — masih manual lewat database.
-- **Token wallet** — `TokenWallet` belum dibuat saat registrasi, dan publish belum mereservasi token;
-  ledger token punya alurnya sendiri.
-- **List riset** (`GET /api/research`) dan **unpublish/close** belum ada.
+- **Sisa alur token** — top-up (`TOPUP`), reserve (`RESERVE`), dan pelepasan sisa reservasi (`RELEASE`,
+  lewat `close` maupun archive) sudah jalan; **pembayaran responden** (`REWARD`/`CONSUME`) belum,
+  karena alur partisipasi responden belum ada.
+- **Belum ada gateway pembayaran** — `POST /api/payment/topup` hanya mencatat order: tidak ada redirect
+  URL, dan webhook masih memakai shared secret, bukan verifikasi signature gateway. **Penarikan**
+  (`WITHDRAWAL`) dan **refund** juga belum ada.
+- **List riset** (`GET /api/research`) dan **unpublish** belum ada.
 - **UI untuk tipe pertanyaan `NUMBER`** — sudah valid di schema dan API, tapi editor belum
   menawarkannya (baru 4 tipe: `SINGLE_CHOICE`, `MULTIPLE_CHOICE`, `TEXT`, `SCALE`), dan halaman
   responden belum merender input angkanya.

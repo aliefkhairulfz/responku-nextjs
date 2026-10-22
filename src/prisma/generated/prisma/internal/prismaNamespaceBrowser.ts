@@ -60,6 +60,7 @@ export const ModelName = {
   ContentReport: 'ContentReport',
   RespondentParticipation: 'RespondentParticipation',
   ParticipationAnswer: 'ParticipationAnswer',
+  Payment: 'Payment',
   Research: 'Research',
   ResearchCriteria: 'ResearchCriteria',
   ResearchQuestion: 'ResearchQuestion',
@@ -233,6 +234,22 @@ export const ParticipationAnswerScalarFieldEnum = {
 export type ParticipationAnswerScalarFieldEnum = (typeof ParticipationAnswerScalarFieldEnum)[keyof typeof ParticipationAnswerScalarFieldEnum]
 
 
+export const PaymentScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  type: 'type',
+  provider: 'provider',
+  providerRef: 'providerRef',
+  amountIdr: 'amountIdr',
+  status: 'status',
+  idempotencyKey: 'idempotencyKey',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type PaymentScalarFieldEnum = (typeof PaymentScalarFieldEnum)[keyof typeof PaymentScalarFieldEnum]
+
+
 export const ResearchScalarFieldEnum = {
   id: 'id',
   researcherId: 'researcherId',
@@ -241,6 +258,7 @@ export const ResearchScalarFieldEnum = {
   category: 'category',
   externalSurveyUrl: 'externalSurveyUrl',
   targetRespondentCount: 'targetRespondentCount',
+  tokenPerRespondent: 'tokenPerRespondent',
   estimatedDurationMinutes: 'estimatedDurationMinutes',
   deadline: 'deadline',
   status: 'status',
@@ -483,6 +501,17 @@ export const ParticipationAnswerOrderByRelevanceFieldEnum = {
 } as const
 
 export type ParticipationAnswerOrderByRelevanceFieldEnum = (typeof ParticipationAnswerOrderByRelevanceFieldEnum)[keyof typeof ParticipationAnswerOrderByRelevanceFieldEnum]
+
+
+export const PaymentOrderByRelevanceFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  provider: 'provider',
+  providerRef: 'providerRef',
+  idempotencyKey: 'idempotencyKey'
+} as const
+
+export type PaymentOrderByRelevanceFieldEnum = (typeof PaymentOrderByRelevanceFieldEnum)[keyof typeof PaymentOrderByRelevanceFieldEnum]
 
 
 export const ResearchOrderByRelevanceFieldEnum = {

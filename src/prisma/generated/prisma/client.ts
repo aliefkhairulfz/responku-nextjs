@@ -87,6 +87,11 @@ export type RespondentParticipation = Prisma.RespondentParticipationModel
  */
 export type ParticipationAnswer = Prisma.ParticipationAnswerModel
 /**
+ * Model Payment
+ * 
+ */
+export type Payment = Prisma.PaymentModel
+/**
  * Model Research
  * 
  */

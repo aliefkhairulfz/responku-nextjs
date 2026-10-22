@@ -1,7 +1,7 @@
 import type { ResearchCategory } from "@/lib/research-category"
 import { BadRequestException, ConflictException, NotFoundException } from "@/lib/server/http-exception"
 import type { Prisma } from "@/prisma/generated/prisma/client"
-import { type CriteriaOperator, QuestionType, ResearchStatus } from "@/prisma/generated/prisma/enums"
+import { type CriteriaOperator, QuestionType, ResearchStatus, TokenTransactionType } from "@/prisma/generated/prisma/enums"
 import type { ResearchModel } from "@/prisma/generated/prisma/models/Research"
 import { prisma } from "@/prisma/prisma"
 
@@ -22,6 +22,9 @@ const DRAFT_DEADLINE_DAYS = 15
  * questionnaire endpoints refuse to touch a research in any of these states.
  */
 const IMMUTABLE_STATUSES: ResearchStatus[] = [ResearchStatus.PUBLISHED]
+
+/** Cap on the reward budget, mirroring the editor's own limit. */
+const TOKEN_TOTAL_LIMIT = 1_000_000
 
 /** Criteria operators the API accepts, mirroring the Prisma enum. */
 export const CRITERIA_OPERATORS = ["EQ", "NEQ", "IN", "NOT_IN", "GT", "GTE", "LT", "LTE", "BETWEEN"] as const
@@ -59,6 +62,8 @@ export type UpdateResearchInput = {
     category?: ResearchCategory | null
     externalSurveyUrl?: string | null
     targetRespondentCount?: number
+    /** Reward per respondent; the reservation at publish is target × this. */
+    tokenPerRespondent?: number
     estimatedDurationMinutes?: number
     deadline?: Date
     /** Replaces the research's whole criteria list when present. */
@@ -121,6 +126,47 @@ async function writeCriteria(tx: Prisma.TransactionClient, researchId: string, c
 }
 
 /**
+ * Hands whatever is still held back to the researcher's wallet.
+ *
+ * Publishing reserves the whole reward budget up front, so when a research stops
+ * asking for respondents the share nobody consumed must not stay in limbo. The
+ * ledger row is keyed by the research, which makes a second release — closing and
+ * then archiving — a no-op rather than a double refund.
+ */
+async function releaseReservation(
+    tx: Prisma.TransactionClient,
+    research: { id: string; researcherId: string; tokensReserved: number; tokensConsumed: number },
+) {
+    const amount = research.tokensReserved - research.tokensConsumed
+    if (amount <= 0) return 0
+
+    const wallet = await tx.tokenWallet.upsert({
+        where: { userId: research.researcherId },
+        // Accounts created before wallets were made at registration have none.
+        create: { userId: research.researcherId, balance: amount },
+        update: { balance: { increment: amount } },
+        select: { id: true },
+    })
+
+    await tx.tokenTransaction.create({
+        data: {
+            walletId: wallet.id,
+            researchId: research.id,
+            type: TokenTransactionType.RELEASE,
+            // Credits are positive, the mirror of the reserve's negative debit.
+            amount,
+            idempotencyKey: `research-release:${research.id}`,
+        },
+    })
+
+    // Nothing is held for this research any more. `tokensConsumed` is left alone, so
+    // whatever respondents already earned stays accounted for.
+    await tx.research.update({ where: { id: research.id }, data: { tokensReserved: 0 } })
+
+    return amount
+}
+
+/**
  * Whether a question type's options have to carry a label.
  *
  * An essay / short-answer question (`TEXT`) stores only answer codes, so its
@@ -143,6 +189,7 @@ function toResearchResponse(research: ResearchModel) {
         category: research.category,
         externalSurveyUrl: research.externalSurveyUrl,
         targetRespondentCount: research.targetRespondentCount,
+        tokenPerRespondent: research.tokenPerRespondent,
         estimatedDurationMinutes: research.estimatedDurationMinutes,
         deadline: research.deadline,
         status: research.status,
@@ -191,7 +238,7 @@ async function readResearchDetail(id: string) {
 async function findOwnedResearch(id: string, researcherId: string) {
     const research = await prisma.research.findFirst({
         where: { id, researcherId, deletedAt: null },
-        select: { id: true, status: true, publishedAt: true },
+        select: { id: true, status: true, publishedAt: true, tokensReserved: true, tokensConsumed: true },
     })
 
     if (research === null) throw new NotFoundException("Research not found")
@@ -199,19 +246,17 @@ async function findOwnedResearch(id: string, researcherId: string) {
     return research
 }
 
-/** Refuses to publish a research that is not complete enough to be shown. */
-async function assertPublishable(id: string): Promise<void> {
-    const research = await prisma.research.findUniqueOrThrow({
-        where: { id },
-        select: {
-            title: true,
-            category: true,
-            targetRespondentCount: true,
-            deadline: true,
-            _count: { select: { questions: true } },
-        },
-    })
+/** Everything the publish checklist looks at. */
+type PublishChecklist = {
+    title: string
+    category: string | null
+    targetRespondentCount: number
+    deadline: Date
+    _count: { questions: number }
+}
 
+/** Refuses to publish a research that is not complete enough to be shown. */
+function assertPublishable(research: PublishChecklist): void {
     const errors: Record<string, string> = {}
 
     if (research.title.trim().length === 0) errors.title = "A title is required before publishing."
@@ -299,6 +344,7 @@ export async function updateResearchService({ id, researcherId, criteria, ...pat
                 category: patch.category,
                 externalSurveyUrl: patch.externalSurveyUrl,
                 targetRespondentCount: patch.targetRespondentCount,
+                tokenPerRespondent: patch.tokenPerRespondent,
                 estimatedDurationMinutes: patch.estimatedDurationMinutes,
                 deadline: patch.deadline,
             },
@@ -399,24 +445,37 @@ export async function replaceResearchQuestionsService({
 /**
  * Deletes one research owned by `researcherId`.
  *
- * A research that has been published may already be referenced by
- * participations, answers and token transactions, so it is only archived — the
- * row stays and every read already filters `deletedAt`. A draft that was never
- * published is referenced by nothing, so it is removed for good, taking its
- * criteria and questions with it.
+ * A research that has been published may already be referenced by participations,
+ * answers and token transactions, so it is only archived — the row stays and every
+ * read already filters `deletedAt`. Archiving also returns the unused part of its
+ * reward budget, so a removed research does not sit on the researcher's tokens.
+ *
+ * A draft that was never published is referenced by nothing, so it is removed for
+ * good, taking its criteria and questions with it.
  */
 export async function deleteResearchService({ id, researcherId }: { id: string; researcherId: string }) {
     const research = await findOwnedResearch(id, researcherId)
 
-    if (research.publishedAt !== null) {
-        await prisma.research.update({ where: { id }, data: { deletedAt: new Date() } })
+    if (research.publishedAt === null) {
+        await prisma.research.delete({ where: { id } })
 
-        return { id, softDeleted: true }
+        return { id, softDeleted: false, tokensReleased: 0 }
     }
 
-    await prisma.research.delete({ where: { id } })
+    const tokensReleased = await prisma.$transaction(async (tx) => {
+        const released = await releaseReservation(tx, {
+            id,
+            researcherId,
+            tokensReserved: research.tokensReserved,
+            tokensConsumed: research.tokensConsumed,
+        })
 
-    return { id, softDeleted: false }
+        await tx.research.update({ where: { id }, data: { deletedAt: new Date() } })
+
+        return released
+    })
+
+    return { id, softDeleted: true, tokensReleased }
 }
 
 /* ========== Publish ========== */
@@ -425,24 +484,123 @@ export async function deleteResearchService({ id, researcherId }: { id: string; 
  * Publishes a draft so respondents can take it.
  *
  * Only a draft can be published, and only once it is complete enough to be shown.
- * Publishing stamps `publishedAt`, which is what later freezes the questionnaire
- * and turns a delete into an archive.
+ * Publishing is also where the reward budget is committed: `targetRespondentCount
+ * × tokenPerRespondent` tokens are reserved out of the researcher's wallet, so the
+ * money is provably set aside before anybody can join.
  *
- * Reserving tokens is not done here — the token ledger has its own flow.
+ * The reservation, its ledger row, and the status change share one transaction,
+ * and the ledger row carries a deterministic idempotency key — retrying a publish
+ * can therefore never reserve twice.
+ *
+ * Releasing the remainder (`closeResearchService`) and paying respondents are
+ * separate flows, not part of this.
  */
 export async function publishResearchService({ id, researcherId }: { id: string; researcherId: string }) {
-    const research = await findOwnedResearch(id, researcherId)
+    const owned = await findOwnedResearch(id, researcherId)
 
-    if (research.status !== ResearchStatus.DRAFT) {
-        throw new ConflictException(`Only a draft can be published, this research is ${research.status}`)
+    if (owned.status !== ResearchStatus.DRAFT) {
+        throw new ConflictException(`Only a draft can be published, this research is ${owned.status}`)
     }
 
-    await assertPublishable(id)
+    await prisma.$transaction(async (tx) => {
+        const research = await tx.research.findUniqueOrThrow({
+            where: { id },
+            select: {
+                status: true,
+                title: true,
+                category: true,
+                targetRespondentCount: true,
+                tokenPerRespondent: true,
+                deadline: true,
+                _count: { select: { questions: true } },
+            },
+        })
 
-    await prisma.research.update({
-        where: { id },
-        data: { status: ResearchStatus.PUBLISHED, publishedAt: new Date() },
+        // Re-checked inside the transaction, so two simultaneous publishes cannot
+        // both get past it and reserve twice.
+        if (research.status !== ResearchStatus.DRAFT) {
+            throw new ConflictException(`Only a draft can be published, this research is ${research.status}`)
+        }
+
+        assertPublishable(research)
+
+        const amount = research.targetRespondentCount * research.tokenPerRespondent
+
+        if (amount > TOKEN_TOTAL_LIMIT) {
+            throw new BadRequestException("Token allocation is too large", {
+                tokenPerRespondent: `The total may not exceed ${TOKEN_TOTAL_LIMIT.toLocaleString("en-US")} tokens.`,
+            })
+        }
+
+        const wallet = await tx.tokenWallet.findUnique({
+            where: { userId: researcherId },
+            select: { id: true, balance: true },
+        })
+
+        const insufficient = () =>
+            new BadRequestException("Not enough tokens to publish", {
+                _root: `This research needs ${amount} tokens, the wallet holds ${wallet?.balance ?? 0}.`,
+            })
+
+        // A missing wallet simply means there is nothing to reserve from.
+        if (wallet === null) throw insufficient()
+
+        // The ceiling travels with the decrement. A plain read-then-check would let
+        // two publishes racing on the same wallet both pass it and overdraw.
+        const reserved = await tx.tokenWallet.updateMany({
+            where: { id: wallet.id, balance: { gte: amount } },
+            data: { balance: { decrement: amount } },
+        })
+
+        if (reserved.count === 0) throw insufficient()
+
+        await tx.tokenTransaction.create({
+            data: {
+                walletId: wallet.id,
+                researchId: id,
+                type: TokenTransactionType.RESERVE,
+                // Debits are negative, which is how the wallet view reads them.
+                amount: -amount,
+                idempotencyKey: `research-reserve:${id}`,
+            },
+        })
+
+        await tx.research.update({
+            where: { id },
+            data: { status: ResearchStatus.PUBLISHED, publishedAt: new Date(), tokensReserved: amount },
+        })
     })
 
     return readResearchDetail(id)
+}
+
+/* ========== Close ========== */
+
+/**
+ * Closes a published research: it stops taking respondents, and the part of its
+ * reward budget nobody consumed goes back to the researcher.
+ *
+ * A draft never reserved anything, so closing one is not offered — delete it instead.
+ */
+export async function closeResearchService({ id, researcherId }: { id: string; researcherId: string }) {
+    const tokensReleased = await prisma.$transaction(async (tx) => {
+        const research = await tx.research.findFirst({
+            where: { id, researcherId, deletedAt: null },
+            select: { id: true, researcherId: true, status: true, tokensReserved: true, tokensConsumed: true },
+        })
+
+        if (research === null) throw new NotFoundException("Research not found")
+
+        if (research.status !== ResearchStatus.PUBLISHED) {
+            throw new ConflictException(`Only a published research can be closed, this one is ${research.status}`)
+        }
+
+        const released = await releaseReservation(tx, research)
+
+        await tx.research.update({ where: { id }, data: { status: ResearchStatus.CLOSED } })
+
+        return released
+    })
+
+    return { research: await readResearchDetail(id), tokensReleased }
 }

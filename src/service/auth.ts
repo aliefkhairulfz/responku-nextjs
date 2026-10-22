@@ -129,15 +129,18 @@ async function consumeVerification({ userId, type, code }: { userId: string; typ
     if (verification.expiredAt.getTime() <= Date.now()) throw invalid
 
     if (verification.code !== code) {
-        const attempts = verification.attempts + 1
+        // The ceiling rides along with the increment: with a read-then-write, guesses
+        // arriving together would all read the same count and overwrite each other.
+        const counted = await prisma.verification.updateMany({
+            where: { id: verification.id, attempts: { lt: MAX_VERIFICATION_ATTEMPTS - 1 } },
+            data: { attempts: { increment: 1 } },
+        })
 
-        if (attempts >= MAX_VERIFICATION_ATTEMPTS) {
+        if (counted.count === 0) {
             await prisma.verification.deleteMany({ where: { id: verification.id } })
 
             throw new TooManyRequestsException("Too many incorrect codes — ask for a new one.")
         }
-
-        await prisma.verification.update({ where: { id: verification.id }, data: { attempts } })
 
         throw invalid
     }
@@ -179,6 +182,8 @@ export async function registerService({ name, email, password }: RegisterInput) 
                 },
             },
             verifications: { create: verification.data },
+            // Every account gets a wallet up front, so a top-up never has to invent one.
+            tokenWallet: { create: { balance: 0 } },
         },
         select: { id: true, name: true, email: true, verifiedAt: true },
     })

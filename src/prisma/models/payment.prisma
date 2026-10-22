@@ -1,0 +1,42 @@
+// ============================================================
+// PAYMENT: payments
+// ============================================================
+
+enum PaymentType {
+  TOKEN_TOPUP
+  WITHDRAWAL
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  EXPIRED
+  REFUNDED
+}
+
+model Payment {
+  id     String @id @default(uuid()) @db.VarChar(36)
+  userId String @map("user_id") @db.VarChar(36)
+
+  type PaymentType
+  // Nama gateway, mis. "midtrans", "xendit" (dibiarkan string agar mudah tambah provider)
+  provider    String @db.VarChar(50)
+  // ID transaksi dari provider (order_id / invoice_id)
+  providerRef String @unique @map("provider_ref") @db.VarChar(255)
+
+  amountIdr Decimal       @map("amount_idr") @db.Decimal(12, 2)
+  status    PaymentStatus @default(PENDING)
+
+  // Mencegah pembayaran ganda saat retry / webhook berulang
+  idempotencyKey String @unique @map("idempotency_key") @db.VarChar(255)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.DateTime(3)
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, createdAt])
+  @@index([status])
+  @@map("payments")
+}
