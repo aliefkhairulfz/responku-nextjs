@@ -1,0 +1,128 @@
+// ============================================================
+// RESEARCH: researches, researchCriteria, researchQuestions,
+//           researchQuestionChoices
+// ============================================================
+
+enum ResearchStatus {
+  DRAFT
+  PENDING_REVIEW
+  PUBLISHED
+  CLOSED
+  COMPLETED
+  REJECTED
+  CANCELLED
+}
+
+enum CriteriaOperator {
+  EQ
+  NEQ
+  IN
+  NOT_IN
+  GT
+  GTE
+  LT
+  LTE
+  BETWEEN
+}
+
+enum QuestionType {
+  SINGLE_CHOICE
+  MULTIPLE_CHOICE
+  TEXT
+  NUMBER
+  SCALE
+}
+
+model Research {
+  id          String @id @default(cuid()) @db.VarChar(36)
+  researcherId String @db.VarChar(36)
+
+  title             String  @db.VarChar(255)
+  description       String  @db.Text
+  // Kategori topik sebagai key stabil (mis. "fintech"), label tampilan ada di UI
+  category          String? @db.VarChar(50)
+  externalSurveyUrl String? @db.VarChar(2048)
+
+  targetRespondentCount    Int
+  estimatedDurationMinutes Int
+  deadline                 DateTime @db.DateTime(3)
+
+  status         ResearchStatus @default(DRAFT)
+  tokensReserved Int            @default(0)
+  tokensConsumed Int            @default(0)
+  publishedAt    DateTime?      @db.DateTime(3)
+
+  createdAt DateTime  @default(now()) @db.DateTime(3)
+  updatedAt DateTime  @updatedAt @db.DateTime(3)
+  deletedAt DateTime? @db.DateTime(3)
+
+  researcher User @relation("ResearcherResearches", fields: [researcherId], references: [id])
+
+  criteria       ResearchCriteria[]
+  questions      ResearchQuestion[]
+  participations RespondentParticipation[]
+  transactions   TokenTransaction[]
+  reports        ContentReport[]
+
+  @@index([researcherId])
+  @@index([status, deadline])
+  @@map("researches")
+}
+
+model ResearchCriteria {
+  id         String @id @default(cuid()) @db.VarChar(36)
+  researchId String @db.VarChar(36)
+
+  field    String           @db.VarChar(100)
+  operator CriteriaOperator
+  value    String           @db.VarChar(512)
+
+  createdAt DateTime  @default(now()) @db.DateTime(3)
+  updatedAt DateTime  @updatedAt @db.DateTime(3)
+  deletedAt DateTime? @db.DateTime(3)
+
+  research Research @relation(fields: [researchId], references: [id], onDelete: Cascade)
+
+  @@index([researchId])
+  @@map("research_criteria")
+}
+
+model ResearchQuestion {
+  id         String @id @default(cuid()) @db.VarChar(36)
+  researchId String @db.VarChar(36)
+
+  pos          Int
+  question     String       @db.Text
+  questionType QuestionType
+  mustFill     Boolean      @default(true)
+
+  createdAt DateTime  @default(now()) @db.DateTime(3)
+  updatedAt DateTime  @updatedAt @db.DateTime(3)
+  deletedAt DateTime? @db.DateTime(3)
+
+  research Research                 @relation(fields: [researchId], references: [id], onDelete: Cascade)
+  choices  ResearchQuestionChoice[]
+  answers  ParticipationAnswer[]
+
+  @@unique([researchId, pos])
+  @@map("research_questions")
+}
+
+model ResearchQuestionChoice {
+  id         String @id @default(cuid()) @db.VarChar(36)
+  questionId String @db.VarChar(36)
+
+  pos        Int
+  // Kode/label singkat pilihan (mis. "A", "B", "1"), sesuai kolom `n` di ERD
+  n          String  @db.VarChar(20)
+  choiceText String? @db.Text
+
+  createdAt DateTime  @default(now()) @db.DateTime(3)
+  updatedAt DateTime  @updatedAt @db.DateTime(3)
+  deletedAt DateTime? @db.DateTime(3)
+
+  question ResearchQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([questionId, pos])
+  @@map("research_question_choices")
+}

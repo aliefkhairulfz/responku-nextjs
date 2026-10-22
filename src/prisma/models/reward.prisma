@@ -1,0 +1,29 @@
+// ============================================================
+// REWARD: rewards
+// ============================================================
+
+enum RewardStatus {
+  PENDING
+  HELD
+  PAID
+  CANCELLED
+}
+
+model Reward {
+  id              String @id @default(cuid()) @db.VarChar(36)
+  participationId String @unique @db.VarChar(36)
+
+  respondentTokenAmount Decimal @db.Decimal(18, 2)
+  platformTokenAmount   Decimal @db.Decimal(18, 2)
+
+  status RewardStatus @default(PENDING)
+  paidAt DateTime?    @db.DateTime(3)
+
+  createdAt DateTime  @default(now()) @db.DateTime(3)
+  updatedAt DateTime  @updatedAt @db.DateTime(3)
+  deletedAt DateTime? @db.DateTime(3)
+
+  participation RespondentParticipation @relation(fields: [participationId], references: [id])
+
+  @@map("rewards")
+}

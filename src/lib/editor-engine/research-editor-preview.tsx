@@ -1,16 +1,16 @@
-"use client";
+"use client"
 
-import * as Card from "@/components/ui/card";
-import { categoryItems, genderItems, questionTypeItems, regionItems, timeLimitOptions, UseResearchEditorForm } from "./research-editor-schema";
+import * as Card from "@/components/ui/card"
+import { categoryItems, genderItems, questionTypeItems, regionItems, timeLimitOptions, type UseResearchEditorForm } from "./research-editor-schema"
 
 type ResearchEditorPreviewProps = {
-    researchEditorForm: UseResearchEditorForm;
-};
+    researchEditorForm: UseResearchEditorForm
+}
 
-type Option = { value: string | null; label: string };
+type Option = { value: string | null; label: string }
 
 function getLabel(items: Option[], value: string) {
-    return items.find((item) => item.value === value)?.label ?? value;
+    return items.find((item) => item.value === value)?.label ?? value
 }
 
 function InfoItem({ label, value }: { label: string; value: React.ReactNode }) {
@@ -19,14 +19,14 @@ function InfoItem({ label, value }: { label: string; value: React.ReactNode }) {
             <span className="text-xs text-muted-foreground">{label}</span>
             <div className="wrap-break-word text-sm font-medium">{value || "—"}</div>
         </div>
-    );
+    )
 }
 
 export default function ResearchEditorPreview({ researchEditorForm: { form } }: ResearchEditorPreviewProps) {
     return (
         <form.Subscribe selector={(s) => s.values}>
             {({ allocationToken, identity, criteria, questions }) => {
-                const totalToken = allocationToken.targetResponden * allocationToken.tokenPerResponden;
+                const totalToken = allocationToken.targetResponden * allocationToken.tokenPerResponden
 
                 return (
                     <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 mb-10">
@@ -103,8 +103,8 @@ export default function ResearchEditorPreview({ researchEditorForm: { form } }: 
                             </div>
 
                             {questions.map((question, idx) => {
-                                const isEssay = question.questionType === "essay-answer";
-                                const isScale = question.questionType === "scale-answer";
+                                const isEssay = question.questionType === "TEXT"
+                                const isScale = question.questionType === "SCALE"
 
                                 return (
                                     <Card.Card key={question.id} className="gap-4 p-4 sm:p-5">
@@ -149,12 +149,12 @@ export default function ResearchEditorPreview({ researchEditorForm: { form } }: 
                                             </div>
                                         )}
                                     </Card.Card>
-                                );
+                                )
                             })}
                         </div>
                     </div>
-                );
+                )
             }}
         </form.Subscribe>
-    );
+    )
 }

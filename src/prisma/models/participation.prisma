@@ -1,0 +1,75 @@
+// ============================================================
+// PARTICIPATION: respondentParticipations, participationAnswers
+// ============================================================
+
+enum ParticipationStatus {
+  JOINED
+  IN_PROGRESS
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  EXPIRED
+}
+
+enum AutoScreeningResult {
+  PASS
+  FAIL
+  NEEDS_REVIEW
+}
+
+model RespondentParticipation {
+  id           String @id @default(cuid()) @db.VarChar(36)
+  researchId   String @db.VarChar(36)
+  respondentId String @db.VarChar(36)
+
+  status              ParticipationStatus  @default(JOINED)
+  screeningScore      Int?
+  autoScreeningResult AutoScreeningResult?
+  submittedAt         DateTime?            @db.DateTime(3)
+
+  adminReviewedBy String?   @db.VarChar(36)
+  adminReviewedAt DateTime? @db.DateTime(3)
+  holdReleaseAt   DateTime? @db.DateTime(3)
+  rewardedAt      DateTime? @db.DateTime(3)
+
+  createdAt DateTime  @default(now()) @db.DateTime(3)
+  updatedAt DateTime  @updatedAt @db.DateTime(3)
+  deletedAt DateTime? @db.DateTime(3)
+
+  research   Research @relation(fields: [researchId], references: [id])
+  respondent User     @relation("RespondentParticipations", fields: [respondentId], references: [id])
+  adminReviewer User? @relation("ParticipationAdminReviewer", fields: [adminReviewedBy], references: [id])
+
+  answers      ParticipationAnswer[]
+  transactions TokenTransaction[]
+  reward       Reward?
+  qualityChecks QualityCheck[]
+
+  // satu responden hanya boleh ikut satu kali per riset
+  @@unique([researchId, respondentId])
+  @@index([respondentId])
+  @@index([status, holdReleaseAt])
+  @@map("respondent_participations")
+}
+
+model ParticipationAnswer {
+  id                       String @id @default(cuid()) @db.VarChar(36)
+  respondentParticipationId String @db.VarChar(36)
+  researchQuestionId       String @db.VarChar(36)
+
+  // Array id pilihan, mis. ["id1","id2"]; null untuk jawaban non-pilihan
+  choiceIds  Json?
+  answeredAt DateTime? @db.DateTime(3)
+
+  createdAt DateTime  @default(now()) @db.DateTime(3)
+  updatedAt DateTime  @updatedAt @db.DateTime(3)
+  deletedAt DateTime? @db.DateTime(3)
+
+  participation RespondentParticipation @relation(fields: [respondentParticipationId], references: [id], onDelete: Cascade)
+  question      ResearchQuestion        @relation(fields: [researchQuestionId], references: [id])
+
+  @@unique([respondentParticipationId, researchQuestionId])
+  @@index([researchQuestionId])
+  @@map("participation_answers")
+}

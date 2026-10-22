@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 import {
     ArrowUpRightIcon,
@@ -11,23 +11,23 @@ import {
     UserCheckIcon,
     Wallet,
     XIcon,
-} from "lucide-react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { type ReactNode, useState } from "react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { DashboardStoreProvider, useDashboardStore } from "@/lib/stores/dashboard-store-provider";
-import { cn } from "@/lib/utils";
+} from "lucide-react"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { type ReactNode, useState } from "react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
+import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
+import { DashboardStoreProvider, useDashboardStore } from "@/lib/stores/dashboard-store-provider"
+import { cn } from "@/lib/cn"
 
 type MenuItem = {
-    label: string;
-    icon: LucideIcon;
-    highlight?: boolean;
-    url: string;
-};
+    label: string
+    icon: LucideIcon
+    highlight?: boolean
+    url: string
+}
 
 const menus: MenuItem[] = [
     { label: "Dashboard", icon: LayoutDashboardIcon, url: "dashboard" },
@@ -48,7 +48,7 @@ const menus: MenuItem[] = [
         highlight: true,
         url: "create-research",
     },
-];
+]
 
 const menus2nd: MenuItem[] = [
     {
@@ -63,20 +63,20 @@ const menus2nd: MenuItem[] = [
         highlight: true,
         url: "help-center",
     },
-];
+]
 
 const user = {
     name: "John Doe",
     image: "",
-};
+}
 
 function MenuList({ items, open, onItemClick, pathnames }: { items: MenuItem[]; open: boolean; onItemClick?: () => void; pathnames: string[] }) {
-    const hideOnCollapse = open ? "opacity-100" : "md:opacity-0";
+    const hideOnCollapse = open ? "opacity-100" : "md:opacity-0"
     return (
         <ul className="flex flex-col gap-1">
             {items.map(({ label, icon: Icon, highlight, url }) => {
-                const urls = url.split("/").filter((c) => c !== "");
-                const isActive = urls.every((c) => pathnames.includes(c));
+                const urls = url.split("/").filter((c) => c !== "")
+                const isActive = urls.every((c) => pathnames.includes(c))
 
                 return (
                     <Link
@@ -97,14 +97,14 @@ function MenuList({ items, open, onItemClick, pathnames }: { items: MenuItem[]; 
                             )}
                         </button>
                     </Link>
-                );
+                )
             })}
         </ul>
-    );
+    )
 }
 
 export default function Layout({ children }: { children: ReactNode }) {
-    const pathname = usePathname();
+    const pathname = usePathname()
 
     return (
         <DashboardStoreProvider>
@@ -112,16 +112,16 @@ export default function Layout({ children }: { children: ReactNode }) {
                 <div className="w-full p-6 overflow-auto">{children}</div>
             </LayoutChildren>
         </DashboardStoreProvider>
-    );
+    )
 }
 
 function LayoutChildren({ pathname, children }: { pathname: string; children: ReactNode }) {
-    const [open, setOpen] = useState(true);
-    const [mobileOpen, setMobileOpen] = useState(false);
+    const [open, setOpen] = useState(true)
+    const [mobileOpen, setMobileOpen] = useState(false)
 
     // stores
-    const userMode = useDashboardStore((s) => s.userMode);
-    const setMode = useDashboardStore((s) => s.setMode);
+    const userMode = useDashboardStore((s) => s.userMode)
+    const setMode = useDashboardStore((s) => s.setMode)
 
     return (
         <div className="w-full h-dvh flex md:divide-x overflow-hidden">
@@ -275,5 +275,5 @@ function LayoutChildren({ pathname, children }: { pathname: string; children: Re
                 {children}
             </div>
         </div>
-    );
+    )
 }

@@ -1,0 +1,72 @@
+// ============================================================
+// MODERATION: qualityChecks, contentReports
+// ============================================================
+
+enum QualityDecision {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ReportStatus {
+  OPEN
+  UNDER_REVIEW
+  RESOLVED
+  DISMISSED
+}
+
+enum ReportAction {
+  NONE
+  WARNING
+  CONTENT_REMOVED
+  RESEARCH_SUSPENDED
+  USER_BANNED
+}
+
+model QualityCheck {
+  id              String @id @default(cuid()) @db.VarChar(36)
+  participationId String @db.VarChar(36)
+
+  // Array flag sinyal otomatis, mis. ["SPEEDING","STRAIGHT_LINING"]
+  signalFlags Json?
+  autoScore   Decimal? @db.Decimal(8, 4)
+  reviewedBy  String?  @db.VarChar(36)
+  decision    QualityDecision @default(PENDING)
+
+  createdAt DateTime  @default(now()) @db.DateTime(3)
+  updatedAt DateTime  @updatedAt @db.DateTime(3)
+  deletedAt DateTime? @db.DateTime(3)
+
+  participation RespondentParticipation @relation(fields: [participationId], references: [id])
+  reviewer      User?                   @relation("QualityCheckReviewer", fields: [reviewedBy], references: [id])
+
+  @@index([participationId])
+  @@index([reviewedBy])
+  @@map("quality_checks")
+}
+
+model ContentReport {
+  id         String @id @default(cuid()) @db.VarChar(36)
+  researchId String @db.VarChar(36)
+  reportedBy String @db.VarChar(36)
+
+  reason String       @db.Text
+  status ReportStatus @default(OPEN)
+
+  reviewedBy  String?       @db.VarChar(36)
+  actionTaken ReportAction?
+
+  createdAt DateTime  @default(now()) @db.DateTime(3)
+  updatedAt DateTime  @updatedAt @db.DateTime(3)
+  deletedAt DateTime? @db.DateTime(3)
+
+  research Research @relation(fields: [researchId], references: [id])
+  reporter User     @relation("ContentReportReporter", fields: [reportedBy], references: [id])
+  reviewer User?    @relation("ContentReportReviewer", fields: [reviewedBy], references: [id])
+
+  @@index([researchId])
+  @@index([reportedBy])
+  @@index([reviewedBy])
+  @@index([status])
+  @@map("content_reports")
+}

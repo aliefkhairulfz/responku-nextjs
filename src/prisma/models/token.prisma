@@ -1,0 +1,54 @@
+// ============================================================
+// TOKEN: tokenWallets, tokenTransactions
+// ============================================================
+
+enum TokenTransactionType {
+  TOPUP
+  RESERVE
+  RELEASE
+  CONSUME
+  REWARD
+  WITHDRAW
+  FEE
+  REFUND
+}
+
+model TokenWallet {
+  id      String @id @default(cuid()) @db.VarChar(36)
+  userId  String @unique @db.VarChar(36)
+  balance Int    @default(0)
+
+  createdAt DateTime  @default(now()) @db.DateTime(3)
+  updatedAt DateTime  @updatedAt @db.DateTime(3)
+  deletedAt DateTime? @db.DateTime(3)
+
+  user         User               @relation(fields: [userId], references: [id])
+  transactions TokenTransaction[]
+
+  @@map("token_wallets")
+}
+
+model TokenTransaction {
+  id                        String  @id @default(cuid()) @db.VarChar(36)
+  walletId                  String  @db.VarChar(36)
+  researchId                String? @db.VarChar(36)
+  respondentParticipationId String? @db.VarChar(36)
+
+  type   TokenTransactionType
+  amount Int
+  // Mencegah transaksi ganda (retry / webhook ganda)
+  idempotencyKey String @unique @db.VarChar(255)
+
+  createdAt DateTime  @default(now()) @db.DateTime(3)
+  updatedAt DateTime  @updatedAt @db.DateTime(3)
+  deletedAt DateTime? @db.DateTime(3)
+
+  wallet        TokenWallet              @relation(fields: [walletId], references: [id])
+  research      Research?                @relation(fields: [researchId], references: [id])
+  participation RespondentParticipation? @relation(fields: [respondentParticipationId], references: [id])
+
+  @@index([walletId, createdAt])
+  @@index([researchId])
+  @@index([respondentParticipationId])
+  @@map("token_transactions")
+}

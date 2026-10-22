@@ -1,56 +1,56 @@
-"use client";
+"use client"
 
-import { Button } from "@/components/ui/button";
-import * as Card from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import * as Select from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
-import { ChevronDown, ChevronUp, Copy, Plus, Trash2 } from "lucide-react";
-import { MAX_AGE, MIN_AGE, QuestionSchema, questionTypeItems, timeLimitOptions } from "./research-editor-schema";
-import type { UseResearchEditorForm } from "./research-editor-schema";
+import { Button } from "@/components/ui/button"
+import * as Card from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import * as Select from "@/components/ui/select"
+import { Switch } from "@/components/ui/switch"
+import { Textarea } from "@/components/ui/textarea"
+import { ChevronDown, ChevronUp, Copy, Plus, Trash2 } from "lucide-react"
+import { MAX_AGE, MIN_AGE, type QuestionSchema, categoryItems, questionTypeItems, timeLimitOptions } from "./research-editor-schema"
+import type { UseResearchEditorForm } from "./research-editor-schema"
 
 /** CONSTANTS & HELPERS */
-const MAX_QUESTIONS = 50;
-const MAX_CHOICES = 5;
-const LIKERT_LABELS = ["Sangat Tidak Setuju", "Tidak Setuju", "Netral", "Setuju", "Sangat Setuju"];
+const MAX_QUESTIONS = 50
+const MAX_CHOICES = 5
+const LIKERT_LABELS = ["Sangat Tidak Setuju", "Tidak Setuju", "Netral", "Setuju", "Sangat Setuju"]
 
-type QuestionItem = QuestionSchema[number];
-type QuestionType = QuestionItem["questionType"];
+type QuestionItem = QuestionSchema[number]
+type QuestionType = QuestionItem["questionType"]
 
 const makeChoice = (idx: number, choiceText = "") => ({
     id: crypto.randomUUID(),
     pos: idx + 1,
     n: String.fromCharCode(97 + idx), // a, b, c, ...
     choiceText,
-});
+})
 
 const makeChoicesByType = (type: QuestionType) => {
     switch (type) {
-        case "scale-answer":
-            return LIKERT_LABELS.map((label, i) => makeChoice(i, label));
-        case "essay-answer":
-            return [];
+        case "SCALE":
+            return LIKERT_LABELS.map((label, i) => makeChoice(i, label))
+        case "TEXT":
+            return []
         default:
-            return [makeChoice(0), makeChoice(1)];
+            return [makeChoice(0), makeChoice(1)]
     }
-};
+}
 
-const makeQuestion = (pos: number, type: QuestionType = "single-answer"): QuestionItem => ({
+const makeQuestion = (pos: number, type: QuestionType = "SINGLE_CHOICE"): QuestionItem => ({
     id: crypto.randomUUID(),
     pos,
     question: "",
     mustFill: true,
     questionType: type,
     choices: makeChoicesByType(type),
-});
+})
 
 /** SMALL UI HELPERS */
 function FieldError({ errors }: { errors: unknown[] }) {
-    const messages = errors.map((err) => (typeof err === "string" ? err : (err as { message?: string } | undefined)?.message)).filter(Boolean);
-    if (messages.length === 0) return null;
-    return <p className="text-destructive text-sm">{messages[0]}</p>;
+    const messages = errors.map((err) => (typeof err === "string" ? err : (err as { message?: string } | undefined)?.message)).filter(Boolean)
+    if (messages.length === 0) return null
+    return <p className="text-destructive text-sm">{messages[0]}</p>
 }
 
 function FieldWrapper({ label, htmlFor, children }: { label: string; htmlFor?: string; children: React.ReactNode }) {
@@ -59,43 +59,36 @@ function FieldWrapper({ label, htmlFor, children }: { label: string; htmlFor?: s
             <Label htmlFor={htmlFor}>{label}</Label>
             {children}
         </div>
-    );
+    )
 }
 
 /** SELECT HELPER (for simple string enums) */
-type Option = { value: string; label: string };
+type Option = { value: string; label: string }
 
 /** MAIN COMPONENT */
 type RisetEditorEngineProps = {
-    researchEditorForm: UseResearchEditorForm;
-};
+    researchEditorForm: UseResearchEditorForm
+}
 
 export default function RisetEditorEngine({ researchEditorForm: { form } }: RisetEditorEngineProps) {
     const genderItems: Option[] = [
         { value: "all", label: "Semua" },
         { value: "male", label: "Laki-laki" },
         { value: "female", label: "Perempuan" },
-    ];
+    ]
     const regionItems: Option[] = [
         { value: "all", label: "Seluruh Indonesia" },
         { value: "jabodetabek", label: "Jabodetabek" },
         { value: "jawa-lainnya", label: "Jawa (selain Jabodetabek)" },
         { value: "luar-jawa", label: "Luar Jawa" },
-    ];
-    const categoryItems: Option[] = [
-        "Fintech & Perbankan",
-        "Konsumen & Retail",
-        "Pendidikan & Akademik",
-        "Kesehatan & Gaya Hidup",
-        "Teknologi & Internet",
-    ].map((c) => ({ value: c, label: c }));
+    ]
 
     return (
         <form
             className="flex flex-col gap-6 mb-10"
             onSubmit={(e) => {
-                e.preventDefault();
-                form.handleSubmit();
+                e.preventDefault()
+                form.handleSubmit()
             }}
         >
             {/* TOKEN ALLOCATION FORM FIELD */}
@@ -359,13 +352,13 @@ export default function RisetEditorEngine({ researchEditorForm: { form } }: Rise
             {/* QUESTIONS FORM FIELD */}
             <form.Field name="questions" mode="array">
                 {(questionsField) => {
-                    const total = questionsField.state.value.length;
+                    const total = questionsField.state.value.length
 
                     return (
                         <div className="flex flex-col gap-4">
                             {questionsField.state.value.map((q, questionItemIdx) => {
-                                const isEssay = q.questionType === "essay-answer";
-                                const isScale = q.questionType === "scale-answer";
+                                const isEssay = q.questionType === "TEXT"
+                                const isScale = q.questionType === "SCALE"
 
                                 return (
                                     <Card.Card key={q.id} className="w-full">
@@ -405,8 +398,8 @@ export default function RisetEditorEngine({ researchEditorForm: { form } }: Rise
                                                                     ...c,
                                                                     id: crypto.randomUUID(),
                                                                 })),
-                                                            } as QuestionItem;
-                                                            questionsField.insertValue(questionItemIdx + 1, copy);
+                                                            } as QuestionItem
+                                                            questionsField.insertValue(questionItemIdx + 1, copy)
                                                         }}
                                                     >
                                                         <Copy />
@@ -430,14 +423,14 @@ export default function RisetEditorEngine({ researchEditorForm: { form } }: Rise
                                                         items={questionTypeItems}
                                                         value={field.state.value}
                                                         onValueChange={(next) => {
-                                                            if (!next || next === field.state.value) return;
+                                                            if (!next || next === field.state.value) return
                                                             // Ganti seluruh item agar `choices` selalu cocok dengan tipenya
                                                             questionsField.replaceValue(questionItemIdx, {
                                                                 ...makeQuestion(q.pos, next as QuestionType),
                                                                 id: q.id,
                                                                 question: q.question,
                                                                 mustFill: q.mustFill,
-                                                            });
+                                                            })
                                                         }}
                                                     >
                                                         <Select.SelectTrigger className="w-full">
@@ -558,7 +551,7 @@ export default function RisetEditorEngine({ researchEditorForm: { form } }: Rise
                                             </form.Field>
                                         </Card.CardFooter>
                                     </Card.Card>
-                                );
+                                )
                             })}
 
                             <FieldError errors={questionsField.state.meta.errors} />
@@ -572,7 +565,7 @@ export default function RisetEditorEngine({ researchEditorForm: { form } }: Rise
                                 <Plus /> Tambah Pertanyaan ({total}/{MAX_QUESTIONS})
                             </Button>
                         </div>
-                    );
+                    )
                 }}
             </form.Field>
 
@@ -592,5 +585,5 @@ export default function RisetEditorEngine({ researchEditorForm: { form } }: Rise
                 </form.Subscribe>
             </div>
         </form>
-    );
+    )
 }
