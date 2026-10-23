@@ -132,11 +132,12 @@ function toAdminParticipationResponse(participation: AdminParticipationRow) {
 }
 
 /**
- * The submissions waiting for a decision, oldest first.
+ * Every participation, newest first — a monitoring list, not a work queue.
  *
- * Oldest first on purpose: this is a work queue, so the submission that has waited longest
- * is the one to look at next. Without a `status` it covers everything still awaiting a
- * decision; a `status` narrows it to one of those.
+ * The decision lives on the quality check (`POST /api/quality-check/{id}/review`), so this
+ * read is deliberately unfiltered: it is where an admin watches the whole picture, including
+ * what each submission's reward ended up as. A `status` narrows it when one state is all
+ * that is wanted.
  */
 export async function listAdminParticipationsService({
     status,
@@ -146,11 +147,8 @@ export async function listAdminParticipationsService({
     take?: number
 }) {
     const participations = await prisma.respondentParticipation.findMany({
-        where: {
-            deletedAt: null,
-            status: status === undefined ? { in: PENDING_PARTICIPATION_STATUSES } : status,
-        },
-        orderBy: { submittedAt: 'asc' },
+        where: { deletedAt: null, ...(status === undefined ? {} : { status }) },
+        orderBy: { createdAt: 'desc' },
         take: take ?? DEFAULT_ADMIN_LIMIT,
         include: ADMIN_PARTICIPATION_INCLUDE,
     })

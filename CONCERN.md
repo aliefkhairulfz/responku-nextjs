@@ -7,75 +7,124 @@ endpoint — itu ada di `API.md`.
 
 ## `screeningScore` dan `autoScreeningResult` pada partisipasi
 
-**Pertanyaan:** kenapa baris partisipasi langsung berisi `"screeningScore": 100` dan
-`"autoScreeningResult": "PASS"` begitu responden join?
+**Pertanyaan:** dari mana `screeningScore` dan `autoScreeningResult` pada partisipasi, dan kapan diisi?
 
-**Jawaban:** itu hasil **auto-screening** — pencocokan profil responden terhadap `criteria` yang
-dipasang peneliti, dihitung **saat join**. Ini bukan penilaian kualitas jawaban.
+**Jawaban:** keduanya adalah **screening kualitas** — ringkasan sinyal kualitas jawaban otomatis
+(`SPEEDING`, `STRAIGHT_LINING`) — dihitung **sekali saat kirim**, bukan saat join. Keduanya tetap `null`
+selama partisipasinya masih berjalan. Kecocokan profil vs kriteria riset adalah gerbang **join** yang
+terpisah dan tidak disimpan (lihat bagian berikutnya).
 
 ### Kapan dan bagaimana dihitung
 
-`joinResearchService` (`src/service/participation.ts`):
+Sinyalnya dihitung di satu tempat, `screenSubmission` (`src/lib/server/quality.ts`), lalu disimpan ke
+`QualityCheck` (`signalFlags`, `autoScore`). Partisipasinya **tidak menghitung ulang** — ia membaca kembali
+nilai yang sama dan menurunkannya (`submitParticipationService`, `src/service/participation.ts`):
 
 ```ts
-const screening = screenCriteria(research.criteria, await readScreenableProfile(respondentId))
+const check = await createQualityCheckService(tx, { ... }) // menghitung & menyimpan sinyalnya
 
-if (screening.failed.length > 0) {
-    throw new BadRequestException("This research's criteria are not met", ...) // join DITOLAK 422
-}
-
-const screeningResult =
-    research.criteria.length === 0
-        ? null
-        : screening.undecided.length > 0
-          ? AutoScreeningResult.NEEDS_REVIEW
-          : AutoScreeningResult.PASS
+const screening = screeningVerdict(check.signalFlags, check.autoScore)
+// screening.result: "CLEAN" | "FLAGGED";  screening.score: round(autoScore * 100)
 ```
 
 ### Arti tiap nilai
 
-| Nilai          | Artinya                                                                | Join?            |
-| -------------- | ---------------------------------------------------------------------- | ---------------- |
-| `null`         | Riset tidak punya criteria — terbuka untuk siapa saja                  | ✅               |
-| `PASS`         | Ada criteria, semuanya bisa diputuskan dan terpenuhi                   | ✅               |
-| `NEEDS_REVIEW` | Ada criteria, ada yang tidak bisa diputuskan (mis. profil belum diisi) | ✅ tapi ditandai |
-| _(tidak ada)_  | Ada rule yang gagal → join ditolak `422`, bukan dicatat sebagai hasil  | ❌               |
+| Nilai     | Artinya                                |
+| --------- | -------------------------------------- |
+| `null`    | Belum dikirim                          |
+| `CLEAN`   | Tidak ada sinyal kualitas yang menyala |
+| `FLAGGED` | Minimal satu sinyal menyala            |
 
-`AutoScreeningResult.FAIL` ada di enum tapi **tidak pernah ditulis**: kegagalan memblokir join,
-bukan menjadi hasil.
+Screening kualitas **tidak menolak** apa pun: hasilnya hanya penanda di antrean quality check. Admin yang
+memutuskan.
 
 ### `screeningScore`
 
-Persentase rule yang terpenuhi. Rule yang _undecided_ dihitung **tidak terpenuhi**, jadi angkanya
-tidak pernah menyanjung. Riset tanpa criteria → `null`.
+`autoScore` (0–1, disimpan di `QualityCheck`) dibaca sebagai persen, jadi 0–100. `autoScore` sendiri =
+`1 − (jumlah sinyal / jumlah sinyal yang mungkin)`: tanpa sinyal → `1` → skor `100`; satu sinyal → `0,5` →
+`50`; dua sinyal → `0` → `0`. Skornya hanya ringkasan sinyal — yang dibaca admin adalah sinyalnya.
 
-### Kenapa di seeder hasilnya 100 / PASS
+### Kenapa contoh kiriman `SPEEDING` skornya 50 / FLAGGED
 
-Riset yang di-seed punya 2 criteria:
+Kiriman yang selesai jauh lebih cepat dari estimasi memicu `SPEEDING` (dan sering `STRAIGHT_LINING` juga
+kalau posisi pilihannya seragam). Satu sinyal → `autoScore = 0,5` → `screeningScore = 50` / `FLAGGED`.
+Kiriman tanpa sinyal → `100` / `CLEAN`.
 
-```
-education IN "bachelor,master,doctorate"
-province  IN "DKI Jakarta,Jawa Barat,Banten"
-```
+### Tiga hal yang mudah salah dibaca
 
-Profil Alip Freelancer sengaja dibuat cocok (`education = bachelor`, `province = DKI Jakarta`), jadi
-kedua rule terpenuhi → `failed = []`, `undecided = []`, `score = 100`, `PASS`.
+1. **Dihitung sekali saat kirim, lalu disimpan.** Setelah dikirim, jawaban tidak bisa berubah, jadi
+   sinyalnya pun final.
+2. **Bukan keputusan.** `CLEAN`/`FLAGGED` hanya penanda untuk membaca; admin yang memutuskan lewat quality
+   check.
+3. **Bukan kelayakan.** Kecocokan profil vs kriteria adalah gerbang join yang terpisah.
 
-### Dua hal yang mudah salah dibaca
+Jadi `CLEAN` berarti "tidak ada sinyal kualitas yang menyala", bukan "diterima" — keputusannya tetap ada
+pada admin.
 
-1. **Dihitung sekali saat join, lalu disimpan.** Mengubah profil setelahnya tidak mengubah nilai di
-   baris partisipasi itu.
-2. **Bukan quality check.** Screening menilai _siapa_ respondennya (profil vs criteria); quality
-   check menilai _bagaimana_ dia menjawab (`SPEEDING`, `STRAIGHT_LINING`), dan baru dihitung saat
-   submit.
+---
 
-|         | Screening                               | Quality check              |
-| ------- | --------------------------------------- | -------------------------- |
-| Menilai | siapa respondennya                      | bagaimana dia menjawab     |
-| Kapan   | saat join                               | saat submit                |
-| Field   | `screeningScore`, `autoScreeningResult` | `signalFlags`, `autoScore` |
+## Satu keputusan: quality check adalah tempatnya
 
-Jadi `PASS` berarti "profil responden cocok dengan yang diminta peneliti", bukan "jawabannya bagus".
+**Keputusan:** sebuah kiriman diputuskan **hanya** lewat `POST /api/quality-check/{id}/review`. Sebelumnya
+ada dua jalur yang saling mengunci (quality check dulu, baru keputusan reward di
+`POST /api/participation/{id}/review`), dan itu memisahkan dua hal yang seharusnya satu.
+
+**Sekarang:**
+
+- Setiap submission membuat satu quality check `PENDING` saat dikirim, jadi **semua** kiriman masuk antrean —
+  hasil auto-screening `clean` maupun `flagged`. Antrean tidak pernah disaring berdasarkan sinyal.
+- `screeningScore` dan `autoScreeningResult` hanya **informasi pendukung**.
+- `APPROVED` dan `REJECTED` di quality check adalah keputusan final untuk kiriman itu, dan keduanya
+  menggerakkan quality check + partisipasi + reward dalam **satu transaksi**.
+- `POST /api/participation/{id}/review` **dihapus**; tab Partisipasi di panel admin jadi pemantauan saja.
+
+**Kenapa aman dari bayar dua kali:** check-nya diklaim lebih dulu dengan update bersyarat
+(`decision = PENDING`), jadi keputusan kedua — termasuk dua permintaan serentak — tidak menemukan baris dan
+dijawab `409`. Baris ledger `REWARD` berkunci pada partisipasi sebagai kunci kedua.
+
+**Yang dihapus:** mekanisme tahan reward (`RewardStatus.HELD`, `Participation.holdReleaseAt`, env
+`QUALITY_HOLD_RELEASE_HOURS`). Tidak pernah ada scheduler yang memakainya — semua keputusan wajib dilakukan
+admin — jadi ketiganya hanya menyisakan kolom dan nilai mati. Dihapus dari schema dan env; kolomnya kosong,
+jadi tidak ada data yang hilang.
+
+**Yang belum ada:** membalik bayaran yang sudah terjadi. Menolak sebelum dibayar sudah bisa (`REJECTED`),
+tapi setelah `PAID` tidak ada jalur pembalikan.
+
+---
+
+## Tiga hal yang terpisah: kelayakan (join), sinyal kualitas, keputusan
+
+Tiga hal, jangan dicampur:
+
+|               | Eligibility (demographic)                      | Sinyal kualitas                                                     | Keputusan       |
+| ------------- | ---------------------------------------------- | ------------------------------------------------------------------- | --------------- |
+| Kapan         | saat **join**                                  | saat **submit**                                                     | setelah submit  |
+| Menilai       | profil vs kriteria riset                       | kualitas jawaban                                                    | —               |
+| Field         | _(tidak disimpan)_                             | `screeningScore`, `autoScreeningResult`, `signalFlags`, `autoScore` | `decision`      |
+| Bisa menolak? | ya — join `422` kalau kriteria tidak terpenuhi | tidak                                                               | ya, hanya admin |
+
+Kelayakan demografis hanya gerbang join: `screenCriteria` (`src/lib/server/screening.ts`) menolak `422` bila
+ada aturan yang gagal, dan hasilnya tidak disimpan. Sinyal kualitas — beserta turunannya `CLEAN`/`FLAGGED`
+plus skor — dibawa ke antrean quality check sebagai **informasi pendukung**, bukan penentu approval.
+
+### Sinyal yang tersedia, dan yang tidak
+
+`QualityCheck.signalFlags` adalah JSON array, jadi menambah sinyal tidak butuh migrasi. Yang **sudah** ada:
+
+| Sinyal            | Arti                                                        |
+| ----------------- | ----------------------------------------------------------- |
+| `SPEEDING`        | selesai jauh lebih cepat dari estimasi (padanan `too_fast`) |
+| `STRAIGHT_LINING` | posisi pilihan yang sama untuk semua soal pilihan           |
+
+Dua sinyal yang disebut di requirement **tidak diimplementasikan**, karena datanya tidak ada di schema:
+
+- **`attention_check_failed`** — tidak ada tipe soal _attention check_ di `QuestionType`, dan editor riset
+  tidak menawarkannya. Menambahkannya berarti menambah tipe soal + UI editor + render responden.
+- **`duplicate_submission`** — `RespondentParticipation` sudah unik pada `(researchId, respondentId)`, jadi
+  satu responden tidak bisa mengirim dua kali untuk riset yang sama. Deteksi "jawaban identik antar
+  responden" butuh perbandingan antar-baris yang belum ada.
+
+Keduanya sengaja tidak dikarang-karang: sinyal palsu lebih buruk daripada tidak ada sinyal.
 
 <!--// mulai kuesioner
 respondent_participation {
@@ -83,8 +132,8 @@ respondent_participation {
   "researchId": "cmvkugy2b000dfxgo4z1v04z0",
   "respondentId": "cmvkugy210006fxgowqt7u9dj",
   "status": "JOINED",
-  "screeningScore": 100,
-  "autoScreeningResult": "PASS",
+  "screeningScore": null,
+  "autoScreeningResult": null,
   "startedAt": "2026-10-23 10:55:19.599",
   "submittedAt": null,
   "adminReviewedBy": null,
@@ -102,8 +151,8 @@ respondent_participation {
   "researchId": "cmvkugy2b000dfxgo4z1v04z0",
   "respondentId": "cmvkugy210006fxgowqt7u9dj",
   "status": "SUBMITTED",
-  "screeningScore": 100,
-  "autoScreeningResult": "PASS",
+  "screeningScore": 50,
+  "autoScreeningResult": "FLAGGED",
   "startedAt": "2026-10-23 10:55:19.599",
   "submittedAt": "2026-10-23 10:57:16.819",
   "adminReviewedBy": null,
@@ -138,8 +187,8 @@ respondent_participation:  {
   "researchId": "cmvkugy2b000dfxgo4z1v04z0",
   "respondentId": "cmvkugy210006fxgowqt7u9dj",
   "status": "SUBMITTED",
-  "screeningScore": 100,
-  "autoScreeningResult": "PASS",
+  "screeningScore": 50,
+  "autoScreeningResult": "FLAGGED",
   "startedAt": "2026-10-23 10:55:19.599",
   "submittedAt": "2026-10-23 10:57:16.819",
   "adminReviewedBy": null,
@@ -169,8 +218,8 @@ respondent_participation:   {
   "researchId": "cmvkugy2b000dfxgo4z1v04z0",
   "respondentId": "cmvkugy210006fxgowqt7u9dj",
   "status": "APPROVED",
-  "screeningScore": 100,
-  "autoScreeningResult": "PASS",
+  "screeningScore": 50,
+  "autoScreeningResult": "FLAGGED",
   "startedAt": "2026-10-23 10:55:19.599",
   "submittedAt": "2026-10-23 10:57:16.819",
   "adminReviewedBy": "cmvkugy210005fxgoiwy1i87x",

@@ -59,7 +59,7 @@ async function openParticipation(researchId: string): Promise<PageState> {
 
     if (result.statusCode === 401) return { status: "unauthenticated" }
 
-    // Closed, filled, already answered, or not meant for this profile: the server has an
+    // Closed, filled, already answered, or refused by validation: the server has an
     // answer, and a retry would give the same one, so it is not an error to recover from.
     if (result.statusCode === 403 || result.statusCode === 409 || result.statusCode === 422) {
         return { status: "blocked", message: result.errors._root ?? result.message }

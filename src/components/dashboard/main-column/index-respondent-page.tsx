@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { useCallback, useEffect, useState } from "react"
 import BasicStatisticsCard from "@/components/shared/basic-statistics-card"
 import BrowseSurveyCard from "@/components/shared/browse-survey-card"
+import DoneSurveyCard from "@/components/shared/done-survey-card"
 import { FilterBadge } from "@/components/shared/filter-badge"
 import RespondentTips from "@/components/shared/respondent-tips"
 import TokenBalanceCard from "@/components/shared/token-balance-card"
@@ -12,13 +13,22 @@ import YourWalletBalanceCard from "@/components/shared/your-wallet-balance-card"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { getJson } from "@/lib/api-client"
-import type { AvailableResearchRow, CurrentUser } from "@/lib/api-types"
+import type { AvailableResearchRow, CurrentUser, Participation } from "@/lib/api-types"
 import { formatIdr } from "@/lib/currency"
+import { isParticipationDone } from "@/lib/participation-status"
 import { RESEARCH_CATEGORY_ITEMS } from "@/lib/research-category"
 import { useRefreshOnFocus } from "@/lib/use-refresh-on-focus"
 
 /** Longest page the feed endpoint will hand back. */
 const LIST_LIMIT = 100
+
+/**
+ * The badge that swaps the feed for the surveys the caller has already sent in.
+ *
+ * Not a category key, so it can share the one `filter` state without ever colliding
+ * with a real category.
+ */
+const DONE_FILTER = "DONE"
 
 /**
  * The feed is read in one go and filtered in the browser, so switching a category is
@@ -33,6 +43,8 @@ type FeedState =
           respondentId: string | null
           balance: number | null
           balanceIdr: number | null
+          /** The caller's own participations, of which the done ones are shown below the feed. */
+          doneParticipations: Participation[]
       }
     | { status: "unauthorized" }
     | { status: "error"; message: string }
@@ -49,11 +61,14 @@ type FeedState =
  * effect apply it in a callback — which is where an effect is allowed to put state.
  */
 async function readFeed(): Promise<FeedState> {
-    const [available, wallet, me] = await Promise.all([
+    const [available, wallet, me, participations] = await Promise.all([
         getJson<{ researches: AvailableResearchRow[] }>(`/api/research/available?take=${LIST_LIMIT}`),
         // The wallet needs no role of its own, so it is read alongside rather than after.
         getJson<{ wallet: { balance: number; balanceIdr: number } }>("/api/payment/wallet"),
         getJson<{ user: CurrentUser }>("/api/auth/me"),
+        // The caller's own participations, to add back the surveys the feed deliberately drops
+        // once they are sent in.
+        getJson<{ participations: Participation[] }>(`/api/participation?take=${LIST_LIMIT}`),
     ])
 
     if (available.statusCode === 401) return { status: "unauthorized" }
@@ -68,6 +83,9 @@ async function readFeed(): Promise<FeedState> {
         // A wallet that could not be read reads as unknown, never as zero.
         balance: wallet.ok ? (wallet.data?.wallet.balance ?? null) : null,
         balanceIdr: wallet.ok ? (wallet.data?.wallet.balanceIdr ?? null) : null,
+        // A participation list that could not be read only costs the done section; the feed
+        // itself is still worth showing.
+        doneParticipations: participations.ok ? (participations.data?.participations ?? []).filter((item) => isParticipationDone(item.status)) : [],
     }
 }
 
@@ -117,10 +135,15 @@ export default function DashboardMainColumnIndexRespondentPage() {
 
     const researches = state.status === "ready" ? state.researches : []
     const respondentId = state.status === "ready" ? state.respondentId : null
+    // Surveys already sent in — the feed drops them, so this is where they stay reachable.
+    const doneParticipations = state.status === "ready" ? state.doneParticipations : []
     // Only the categories actually on offer, so a badge is never empty.
     const categories = RESEARCH_CATEGORY_ITEMS.filter((item) => researches.some((research) => research.category === item.value))
     const countOf = (category: string) => researches.filter((research) => research.category === category).length
     const visible = filter === "ALL" ? researches : researches.filter((research) => research.category === filter)
+    // The done badge shares the category `filter` state but is not a category, so it is
+    // branched off here rather than narrowed through the category list above.
+    const showingDone = filter === DONE_FILTER
 
     const highestReward = researches.reduce((best, research) => Math.max(best, research.rewardIdr), 0)
     const averageMinutes =
@@ -159,8 +182,12 @@ export default function DashboardMainColumnIndexRespondentPage() {
             <div className="grid grid-cols-[100%_0%] lg:grid-cols-[60%_40%] gap-4">
                 <div className="space-y-4">
                     <div>
-                        <h3 className="text-xl font-semibold leading-snug">Survei Tersedia</h3>
-                        <p className="leading-relaxed text-muted-foreground">{visible.length} survei dari peneliti lain sedang dibuka</p>
+                        <h3 className="text-xl font-semibold leading-snug">{showingDone ? "Survei yang Sudah Dikerjakan" : "Survei Tersedia"}</h3>
+                        <p className="leading-relaxed text-muted-foreground">
+                            {showingDone
+                                ? `${doneParticipations.length} survei yang sudah kamu kirim`
+                                : `${visible.length} survei dari peneliti lain sedang dibuka`}
+                        </p>
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2">
@@ -175,6 +202,13 @@ export default function DashboardMainColumnIndexRespondentPage() {
                                 onClick={() => setFilter(category.value)}
                             />
                         ))}
+
+                        <FilterBadge
+                            label="Sudah Dikerjakan"
+                            count={doneParticipations.length}
+                            active={showingDone}
+                            onClick={() => setFilter(DONE_FILTER)}
+                        />
                     </div>
 
                     {state.status === "loading" && (
@@ -198,7 +232,20 @@ export default function DashboardMainColumnIndexRespondentPage() {
                     )}
 
                     {state.status === "ready" &&
-                        (visible.length === 0 ? (
+                        (showingDone ? (
+                            doneParticipations.length === 0 ? (
+                                <p className="text-sm text-muted-foreground">
+                                    Kamu belum menyelesaikan survei apa pun. Survei yang sudah kamu kirim akan muncul di sini beserta status
+                                    rewardnya.
+                                </p>
+                            ) : (
+                                <div className="space-y-4">
+                                    {doneParticipations.map((participation) => (
+                                        <DoneSurveyCard key={participation.id} participation={participation} />
+                                    ))}
+                                </div>
+                            )
+                        ) : visible.length === 0 ? (
                             <p className="text-sm text-muted-foreground">
                                 {filter === "ALL"
                                     ? "Belum ada survei yang bisa kamu kerjakan. Coba lagi nanti."

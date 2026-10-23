@@ -136,8 +136,6 @@ export const env = createEnv({
         ADMIN_REVIEW_SLA_HOURS: z.coerce.number().int().positive().default(24),
         /** Hours a content report may stay open. */
         CONTENT_REPORT_SLA_HOURS: z.coerce.number().int().positive().default(24),
-        /** Hours a reward is held while its answer quality is checked. */
-        QUALITY_HOLD_RELEASE_HOURS: z.coerce.number().int().positive().default(72),
 
         /* --- App --- */
 

@@ -6,5 +6,7 @@ export default defineConfig({
     plugins: [tsconfigPaths(), react()],
     test: {
         environment: 'jsdom',
+        // Loads `.env` before `@/env` validates it, which the database tests need.
+        setupFiles: ['./vitest.setup.ts'],
     },
 })

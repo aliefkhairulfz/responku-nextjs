@@ -1,19 +1,22 @@
-import { ConflictException, NotFoundException } from '@/lib/server/http-exception'
-import { type QualitySignalInput, screenSubmission } from '@/lib/server/quality'
-import { toTiming } from '@/lib/server/timing'
-import type { Prisma } from '@/prisma/generated/prisma/client'
-import { QualityDecision } from '@/prisma/generated/prisma/enums'
-import { prisma } from '@/prisma/prisma'
+import { ConflictException, NotFoundException } from "@/lib/server/http-exception"
+import { type QualitySignalInput, screenSubmission } from "@/lib/server/quality"
+import { toTiming } from "@/lib/server/timing"
+import type { Prisma } from "@/prisma/generated/prisma/client"
+import { ParticipationStatus, QualityDecision, RewardStatus, TokenTransactionType } from "@/prisma/generated/prisma/enums"
+import { prisma } from "@/prisma/prisma"
 
 /**
- * The moderation side of a submission: the automatic signals it carries, and an admin's
- * decision on them.
+ * The decision point for a submission: the automatic signals it carries, and the admin's
+ * final verdict on it.
  *
  * A quality check is one row per submission, written when the submission is sent in
- * (`createQualityCheckService`, called from the submit flow) and decided later by an admin.
- * The signals are heuristics — pace and answer pattern — so the row is a note that says
- * "read this one", not a verdict. Deciding it does not pay or reject the participation:
- * that is `reviewParticipationService`, and the two flows stay independent.
+ * (`createQualityCheckService`, called from the submit flow). Deciding it decides the whole
+ * submission — the participation's status, the reward, and the wallet credit all move with
+ * it, in one transaction (`reviewQualityCheckService`).
+ *
+ * The signals are heuristics — pace and answer pattern — so they are supporting information,
+ * not a verdict: every submission is queued, clean or flagged, and an admin reads it before
+ * deciding. Nothing pays out on its own.
  */
 
 /* ========== Konstanta ========== */
@@ -23,7 +26,14 @@ const DEFAULT_QUALITY_CHECK_LIMIT = 50
 
 /* ========== Bentuk baca ========== */
 
-/** What the queue needs: the check, plus the submission and research it is about. */
+/**
+ * What the queue needs: the check, plus the submission and research it is about.
+ *
+ * The demographic screening travels with it — `screeningScore` and `autoScreeningResult` —
+ * because it is supporting information an admin reads alongside the signals. It is a
+ * different thing from the check: screening decides whether somebody could join, the check
+ * decides whether their answers are good enough to pay for.
+ */
 const LIST_INCLUDE = {
     participation: {
         select: {
@@ -31,6 +41,8 @@ const LIST_INCLUDE = {
             status: true,
             respondentId: true,
             researchId: true,
+            screeningScore: true,
+            autoScreeningResult: true,
             submittedAt: true,
             respondent: { select: { name: true } },
             research: { select: { id: true, title: true } },
@@ -72,7 +84,7 @@ const DETAIL_INCLUDE = {
                     researcher: { select: { name: true } },
                     questions: {
                         where: { deletedAt: null },
-                        orderBy: { pos: 'asc' },
+                        orderBy: { pos: "asc" },
                         select: {
                             id: true,
                             pos: true,
@@ -81,7 +93,7 @@ const DETAIL_INCLUDE = {
                             mustFill: true,
                             choices: {
                                 where: { deletedAt: null },
-                                orderBy: { pos: 'asc' },
+                                orderBy: { pos: "asc" },
                                 select: { id: true, pos: true, n: true, choiceText: true },
                             },
                         },
@@ -103,16 +115,12 @@ type QualityCheckDetailRow = Prisma.QualityCheckGetPayload<{ include: typeof DET
 
 /** The signal flags of a stored row, ignoring anything that is not a string. */
 function toSignalFlags(value: unknown): string[] {
-    return Array.isArray(value)
-        ? value.filter((item): item is string => typeof item === 'string')
-        : []
+    return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : []
 }
 
 /** The choice ids of a stored answer, ignoring anything that is not a string. */
 function toChoiceIds(value: unknown): string[] {
-    return Array.isArray(value)
-        ? value.filter((item): item is string => typeof item === 'string')
-        : []
+    return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : []
 }
 
 /** Public view of a quality check, without the soft-delete bookkeeping. */
@@ -136,6 +144,9 @@ function toQualityCheckResponse(check: QualityCheckRow | QualityCheckDetailRow) 
             researchId: check.participation.researchId,
             researchTitle: check.participation.research.title,
             submittedAt: check.participation.submittedAt,
+            // Demographic screening, carried as supporting information.
+            screeningScore: check.participation.screeningScore,
+            screeningResult: check.participation.autoScreeningResult,
         },
     }
 }
@@ -147,7 +158,7 @@ async function findQualityCheck(id: string) {
         include: LIST_INCLUDE,
     })
 
-    if (check === null) throw new NotFoundException('Quality check not found')
+    if (check === null) throw new NotFoundException("Quality check not found")
 
     return check
 }
@@ -167,25 +178,23 @@ export async function createQualityCheckService(
 ) {
     const { signalFlags, autoScore } = screenSubmission(input)
 
-    return tx.qualityCheck.create({
+    const check = await tx.qualityCheck.create({
         data: { participationId, signalFlags, autoScore },
         select: { id: true },
     })
+
+    // Hand the computed signals back with the row: the submit flow derives the participation's
+    // own screening verdict from these very values, so it never screens the submission twice.
+    return { ...check, signalFlags, autoScore }
 }
 
 /* ========== Baca ========== */
 
 /** Lists quality checks for the admin queue, most recently created first. */
-export async function listQualityChecksService({
-    decision,
-    take,
-}: {
-    decision?: QualityDecision
-    take?: number
-}) {
+export async function listQualityChecksService({ decision, take }: { decision?: QualityDecision; take?: number }) {
     const checks = await prisma.qualityCheck.findMany({
         where: { deletedAt: null, ...(decision === undefined ? {} : { decision }) },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
         take: take ?? DEFAULT_QUALITY_CHECK_LIMIT,
         include: LIST_INCLUDE,
     })
@@ -206,21 +215,17 @@ export async function getQualityCheckService({ id }: { id: string }) {
         include: DETAIL_INCLUDE,
     })
 
-    if (check === null) throw new NotFoundException('Quality check not found')
+    if (check === null) throw new NotFoundException("Quality check not found")
 
     const base = toQualityCheckResponse(check)
     const { participation } = check
-    const answersByQuestion = new Map(
-        participation.answers.map((answer) => [answer.researchQuestionId, answer]),
-    )
+    const answersByQuestion = new Map(participation.answers.map((answer) => [answer.researchQuestionId, answer]))
 
     return {
         ...base,
         participation: {
             ...base.participation,
             respondentEmail: participation.respondent.email,
-            screeningScore: participation.screeningScore,
-            screeningResult: participation.autoScreeningResult,
             startedAt: participation.startedAt,
             createdAt: participation.createdAt,
             timing: toTiming({
@@ -272,42 +277,160 @@ export async function getQualityCheckService({ id }: { id: string }) {
 
 /* ========== Tinjau ========== */
 
-/** The two decisions an admin can make on a quality check. */
-export type QualityReviewDecision = 'APPROVED' | 'REJECTED'
+/** The two decisions an admin can make on a submission. */
+export type QualityReviewDecision = "APPROVED" | "REJECTED"
 
 /**
- * Decides a quality check.
+ * Statuses a submission is still awaiting a decision in.
  *
- * A check is decided once: anything past `PENDING` is refused rather than overwritten, so
- * the first decision is the one that stands. The decision is a moderation note about the
- * submission — it does not pay or reject the participation, which keeps its own flow.
+ * Anything already approved or rejected is past reviewing, so this doubles as a guard: a
+ * second decision on the same submission is refused rather than paying it twice.
  */
-export async function reviewQualityCheckService({
-    id,
-    reviewerId,
-    decision,
-}: {
-    id: string
-    reviewerId: string
-    decision: QualityReviewDecision
-}) {
-    const result = await prisma.qualityCheck.updateMany({
-        where: { id, deletedAt: null, decision: QualityDecision.PENDING },
-        data: { decision, reviewedBy: reviewerId },
-    })
+const REVIEWABLE_STATUSES: ParticipationStatus[] = [ParticipationStatus.SUBMITTED, ParticipationStatus.UNDER_REVIEW]
 
-    if (result.count === 0) {
-        const check = await prisma.qualityCheck.findFirst({
-            where: { id, deletedAt: null },
-            select: { decision: true },
+/**
+ * Decides a submission: the quality check, the participation, and the reward, together.
+ *
+ * This is the only place a submission is decided, and the only place a respondent is paid.
+ * The check is the vehicle — it carries the signals an admin reads — but the decision it
+ * records is the final one for the submission, so the two can never disagree.
+ *
+ * `APPROVED` pays: the wallet is credited, a `REWARD` ledger row is written, the reward is
+ * marked `PAID`, and the researcher's consumed counter moves — all in one transaction, so the
+ * balance and the ledger cannot end up disagreeing. `REJECTED` cancels the reward and pays
+ * nothing; the reservation is left alone, so the researcher's unused budget is still released
+ * when the research closes.
+ *
+ * A submission is decided once. The check is claimed with a conditional update first, which
+ * is what makes two concurrent decisions safe: the second matches no row and is refused
+ * instead of paying twice. The ledger row's unique key is the second lock.
+ */
+export async function reviewQualityCheckService({ id, reviewerId, decision }: { id: string; reviewerId: string; decision: QualityReviewDecision }) {
+    await prisma.$transaction(async (tx) => {
+        // Claim the check. Only a `PENDING` one can be decided, so a second decision — or a
+        // concurrent one — matches nothing and is refused below.
+        const claimed = await tx.qualityCheck.updateMany({
+            where: { id, deletedAt: null, decision: QualityDecision.PENDING },
+            data: { decision, reviewedBy: reviewerId },
         })
 
-        if (check === null) throw new NotFoundException('Quality check not found')
+        if (claimed.count === 0) {
+            const existing = await tx.qualityCheck.findFirst({
+                where: { id, deletedAt: null },
+                select: { decision: true },
+            })
 
-        throw new ConflictException(
-            `This quality check is ${check.decision} and has already been decided`,
-        )
-    }
+            if (existing === null) throw new NotFoundException("Quality check not found")
+
+            throw new ConflictException(`This submission is ${existing.decision} and has already been decided`)
+        }
+
+        const check = await tx.qualityCheck.findUniqueOrThrow({
+            where: { id },
+            select: {
+                participation: {
+                    select: {
+                        id: true,
+                        respondentId: true,
+                        status: true,
+                        researchId: true,
+                        reward: { select: { status: true } },
+                        research: {
+                            select: {
+                                tokenPerRespondent: true,
+                                tokensReserved: true,
+                                tokensConsumed: true,
+                            },
+                        },
+                    },
+                },
+            },
+        })
+
+        const { participation } = check
+
+        if (!REVIEWABLE_STATUSES.includes(participation.status)) {
+            throw new ConflictException(`This participation is ${participation.status} and is no longer awaiting review`)
+        }
+
+        // A reward that is no longer pending was either cancelled by an earlier decision or
+        // paid already — nothing either way for this to settle.
+        if (participation.reward !== null && participation.reward.status !== RewardStatus.PENDING) {
+            throw new ConflictException(`This participation's reward is ${participation.reward.status}`)
+        }
+
+        const reviewedAt = new Date()
+
+        if (decision === "REJECTED") {
+            await tx.reward.updateMany({
+                where: { participationId: participation.id, status: RewardStatus.PENDING },
+                data: { status: RewardStatus.CANCELLED },
+            })
+
+            await tx.respondentParticipation.update({
+                where: { id: participation.id },
+                data: {
+                    status: ParticipationStatus.REJECTED,
+                    adminReviewedBy: reviewerId,
+                    adminReviewedAt: reviewedAt,
+                },
+            })
+
+            return
+        }
+
+        const amount = participation.research.tokenPerRespondent
+        const remaining = participation.research.tokensReserved - participation.research.tokensConsumed
+
+        // The reservation is the ceiling. Paying past it would credit tokens the researcher
+        // never funded, so the approval is refused instead.
+        if (amount > remaining) {
+            throw new ConflictException("This research's reward budget is used up")
+        }
+
+        const wallet = await tx.tokenWallet.upsert({
+            where: { userId: participation.respondentId },
+            // Accounts created before wallets were made at registration have none.
+            create: { userId: participation.respondentId, balance: amount },
+            update: { balance: { increment: amount } },
+            select: { id: true },
+        })
+
+        await tx.tokenTransaction.create({
+            data: {
+                walletId: wallet.id,
+                researchId: participation.researchId,
+                respondentParticipationId: participation.id,
+                type: TokenTransactionType.REWARD,
+                // Credits are positive, the mirror of the reserve's negative debit.
+                amount,
+                idempotencyKey: `participation-reward:${participation.id}`,
+            },
+        })
+
+        // The platform's cut is recorded as zero: the token split has no account to land in,
+        // and inventing a balance for it would move tokens out of the ledger. The whole
+        // `tokenPerRespondent` the researcher reserved is what gets paid out.
+        await tx.reward.updateMany({
+            where: { participationId: participation.id, status: RewardStatus.PENDING },
+            data: { status: RewardStatus.PAID, paidAt: reviewedAt },
+        })
+
+        await tx.research.update({
+            where: { id: participation.researchId },
+            data: { tokensConsumed: { increment: amount } },
+        })
+
+        await tx.respondentParticipation.update({
+            where: { id: participation.id },
+            data: {
+                status: ParticipationStatus.APPROVED,
+                adminReviewedBy: reviewerId,
+                adminReviewedAt: reviewedAt,
+                rewardedAt: reviewedAt,
+            },
+        })
+    })
 
     return toQualityCheckResponse(await findQualityCheck(id))
 }

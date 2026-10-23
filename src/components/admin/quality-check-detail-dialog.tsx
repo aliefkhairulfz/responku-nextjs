@@ -3,6 +3,17 @@
 import { Loader2 } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { QueueError, QueueLoading } from '@/components/admin/queue-states'
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -20,6 +31,8 @@ import type { QualityCheck } from '@/lib/api-types'
 import { participationStatusLabel } from '@/lib/participation-status'
 import { qualityDecisionLabel, qualitySignalLabel } from '@/lib/quality-check'
 import { researchStatusLabel } from '@/lib/research-status'
+import { rewardStatusLabel } from '@/lib/reward-status'
+import { screeningResultLabel } from '@/lib/screening'
 
 type DetailState =
     | { status: 'idle' }
@@ -100,7 +113,8 @@ function Field({ label, value }: { label: string; value: string }) {
  * The queue only carries a summary, so this reads the detail endpoint when it opens: the
  * research as the respondent saw it, when they started and sent it in, how long that took
  * against the estimate the `SPEEDING` flag was computed from, the reward at stake, and every
- * answer. The decision lives here too, so an admin reads and decides in one place.
+ * answer. The decision lives here too, so an admin reads and decides in one place — and it is
+ * the final one: approving is what pays the respondent.
  */
 export function QualityCheckDetailDialog({
     checkId,
@@ -138,7 +152,7 @@ export function QualityCheckDetailDialog({
     }, [checkId])
 
     async function decide(decision: 'APPROVED' | 'REJECTED') {
-        if (checkId === null) return
+        if (checkId === null || busy) return
 
         setBusy(true)
         const result = await postJson(`/api/quality-check/${checkId}/review`, { decision })
@@ -151,7 +165,11 @@ export function QualityCheckDetailDialog({
 
         toast.add({
             type: 'success',
-            title: `Quality check ${decision === 'APPROVED' ? 'disetujui' : 'ditolak'}`,
+            title: decision === 'APPROVED' ? 'Disetujui & dibayar' : 'Ditolak',
+            description:
+                decision === 'APPROVED'
+                    ? 'Reward responden sudah dikreditkan ke wallet-nya.'
+                    : 'Reward dibatalkan; tidak ada token yang berpindah.',
         })
         onDecided()
         onOpenChange(false)
@@ -265,10 +283,17 @@ export function QualityCheckDetailDialog({
                                     value={formatDuration(timing?.estimatedSeconds)}
                                 />
                                 <Field
-                                    label="Skor kriteria"
+                                    label="Hasil screening"
                                     value={
-                                        participation.screeningScore === null ||
-                                        participation.screeningScore === undefined
+                                        participation.screeningResult === null
+                                            ? '—'
+                                            : screeningResultLabel(participation.screeningResult)
+                                    }
+                                />
+                                <Field
+                                    label="Skor screening"
+                                    value={
+                                        participation.screeningScore === null
                                             ? '—'
                                             : `${participation.screeningScore}%`
                                     }
@@ -284,7 +309,7 @@ export function QualityCheckDetailDialog({
                             {participation.reward && (
                                 <p className="text-sm text-muted-foreground">
                                     Reward {participation.reward.tokenAmount} token ·{' '}
-                                    {participation.reward.status}
+                                    {rewardStatusLabel(participation.reward.status)}
                                 </p>
                             )}
                         </section>
@@ -321,17 +346,59 @@ export function QualityCheckDetailDialog({
 
                     {check?.decision === 'PENDING' && (
                         <>
-                            <Button
-                                variant="outline"
-                                disabled={busy}
-                                onClick={() => decide('REJECTED')}
-                            >
-                                Tolak
-                            </Button>
-                            <Button disabled={busy} onClick={() => decide('APPROVED')}>
-                                {busy && <Loader2 className="animate-spin" />}
-                                Setujui
-                            </Button>
+                            <AlertDialog>
+                                <AlertDialogTrigger>
+                                    <Button nativeButton={false} render={<div />} variant="outline">
+                                        Tolak
+                                    </Button>
+                                </AlertDialogTrigger>
+
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                        <AlertDialogTitle>Tolak kiriman ini?</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                            Reward responden akan dibatalkan dan tidak ada token
+                                            yang berpindah. Tindakan ini tidak bisa dibatalkan.
+                                        </AlertDialogDescription>
+                                    </AlertDialogHeader>
+
+                                    <AlertDialogFooter>
+                                        <AlertDialogCancel>Batal</AlertDialogCancel>
+                                        <AlertDialogAction onClick={() => decide('REJECTED')}>
+                                            Ya, tolak
+                                        </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
+
+                            <AlertDialog>
+                                <AlertDialogTrigger>
+                                    <Button nativeButton={false} render={<div />}>
+                                        {busy && <Loader2 className="animate-spin" />}
+                                        Setujui & bayar
+                                    </Button>
+                                </AlertDialogTrigger>
+
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                        <AlertDialogTitle>
+                                            Setujui dan bayar reward?
+                                        </AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                            {participation?.reward
+                                                ? `${participation.reward.tokenAmount} token akan dikreditkan ke wallet responden, dan reward ditandai sudah dibayar.`
+                                                : 'Reward responden akan dikreditkan ke wallet-nya.'}
+                                        </AlertDialogDescription>
+                                    </AlertDialogHeader>
+
+                                    <AlertDialogFooter>
+                                        <AlertDialogCancel>Batal</AlertDialogCancel>
+                                        <AlertDialogAction onClick={() => decide('APPROVED')}>
+                                            Ya, setujui & bayar
+                                        </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
                         </>
                     )}
                 </DialogFooter>

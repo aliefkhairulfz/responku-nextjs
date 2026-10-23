@@ -63,9 +63,8 @@ export type ParticipationStatus = (typeof ParticipationStatus)[keyof typeof Part
 
 
 export const AutoScreeningResult = {
-  PASS: 'PASS',
-  FAIL: 'FAIL',
-  NEEDS_REVIEW: 'NEEDS_REVIEW'
+  CLEAN: 'CLEAN',
+  FLAGGED: 'FLAGGED'
 } as const
 
 export type AutoScreeningResult = (typeof AutoScreeningResult)[keyof typeof AutoScreeningResult]
@@ -131,7 +130,6 @@ export type QuestionType = (typeof QuestionType)[keyof typeof QuestionType]
 
 export const RewardStatus = {
   PENDING: 'PENDING',
-  HELD: 'HELD',
   PAID: 'PAID',
   CANCELLED: 'CANCELLED'
 } as const

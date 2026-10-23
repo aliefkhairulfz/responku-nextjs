@@ -1,16 +1,10 @@
 import { PARTICIPATION_DONE_STATUSES } from "@/lib/participation-status"
 import { BadRequestException, ConflictException, NotFoundException } from "@/lib/server/http-exception"
 import { type ScreenableField, screenCriteria } from "@/lib/server/screening"
+import { screeningVerdict } from "@/lib/server/quality"
 import { toTiming } from "@/lib/server/timing"
 import type { Prisma } from "@/prisma/generated/prisma/client"
-import {
-    AutoScreeningResult,
-    ParticipationStatus,
-    QualityDecision,
-    ResearchStatus,
-    RewardStatus,
-    TokenTransactionType,
-} from "@/prisma/generated/prisma/enums"
+import { ParticipationStatus, ResearchStatus, RewardStatus } from "@/prisma/generated/prisma/enums"
 import { prisma } from "@/prisma/prisma"
 import { createQualityCheckService } from "@/service/quality-check"
 
@@ -22,12 +16,13 @@ import { createQualityCheckService } from "@/service/quality-check"
  * `ParticipationAnswer`, one row per question, replaced as a whole whenever the client
  * sends its form (the same shape the questionnaire itself is written with).
  *
- * A submission is not paid on its own: it records the work and the reward it is worth,
- * and an admin's approval is what moves the tokens (`reviewParticipationService`). Paying
- * is the mirror of publishing — publishing reserved `target × tokenPerRespondent` from the
- * researcher's wallet, and each approval consumes exactly `tokenPerRespondent` of that
- * reservation. The two together are why `tokensConsumed` may never exceed
- * `tokensReserved` — past that point the payout would be minting tokens nobody funded.
+ * A submission is not paid on its own: it records the work and the reward it is worth, and
+ * an admin's decision on its quality check is what moves the tokens
+ * (`reviewQualityCheckService`). Paying is the mirror of publishing — publishing reserved
+ * `target × tokenPerRespondent` from the researcher's wallet, and each approval consumes
+ * exactly `tokenPerRespondent` of that reservation. The two together are why
+ * `tokensConsumed` may never exceed `tokensReserved` — past that point the payout would be
+ * minting tokens nobody funded.
  */
 
 /* ========== Konstanta ========== */
@@ -40,15 +35,6 @@ const DEFAULT_PARTICIPATION_LIMIT = 50
  * server cannot disagree about which ones are closed.
  */
 const ANSWERED_STATUSES: ParticipationStatus[] = [...PARTICIPATION_DONE_STATUSES]
-
-/**
- * Statuses an admin can still decide.
- *
- * Anything already approved or rejected is past reviewing, so this doubles as the
- * idempotency guard: a second decision on the same submission is refused rather than
- * paying it twice.
- */
-const REVIEWABLE_STATUSES: ParticipationStatus[] = [ParticipationStatus.SUBMITTED, ParticipationStatus.UNDER_REVIEW]
 
 /* ========== Tipe ========== */
 
@@ -401,6 +387,11 @@ export async function joinResearchService({ researchId, respondentId }: { resear
         throw new ConflictException("This research already has all the respondents it asked for")
     }
 
+    // Demographic eligibility is checked here, at join, and nowhere else: the profile is
+    // compared against the research's criteria, and a mismatch keeps the respondent out before
+    // any work begins. The outcome is not stored — `screeningScore` and `autoScreeningResult`
+    // belong to the post-submission quality screening, and stay NULL while the participation is
+    // open.
     const screening = screenCriteria(research.criteria, await readScreenableProfile(respondentId))
 
     if (screening.failed.length > 0) {
@@ -409,14 +400,8 @@ export async function joinResearchService({ researchId, respondentId }: { resear
         })
     }
 
-    // Nothing to screen means nothing to report, which is not the same as passing.
-    const screeningResult =
-        research.criteria.length === 0 ? null : screening.undecided.length > 0 ? AutoScreeningResult.NEEDS_REVIEW : AutoScreeningResult.PASS
-
     const joinData = {
         status: ParticipationStatus.JOINED,
-        screeningScore: screening.score,
-        autoScreeningResult: screeningResult,
         // The questionnaire is being opened right now, which is where the work clock starts.
         startedAt: new Date(),
     }
@@ -526,8 +511,8 @@ export async function saveAnswersService({ id, respondentId, answers }: { id: st
  *
  * No tokens move here. The submission records the answers, the status, the reward the work
  * is worth — created `PENDING`, waiting for an admin — and the automatic quality signals,
- * and the payout happens in `reviewParticipationService`. All of it is one transaction, so
- * a failure leaves the participation exactly as it was rather than half submitted.
+ * and the payout happens in `reviewQualityCheckService`. All of it is one transaction, so a
+ * failure leaves the participation exactly as it was rather than half submitted.
  */
 export async function submitParticipationService({
     id,
@@ -579,9 +564,9 @@ export async function submitParticipationService({
         assertRequiredAnswered(research.questions, saved)
 
         // The reward is recorded, but nothing is paid and nothing is consumed: an admin
-        // approves the work first, and `reviewParticipationService` is what moves the
-        // tokens. A submission that is never approved therefore leaves the researcher's
-        // reservation exactly as it was.
+        // decides the submission's quality check first, and `reviewQualityCheckService` is
+        // what moves the tokens. A submission that is never decided therefore leaves the
+        // researcher's reservation exactly as it was.
         await tx.reward.create({
             data: {
                 participationId: id,
@@ -596,8 +581,8 @@ export async function submitParticipationService({
         // The automatic quality signals are recorded with the submission, in the same
         // transaction: the pace and the answer pattern are read from what was just stored,
         // and a check that is never written is one an admin would have to remember to run by
-        // hand.
-        await createQualityCheckService(tx, {
+        // hand. The check hands back the signals it computed.
+        const check = await createQualityCheckService(tx, {
             participationId: id,
             startedAt: participation.startedAt,
             createdAt: participation.createdAt,
@@ -610,148 +595,21 @@ export async function submitParticipationService({
             })),
         })
 
+        // The participation's screening verdict is those same signals read as `CLEAN`/`FLAGGED`
+        // plus a score, derived here rather than screened a second time so the participation and
+        // its quality check can never disagree. Both fields stay NULL until this point.
+        const screening = screeningVerdict(check.signalFlags, check.autoScore)
+
         await tx.respondentParticipation.update({
             where: { id },
-            data: { status: ParticipationStatus.SUBMITTED, submittedAt },
+            data: {
+                status: ParticipationStatus.SUBMITTED,
+                submittedAt,
+                screeningScore: screening.score,
+                autoScreeningResult: screening.result,
+            },
         })
     })
 
     return toParticipationDetail(await findParticipation(id, respondentId))
-}
-
-/* ========== Tinjau ========== */
-
-/** The two decisions an admin can make on a submitted participation. */
-export type ReviewDecision = "APPROVED" | "REJECTED"
-
-/**
- * Decides a submitted participation, and pays it when it is approved.
- *
- * This is where a respondent is paid. Submitting only records the work and what it is
- * worth; approving moves the tokens — the wallet credit, the ledger row, the reward marked
- * paid, and the researcher's consumed counter — all in one transaction, so the balance and
- * the ledger cannot end up disagreeing. The ledger row is keyed by the participation,
- * which is the second lock against paying the same work twice.
- *
- * The quality check has to be decided first. A submission is screened when it is sent in,
- * and the check is the note that says "read this one" — so paying before reading it would
- * be paying blind. The gate only applies when a check exists: a row submitted before the
- * screening existed has none, and refusing it would strand it forever.
- *
- * A rejection cancels the reward and pays nothing. The reservation is left alone: it was
- * never consumed, so the researcher's unused budget is still released when the research
- * closes.
- */
-export async function reviewParticipationService({ id, reviewerId, decision }: { id: string; reviewerId: string; decision: ReviewDecision }) {
-    await prisma.$transaction(async (tx) => {
-        const participation = await tx.respondentParticipation.findFirst({
-            where: { id, deletedAt: null },
-            select: {
-                id: true,
-                respondentId: true,
-                status: true,
-                researchId: true,
-                reward: { select: { status: true } },
-                qualityChecks: { where: { deletedAt: null }, select: { decision: true } },
-                research: {
-                    select: {
-                        tokenPerRespondent: true,
-                        tokensReserved: true,
-                        tokensConsumed: true,
-                    },
-                },
-            },
-        })
-
-        if (participation === null) throw new NotFoundException("Participation not found")
-
-        if (!REVIEWABLE_STATUSES.includes(participation.status)) {
-            throw new ConflictException(`This participation is ${participation.status} and is no longer awaiting review`)
-        }
-
-        // Review first, decide after: a submission whose screening is still open is one
-        // nobody has read yet.
-        if (participation.qualityChecks.some((check) => check.decision === QualityDecision.PENDING)) {
-            throw new ConflictException("Selesaikan quality check dulu sebelum memutuskan reward")
-        }
-
-        // A reward that is no longer pending was either cancelled by an earlier decision or
-        // paid back when submitting was what paid — nothing either way for this to settle.
-        if (participation.reward !== null && participation.reward.status !== RewardStatus.PENDING) {
-            throw new ConflictException(`This participation's reward is ${participation.reward.status}`)
-        }
-
-        const reviewedAt = new Date()
-
-        if (decision === "REJECTED") {
-            await tx.reward.updateMany({
-                where: { participationId: id, status: RewardStatus.PENDING },
-                data: { status: RewardStatus.CANCELLED },
-            })
-
-            await tx.respondentParticipation.update({
-                where: { id },
-                data: {
-                    status: ParticipationStatus.REJECTED,
-                    adminReviewedBy: reviewerId,
-                    adminReviewedAt: reviewedAt,
-                },
-            })
-
-            return
-        }
-
-        const amount = participation.research.tokenPerRespondent
-        const remaining = participation.research.tokensReserved - participation.research.tokensConsumed
-
-        // The reservation is the ceiling. Paying past it would credit tokens the researcher
-        // never funded, so the approval is refused instead.
-        if (amount > remaining) throw new ConflictException("This research's reward budget is used up")
-
-        const wallet = await tx.tokenWallet.upsert({
-            where: { userId: participation.respondentId },
-            create: { userId: participation.respondentId, balance: amount },
-            update: { balance: { increment: amount } },
-            select: { id: true },
-        })
-
-        await tx.tokenTransaction.create({
-            data: {
-                walletId: wallet.id,
-                researchId: participation.researchId,
-                respondentParticipationId: id,
-                type: TokenTransactionType.REWARD,
-                // Credits are positive, the mirror of the reserve's negative debit.
-                amount,
-                idempotencyKey: `participation-reward:${id}`,
-            },
-        })
-
-        // The platform's cut is recorded as zero: the token split has no account to land in,
-        // and inventing a balance for it would move tokens out of the ledger. The whole
-        // `tokenPerRespondent` the researcher reserved is what gets paid out.
-        await tx.reward.updateMany({
-            where: { participationId: id, status: RewardStatus.PENDING },
-            data: { status: RewardStatus.PAID, paidAt: reviewedAt },
-        })
-
-        await tx.research.update({
-            where: { id: participation.researchId },
-            data: { tokensConsumed: { increment: amount } },
-        })
-
-        await tx.respondentParticipation.update({
-            where: { id },
-            data: {
-                status: ParticipationStatus.APPROVED,
-                adminReviewedBy: reviewerId,
-                adminReviewedAt: reviewedAt,
-                rewardedAt: reviewedAt,
-            },
-        })
-    })
-
-    // Read back unscoped: the work being reviewed belongs to somebody else, so the
-    // respondent-scoped lookup the rest of this file uses would not find it.
-    return toParticipationDetail(await findParticipation(id))
 }

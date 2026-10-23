@@ -98,8 +98,8 @@ Nilai-nilai ini dipakai di request dan response:
 | `language` (setting)   | `id`, `en`                                                                              |
 | `theme` (setting)      | `light`, `system`                                                                       |
 | `status` (partisipasi) | `JOINED`, `IN_PROGRESS`, `SUBMITTED`, `UNDER_REVIEW`, `APPROVED`, `REJECTED`, `EXPIRED` |
-| `screeningResult`      | `PASS`, `FAIL`, `NEEDS_REVIEW`                                                          |
-| `status` (reward)      | `PENDING`, `HELD`, `PAID`, `CANCELLED`                                                  |
+| `screeningResult`      | `CLEAN`, `FLAGGED`                                                                      |
+| `status` (reward)      | `PENDING`, `PAID`, `CANCELLED`                                                          |
 | `status` (report)      | `OPEN`, `UNDER_REVIEW`, `RESOLVED`, `DISMISSED`                                         |
 | `action` (report)      | `NONE`, `WARNING`, `CONTENT_REMOVED`, `RESEARCH_SUSPENDED`, `USER_BANNED`               |
 
@@ -1193,10 +1193,14 @@ berikut hanya menjaga **join pertama**:
 - riset harus `PUBLISHED`, belum lewat `deadline`, dan bukan milik pemanggil sendiri;
 - kuota `targetRespondentCount` belum penuh — ini juga yang menjaga token, karena pembayaran tidak boleh
   melebihi reservasi;
-- kriteria profil terpenuhi.
+- kriteria profil terpenuhi (lihat **Kriteria (screening)** di bawah).
 
 Ini juga panggilan yang **mencatat `startedAt`**: halaman kuesioner membuka partisipasinya lewat endpoint
 ini, jadi jam mulai pengerjaan distempel di sini, sekali saja (lihat **Estimasi durasi**).
+
+Join menjalankan **screening kelayakan demografis** (profil vs kriteria), tetapi hasilnya tidak disimpan:
+`screeningScore` dan `autoScreeningResult` tetap `null` selama partisipasinya berjalan, dan baru diisi saat
+kirim oleh **screening kualitas** — lihat **Kriteria (screening)** di bawah.
 
 Dua permintaan yang datang bersamaan — efek yang dipanggil dua kali, atau tombol yang tertekan dua kali —
 tidak menghasilkan dua baris: pasangan `(riset, responden)` unik, dan yang kalah balapan menjawab dengan
@@ -1228,12 +1232,21 @@ bukan ditebak: tebakan "lolos" akan membelanjakan token peneliti untuk orang yan
 | `GT` / `GTE` / `LT` / `LTE` | perbandingan angka; sisi yang tidak terbaca sebagai angka → belum diputuskan |
 | `BETWEEN`                   | angka di antara dua nilai; `value` berisi `min,maks`                         |
 
-Hasilnya disimpan di partisipasinya:
+#### Screening kelayakan (saat join)
 
-| Field             | Arti                                                                                                                                                                                             |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `screeningScore`  | persentase aturan yang terpenuhi, atau `null` bila risetnya tidak punya kriteria. Aturan yang belum bisa diputuskan dihitung belum terpenuhi                                                     |
-| `screeningResult` | `PASS`, `NEEDS_REVIEW` (ada aturan yang belum bisa diputuskan), atau `null` (tidak ada kriteria). `FAIL` tidak pernah tersimpan: kriteria yang gagal ditolak `422` sebelum partisipasinya dibuat |
+Kriteria diputuskan **saat join**: profil responden dibandingkan dengan kriteria riset, dan aturan yang
+gagal menolak join dengan `422`. Hasilnya **tidak disimpan di partisipasi** — yang tersisa hanyalah
+gerbangnya, terpisah dari screening kualitas.
+
+#### Screening kualitas (saat kirim)
+
+`screeningScore` dan `autoScreeningResult` diciptakan **saat kirim**, dari sinyal kualitas otomatis yang
+sama dengan `QualityCheck` (lihat **Quality check**), dan tetap `null` selama partisipasinya berjalan.
+
+| Field             | Arti                                                                                                                                               |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `screeningScore`  | skor kualitas otomatis 0–100, yaitu `autoScore` sebagai persentase (`autoScore` ada di rentang `[0, 1]`, jadi `1` → `100`); `null` sebelum dikirim |
+| `screeningResult` | `CLEAN` bila tidak ada sinyal yang menyala, `FLAGGED` bila minimal satu sinyal; `null` sebelum dikirim                                             |
 
 ---
 
@@ -1262,7 +1275,7 @@ Daftar partisipasi milik pemanggil, terbaru dulu (default 50 baris).
                 "researchId": "…",
                 "status": "SUBMITTED",
                 "screeningScore": 100,
-                "screeningResult": "PASS",
+                "screeningResult": "CLEAN",
                 "startedAt": "…",
                 "submittedAt": "…",
                 "createdAt": "…",
@@ -1307,8 +1320,8 @@ supaya keberadaannya tidak bocor.
             "id": "…",
             "researchId": "…",
             "status": "JOINED",
-            "screeningScore": 100,
-            "screeningResult": "PASS",
+            "screeningScore": null,
+            "screeningResult": null,
             "startedAt": "…",
             "submittedAt": null,
             "createdAt": "…",
@@ -1384,8 +1397,8 @@ Mengirim partisipasi **untuk ditinjau**. Body-nya opsional; bila ada, `answers` 
 seperti di endpoint sebelumnya _sebelum_ divalidasi, supaya halaman terakhir formulir tidak bisa hilang di
 antara simpan dan kirim.
 
-**Belum ada token yang berpindah di langkah ini.** Yang dibayar adalah approval admin — lihat
-`POST /api/participation/{id}/review` di bawah.
+**Belum ada token yang berpindah di langkah ini.** Yang membayar adalah keputusan admin pada quality
+check — lihat `POST /api/quality-check/{id}/review` di bagian Quality check.
 
 Yang terjadi, semuanya dalam satu transaksi:
 
@@ -1395,7 +1408,11 @@ Yang terjadi, semuanya dalam satu transaksi:
    maupun saat join;
 4. `Reward` dibuat dengan status `PENDING` dan `respondentTokenAmount = tokenPerRespondent` — catatan
    bahwa pekerjaannya berharga sekian, bukan pembayaran;
-5. `submittedAt` diisi dengan waktu server, yang sekaligus menjadi waktu selesai pengerjaan (lihat
+5. **screening kualitas dijalankan**: sinyal otomatis dihitung **sekali**, disimpan ke `QualityCheck`
+   (`signalFlags`, `autoScore`), lalu `screeningScore` (`autoScore` sebagai persen) dan
+   `autoScreeningResult` (`CLEAN`/`FLAGGED`) partisipasi diturunkan dari nilai yang sama — lihat
+   **Kriteria (screening)** dan **Quality check**;
+6. `submittedAt` diisi dengan waktu server, yang sekaligus menjadi waktu selesai pengerjaan (lihat
    **Estimasi durasi** di bawah).
 
 **Response `200`** — `data.participation` dengan `status: "SUBMITTED"` dan `reward` berstatus `PENDING`.
@@ -1408,51 +1425,13 @@ idempoten walaupun bentuk jawabannya bukan.
 
 ---
 
-### `POST /api/participation/{id}/review`
+### Keputusan partisipasi
 
-**Hanya admin** (`roles` memuat `"admin"`). Memutuskan satu kiriman, dan **inilah yang membayar
-responden** saat diputuskan `APPROVED`.
+Tidak ada endpoint keputusan di sini. Keputusan final — yang membayar responden — dilakukan lewat
+**quality check**: `POST /api/quality-check/{id}/review`. Satu kiriman selalu menghasilkan satu quality
+check, jadi keputusan di sana adalah keputusan untuk partisipasinya juga.
 
-**Quality check harus diputuskan dulu.** Satu kiriman disaring saat dikirim, dan check-nya adalah catatan
-"baca yang ini" — jadi membayar sebelum membacanya sama dengan membayar buta. Selama check-nya masih
-`PENDING`, keputusan di sini dijawab `409`. Gate-nya hanya berlaku kalau check-nya ada: baris yang dikirim
-sebelum fitur penyaringan ada tidak punya check, dan menolaknya akan membuatnya menggantung selamanya.
-
-**Request**
-
-```json
-{ "decision": "APPROVED" }
-```
-
-| Field      | Aturan                       |
-| ---------- | ---------------------------- |
-| `decision` | wajib, `APPROVED`/`REJECTED` |
-
-**`APPROVED`** — semuanya dalam satu transaksi:
-
-1. `tokenPerRespondent` dibayarkan ke wallet responden sebagai baris ledger `REWARD` (ber-
-   `researchId` dan `respondentParticipationId`), dan `Reward` menjadi `PAID` dengan `paidAt` terisi;
-2. `Research.tokensConsumed` bertambah sebanyak itu — cerminan `RESERVE` saat publish, dan angka yang
-   membuat sisa reservasi bisa dilepas saat riset ditutup;
-3. partisipasinya menjadi `APPROVED`, dengan `adminReviewedBy`, `adminReviewedAt`, dan `rewardedAt`.
-
-Anggaran reservasi adalah plafonnya: kalau `tokenPerRespondent` melebihi
-`tokensReserved - tokensConsumed`, approval-nya dijawab `409` alih-alih mengkredit token yang tidak pernah
-didanai peneliti.
-
-**`REJECTED`** — `Reward` menjadi `CANCELLED`, partisipasinya `REJECTED`, dan **tidak ada token yang
-berpindah**. Reservasinya tidak disentuh, jadi sisa anggaran peneliti tetap dilepas saat riset ditutup.
-
-**Response `200`** — `data.participation` (lengkap dengan pertanyaan dan jawabannya, karena itu yang
-sedang ditinjau) dengan status baru.
-
-**Error:** `401` · `403` bukan admin · `404` · `409` quality check-nya belum diputuskan, partisipasinya
-sudah tidak menunggu tinjauan (sudah `APPROVED`/`REJECTED`), `Reward`-nya sudah tidak `PENDING`, atau
-anggaran reward-nya habis ·
-`422` `decision` tidak dikenal.
-
-Keputusan kedua dijawab `409`, bukan membayar dua kali: hanya partisipasi yang masih menunggu tinjauan yang
-bisa diputuskan, dan baris ledger-nya berkunci pada partisipasi.
+Tab Partisipasi di panel admin hanya untuk memantau (`GET /api/admin/participations`).
 
 ---
 
@@ -1507,10 +1486,24 @@ lengkap dan memutuskan check lewat endpoint berikutnya.
 
 ## Quality check
 
-Endpoint ini hanya untuk admin (`roles` memuat `"admin"`). Setiap submission membuat satu check berstatus
-`PENDING` dalam transaksi yang sama dengan penyimpanan reward dan waktu pengiriman. Auto-screening hanya
-menunjukkan kiriman yang perlu dibaca — keputusan pada quality check **tidak** mengubah status participation
-atau reward, dan tidak membayar maupun membatalkan token.
+Endpoint ini hanya untuk admin (`roles` memuat `"admin"`), dan **inilah satu-satunya tempat sebuah kiriman
+diputuskan**. Setiap submission membuat satu check berstatus `PENDING` dalam transaksi yang sama dengan
+penyimpanan reward dan waktu pengiriman, jadi **semua** kiriman masuk antrean — hasil auto-screening `clean`
+maupun `flagged` — dan tidak ada yang dibayar tanpa keputusan admin.
+
+**Dua proses yang berbeda, jangan dicampur:**
+
+|               | Eligibility screening (demographic)                | Quality screening + quality check                                                    |
+| ------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| Kapan         | saat **join**                                      | saat **submit**                                                                      |
+| Menilai       | kelayakan: profil vs kriteria riset                | kualitas jawaban                                                                     |
+| Field         | _(tidak disimpan)_ — join ditolak `422` bila gagal | `screeningScore`, `autoScreeningResult`; lalu `signalFlags`, `autoScore`, `decision` |
+| Bisa menolak? | ya — join `422` kalau kriteria tidak terpenuhi     | tidak otomatis; hanya admin yang memutuskan                                          |
+
+Screening kualitas tidak menghitung ulang apa pun: `screeningScore` (`autoScore` sebagai persen) dan
+`autoScreeningResult` (`CLEAN`/`FLAGGED`) diturunkan dari `signalFlags`/`autoScore` yang sama yang dihitung
+untuk `QualityCheck`, jadi keduanya tidak mungkin berbeda. Sinyal otomatis (`SPEEDING`, `STRAIGHT_LINING`)
+hanya petunjuk untuk membaca jawaban.
 
 ### `GET /api/quality-check`
 
@@ -1523,8 +1516,9 @@ check individual untuk meninjaunya.
 | `take`     | opsional, bilangan bulat 1–100 (default 50)      |
 
 Response `200`: `data.qualityChecks[]`. Setiap item memuat `id`, `participationId`, `decision`,
-`signalFlags`, `autoScore`, `reviewedBy`, `createdAt`, `updatedAt`, dan ringkasan `participation` (responden,
-riset, status, serta waktu submit).
+`signalFlags`, `autoScore`, `reviewedBy`, `createdAt`, `updatedAt`, dan ringkasan `participation`:
+`id`, `status`, `respondentId`, `respondentName`, `researchId`, `researchTitle`, `submittedAt`,
+`screeningScore`, dan `screeningResult`.
 
 ### `GET /api/quality-check/{id}`
 
@@ -1537,8 +1531,8 @@ Response `200`: `data.qualityCheck`, dengan field antrean plus `participation` y
 | Field                           | Isi                                                                                                                                |
 | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | `participation.respondentEmail` | email responden                                                                                                                    |
-| `participation.screeningScore`  | skor kriteria (persen) atau `null`                                                                                                 |
-| `participation.screeningResult` | `PASS`/`FAIL`/`NEEDS_REVIEW` atau `null`                                                                                           |
+| `participation.screeningScore`  | skor kualitas otomatis 0–100 (`autoScore` sebagai persen) atau `null` — juga ada di antrean                                        |
+| `participation.screeningResult` | `CLEAN`/`FLAGGED` atau `null` — juga ada di antrean                                                                                |
 | `participation.startedAt`       | kapan kuesioner pertama dibuka                                                                                                     |
 | `participation.createdAt`       | kapan responden join                                                                                                               |
 | `participation.timing`          | `actualSeconds`, `estimatedSeconds`, `tooFast`, dan varian per-pertanyaan                                                          |
@@ -1550,17 +1544,42 @@ Field-field itu **hanya** ada di detail; antrean (`GET /api/quality-check`) hany
 
 ### `POST /api/quality-check/{id}/review`
 
-**Hanya admin.** Memutuskan quality check tepat satu kali; keputusan kedua (termasuk dua review serentak) dijawab
-`409` dan tidak menimpa keputusan pertama.
+**Hanya admin.** Memutuskan satu kiriman: quality check-nya, partisipasinya, dan reward-nya, semuanya dalam
+**satu transaksi**. Keputusan kedua (termasuk dua review serentak) dijawab `409` dan tidak membayar dua kali.
 
 ```json
 { "decision": "APPROVED" }
 ```
 
-`decision` wajib `APPROVED` atau `REJECTED`. Response `200`: `data.qualityCheck` setelah keputusan tersimpan.
+| Field      | Aturan                       |
+| ---------- | ---------------------------- |
+| `decision` | wajib, `APPROVED`/`REJECTED` |
 
-**Error:** `401` belum login · `403` bukan admin · `404` quality check tidak ditemukan · `409` check sudah
-diputuskan · `422` filter atau body tidak valid.
+**`APPROVED`** — semuanya dalam satu transaksi:
+
+1. quality check menjadi `APPROVED` dengan `reviewedBy`;
+2. `tokenPerRespondent` dikreditkan ke wallet responden sebagai baris ledger `REWARD` (ber-`researchId`
+   dan `respondentParticipationId`), dan `Reward` menjadi `PAID` dengan `paidAt` terisi;
+3. `Research.tokensConsumed` bertambah sebanyak itu — cerminan `RESERVE` saat publish, dan angka yang
+   membuat sisa reservasi bisa dilepas saat riset ditutup;
+4. partisipasinya menjadi `APPROVED`, dengan `adminReviewedBy`, `adminReviewedAt`, dan `rewardedAt`.
+
+Anggaran reservasi adalah plafonnya: kalau `tokenPerRespondent` melebihi `tokensReserved - tokensConsumed`,
+approval-nya dijawab `409` alih-alih mengkredit token yang tidak pernah didanai peneliti.
+
+**`REJECTED`** — quality check menjadi `REJECTED`, `Reward` menjadi `CANCELLED`, partisipasinya `REJECTED`,
+dan **tidak ada token yang berpindah**. Reservasinya tidak disentuh, jadi sisa anggaran peneliti tetap
+dilepas saat riset ditutup.
+
+**Response `200`** — `data.qualityCheck` setelah keputusan tersimpan.
+
+**Error:** `401` belum login · `403` bukan admin · `404` quality check tidak ditemukan · `409` sudah
+diputuskan, partisipasinya sudah tidak menunggu tinjauan, `Reward`-nya sudah tidak `PENDING`, atau anggaran
+reward-nya habis · `422` body tidak valid.
+
+Keputusan kedua dijawab `409`, bukan membayar dua kali: check-nya diklaim dengan update bersyarat
+(`decision = PENDING`) lebih dulu, dan baris ledger-nya berkunci pada partisipasi — jadi dua permintaan
+serentak pun hanya satu yang lolos.
 
 ---
 
@@ -2049,9 +2068,9 @@ Back office untuk admin (`roles` memuat `"admin"`). Semua endpoint di bagian ini
 yang bukan admin dijawab `403`.
 
 Antrean moderasi yang sudah punya endpoint sendiri tidak diulang di sini: quality check
-(`/api/quality-check`), laporan konten (`/api/report`), tiket (`/api/ticket/admin`), dan keputusan
-partisipasi (`POST /api/participation/{id}/review`). Bagian ini menambahkan ringkasan, antrean
-partisipasi, penarikan, dan peran pengguna.
+(`/api/quality-check`, yang juga tempat keputusan final), laporan konten (`/api/report`), dan tiket
+(`/api/ticket/admin`). Bagian ini menambahkan ringkasan, daftar pemantauan partisipasi, penarikan, dan
+peran pengguna.
 
 ### `GET /api/admin/overview`
 
@@ -2077,8 +2096,8 @@ Hitungan antrean yang menunggu tindakan.
 
 ### `GET /api/admin/participations`
 
-Antrean kiriman yang menunggu keputusan, **terlama dulu** (default 50, maksimal 100). Tanpa
-`status`, mencakup `SUBMITTED` dan `UNDER_REVIEW`.
+Daftar pemantauan **seluruh** partisipasi, terbaru dulu (default 50, maksimal 100). Tanpa `status`,
+mencakup semua status — ini bukan antrean kerja, karena keputusannya ada di quality check.
 
 | Query    | Aturan                                      |
 | -------- | ------------------------------------------- |
@@ -2090,8 +2109,8 @@ Antrean kiriman yang menunggu keputusan, **terlama dulu** (default 50, maksimal 
 `research` (`id`, `title`, `tokenPerRespondent`), `reward` (`status`, `tokenAmount`), dan `qualityCheck`
 (`id`, `decision`) atau `null`.
 
-`qualityCheck` adalah langkah sebelum keputusan: selama `decision`-nya masih `PENDING`, keputusan reward
-lewat `POST /api/participation/{id}/review` akan dijawab `409`.
+`qualityCheck.decision` dan `reward.status` adalah yang dipantau di sini: keduanya bergerak bersama saat
+admin memutuskan lewat `POST /api/quality-check/{id}/review`.
 
 **Error:** `401` · `403` · `422`.
 
@@ -2177,11 +2196,11 @@ Daftar kosong diizinkan: itu mengunci akun dari semua layar ber-role tanpa mengh
 **Yang sudah berjalan:** register/login/confirm/logout/me, profil demografi (dengan aturan consent
 UU PDP) + unggah foto profil ke Cloudinary, preferensi Account Settings (umum, notifikasi, privasi &
 keamanan) + sesi aktif + ekspor & hapus akun, draft riset + detail + update + criteria + kuesioner +
-publish + close + delete, alur responden (ikut riset + screening kriteria + jawab + kirim + ditinjau
-admin + dibayar), pelaporan konten oleh responden + keputusannya oleh admin, tiket bantuan (pusat
-bantuan) + peninjauannya oleh admin, wallet token (top-up, reserve, bayar responden, release, dan
-penarikan saldo), serta panel admin (`/admin`) yang menyatukan antrean moderasi, menyelesaikan
-penarikan, dan mengatur peran pengguna.
+publish + close + delete, alur responden (ikut riset + jawab + kirim dengan screening kriteria + diputuskan
+admin lewat quality check + dibayar), pelaporan konten oleh responden + keputusannya oleh admin, tiket
+bantuan (pusat bantuan) + peninjauannya oleh admin, wallet token (top-up, reserve, bayar responden,
+release, dan penarikan saldo), serta panel admin (`/admin`) yang menyatukan antrean moderasi,
+menyelesaikan penarikan, dan mengatur peran pengguna.
 
 **Yang belum ada:**
 
@@ -2216,10 +2235,11 @@ penarikan, dan mengatur peran pengguna.
   menampilkan `rewardIdr` sebesar nilai itu — sekaligus menjaga ledger: potongan platform tidak punya
   wallet tujuan, jadi menerapkannya akan membuat token keluar dari pembukuan tanpa jejak. Perlu keputusan
   produk: potong dari `tokenPerRespondent` (dan perbaiki `rewardIdr`), atau tagih di atasnya saat publish.
-- **Penahanan reward** — approval membayar **langsung**: `Reward` melompat `PENDING` → `PAID`, dan
-  `HELD`, `QUALITY_HOLD_RELEASE_HOURS`, serta `Participation.holdReleaseAt` belum dipakai. Jadi belum ada
-  jeda tahan-kualitas antara approve dan saldo masuk, dan belum ada cara membalik bayaran yang sudah
-  terjadi (menolak sebelum dibayar sudah bisa, lewat `REJECTED`).
+- **Pembalikan bayaran** — keputusan admin membayar **langsung**: `Reward` melompat `PENDING` → `PAID`
+  dalam transaksi yang sama dengan keputusan quality check. Belum ada cara membalik bayaran yang sudah
+  terjadi; menolak sebelum dibayar sudah bisa, lewat `REJECTED`. Mekanisme tahan (`HELD`,
+  `Participation.holdReleaseAt`, `QUALITY_HOLD_RELEASE_HOURS`) sudah **dihapus** dari schema dan env,
+  karena semua keputusan wajib dilakukan admin dan tidak ada pencairan otomatis.
 - **Feed responden belum menyaring kriteria** — `GET /api/research/available` masih menampilkan riset
   yang kriterianya tidak dipenuhi profil; responden baru tahu saat mencoba ikut (`422`). Menyaring di
   feed butuh `age` dan `region` yang belum tersimpan.
@@ -2232,8 +2252,7 @@ penarikan, dan mengatur peran pengguna.
 - **Aturan ekonomi lewat env** — selain `TOKEN_PRICE_IDR`: `WITHDRAWAL_FEE_PERCENT` sudah dipakai
   `POST /api/payment/withdraw`. Yang belum dipakai alurnya: `REWARD_SPLIT_PLATFORM_PERCENT` +
   `REWARD_SPLIT_RESPONDENT_PERCENT` (harus berjumlah 100), `TOKEN_EXPIRY_IDLE_MONTHS`,
-  `MIN_RESPONDENT_PER_RESEARCH`, `ADMIN_REVIEW_SLA_HOURS`, `CONTENT_REPORT_SLA_HOURS`, dan
-  `QUALITY_HOLD_RELEASE_HOURS`.
+  `MIN_RESPONDENT_PER_RESEARCH`, `ADMIN_REVIEW_SLA_HOURS`, dan `CONTENT_REPORT_SLA_HOURS`.
 - **Unpublish riset** yang sudah `PUBLISHED` belum ada — yang tersedia baru `close` dan archive.
 - **Akun yang belum bisa diubah dari UI profil** — belum ada endpoint untuk mengganti `User.name`
   maupun mengganti kata sandi (walau `PASSWORD_RESET` sudah ada di enum). Ekspor dan hapus akun untuk
@@ -2248,8 +2267,9 @@ penarikan, dan mengatur peran pengguna.
   menawarkannya (baru 4 tipe: `SINGLE_CHOICE`, `MULTIPLE_CHOICE`, `TEXT`, `SCALE`), dan halaman
   responden belum merender input angkanya.
 - **Skor “cocok” dan institusi peneliti** — kartu survei di feed responden versi awal menampilkan
-  badge “99% cocok” dan nama institusi; keduanya belum ada datanya. Kecocokan sekarang hanya dihitung
-  saat **join** (`screeningScore`), bukan di feed — dan `age`/`region` yang dipakai editor masih belum
+  badge “99% cocok” dan nama institusi; keduanya belum ada datanya. Kecocokan profil hanya dipakai
+  sebagai **gerbang join** (kriteria → `422`), bukan skor di feed; `screeningScore` sendiri kini mengukur
+  kualitas jawaban, bukan kecocokan profil — dan `age`/`region` yang dipakai editor masih belum
   bisa diputuskan karena profilnya belum menyimpannya. Institusi juga belum punya kolom, jadi yang tampil
   nama peneliti. Halaman detail riset juga tidak lagi menampilkan badge “Riset Terverifikasi” dan blok
   “uji perhatian” beserta tombol kirimnya: status verifikasi tidak punya datanya, dan pengiriman jawaban

@@ -12,10 +12,13 @@ enum ParticipationStatus {
   EXPIRED
 }
 
+// Hasil screening otomatis atas kualitas kiriman, dihitung sekali saat submit dari nilai
+// yang sama dengan `QualityCheck.signalFlags`/`autoScore` (SPEEDING, STRAIGHT_LINING).
+// `CLEAN` = tidak ada sinyal, `FLAGGED` = minimal satu sinyal. Ini penanda, bukan keputusan:
+// admin tetap yang memutuskan lewat quality check.
 enum AutoScreeningResult {
-  PASS
-  FAIL
-  NEEDS_REVIEW
+  CLEAN
+  FLAGGED
 }
 
 model RespondentParticipation {
@@ -34,7 +37,6 @@ model RespondentParticipation {
 
   adminReviewedBy String?   @db.VarChar(36)
   adminReviewedAt DateTime? @db.DateTime(3)
-  holdReleaseAt   DateTime? @db.DateTime(3)
   rewardedAt      DateTime? @db.DateTime(3)
 
   createdAt DateTime  @default(now()) @db.DateTime(3)
@@ -53,7 +55,7 @@ model RespondentParticipation {
   // satu responden hanya boleh ikut satu kali per riset
   @@unique([researchId, respondentId])
   @@index([respondentId])
-  @@index([status, holdReleaseAt])
+  @@index([status])
   @@map("respondent_participations")
 }
 

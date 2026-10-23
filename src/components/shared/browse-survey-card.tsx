@@ -1,17 +1,24 @@
 "use client"
 
 import Link from "next/link"
+import { MapPin } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import * as Card from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
 import type { AvailableResearchRow } from "@/lib/api-types"
+import { regionItems } from "@/lib/editor-engine/research-editor-schema"
 import { participationStatusLabel } from "@/lib/participation-status"
 import { RESEARCH_CATEGORY_ITEMS } from "@/lib/research-category"
 
 function categoryLabel(category: string | null) {
     return RESEARCH_CATEGORY_ITEMS.find((item) => item.value === category)?.label ?? "Tanpa kategori"
+}
+
+/** The domicile region key as its label, falling back to "Seluruh Indonesia" for an unknown key. */
+function regionLabel(region: string) {
+    return regionItems.find((item) => item.value === region)?.label ?? regionItems[0].label
 }
 
 /**
@@ -57,6 +64,10 @@ export default function BrowseSurveyCard({ research, respondentId }: { research:
                     <div className="flex flex-wrap items-center gap-2">
                         <Badge variant="secondary">Reward: {reward}</Badge>
                         <Badge variant="secondary">~{research.estimatedDurationMinutes} Menit</Badge>
+                        <Badge variant="secondary">
+                            <MapPin className="size-3.5" />
+                            Domisili: {regionLabel(research.region)}
+                        </Badge>
                         <Badge variant="secondary">
                             Batas pengisian: <b>{research.daysLeft} hari lagi</b>
                         </Badge>

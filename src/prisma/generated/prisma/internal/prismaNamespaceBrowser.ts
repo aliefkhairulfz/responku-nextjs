@@ -214,7 +214,6 @@ export const RespondentParticipationScalarFieldEnum = {
   submittedAt: 'submittedAt',
   adminReviewedBy: 'adminReviewedBy',
   adminReviewedAt: 'adminReviewedAt',
-  holdReleaseAt: 'holdReleaseAt',
   rewardedAt: 'rewardedAt',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',

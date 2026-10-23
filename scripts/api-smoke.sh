@@ -257,26 +257,24 @@ call_as POST "/api/participation/$PID" "$JAR_P"
 call_as POST "/api/research/$RID/participate" "$JAR"
 call GET "/api/research/$RID"
 
-step "6b. Review: quality check first, then the decision that pays"
-# The respondent cannot decide their own submission, and neither can the researcher yet.
-call_as POST "/api/participation/$PID/review" "$JAR_P" '{"decision":"APPROVED"}'
-call POST "/api/participation/$PID/review" '{"decision":"APPROVED"}'
-bun run scripts/db-peek.ts roles "$EMAIL" '["researcher","respondent","admin"]' >/dev/null
-# The reward cannot be decided while the screening is still open.
-call POST "/api/participation/$PID/review" '{"decision":"APPROVED"}'
+step "6b. Decision: the quality check is where a submission is decided, and approving pays"
+# Every submission is queued, clean or flagged, and the detail carries the research, the
+# timestamps, and every answer.
 call GET  /api/quality-check
 QC_ID=$(printf '%s' "$LAST" | json_field '.data.qualityChecks.0.id')
-# The detail carries the research, the timestamps, and every answer.
 call GET  "/api/quality-check/$QC_ID"
+# The respondent cannot decide their own submission, and neither can the researcher yet.
+call_as POST "/api/quality-check/$QC_ID/review" "$JAR_P" '{"decision":"APPROVED"}'
 call POST "/api/quality-check/$QC_ID/review" '{"decision":"APPROVED"}'
-# A second decision on the check is refused rather than overwriting the first.
-call POST "/api/quality-check/$QC_ID/review" '{"decision":"REJECTED"}'
-# Now the decision goes through, and approving is what pays.
-call POST "/api/participation/$PID/review" '{"decision":"APPROVED"}'
+bun run scripts/db-peek.ts roles "$EMAIL" '["researcher","respondent","admin"]' >/dev/null
+# Approving is what pays: the wallet is credited in the same transaction.
+call POST "/api/quality-check/$QC_ID/review" '{"decision":"APPROVED"}'
 call_as GET  /api/payment/wallet "$JAR_P"
 # A second decision is refused instead of paying twice, and so is a decision nobody knows.
+call POST "/api/quality-check/$QC_ID/review" '{"decision":"APPROVED"}'
+call POST "/api/quality-check/$QC_ID/review" '{"decision":"MUNGKIN"}'
+# The participation route no longer decides anything — the decision lives on the check.
 call POST "/api/participation/$PID/review" '{"decision":"APPROVED"}'
-call POST "/api/participation/$PID/review" '{"decision":"MUNGKIN"}'
 
 step "6b2. Content report: file, queue, decide"
 # The research is still open here, so it can be reported; it is archived in 6c.

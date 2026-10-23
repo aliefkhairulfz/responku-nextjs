@@ -1,4 +1,5 @@
-import { QUALITY_SIGNAL_FLAGS, type QualitySignalFlag } from '@/lib/quality-check'
+import { QUALITY_SIGNAL_FLAGS, type QualitySignalFlag } from "@/lib/quality-check"
+import type { ScreeningResult } from "@/lib/screening"
 
 /**
  * The automatic quality signals a submission carries.
@@ -67,10 +68,7 @@ export function isTooFast(actualSeconds: number, estimatedSeconds: number): bool
  * answers can never share one, while "always the first option" is exactly the pattern worth
  * flagging. Multi-select answers are skipped — a set of choices is not a position.
  */
-export function detectStraightLining(
-    answers: ScreenableAnswer[],
-    questions: ScreenableQuestion[],
-): boolean {
+export function detectStraightLining(answers: ScreenableAnswer[], questions: ScreenableQuestion[]): boolean {
     const positions: number[] = []
 
     for (const answer of answers) {
@@ -103,6 +101,20 @@ export function computeAutoScore(flags: QualitySignalFlag[]): number {
     return Math.max(0, Math.round((1 - penalty) * 10000) / 10000)
 }
 
+/**
+ * The participation-level screening verdict a submission's signals produce.
+ *
+ * Derived from the same `signalFlags`/`autoScore` the quality check stores, so the two can
+ * never disagree: no signal is `CLEAN`, any signal is `FLAGGED`, and the score is `autoScore`
+ * read as a percentage — `CLEAN` reads `100`, both signals firing reads `0`.
+ */
+export function screeningVerdict(signalFlags: QualitySignalFlag[], autoScore: number): { result: ScreeningResult; score: number } {
+    return {
+        result: signalFlags.length === 0 ? "CLEAN" : "FLAGGED",
+        score: Math.round(autoScore * 100),
+    }
+}
+
 /** The signals a submission carries, and the score that summarises them. */
 export function screenSubmission(input: QualitySignalInput): {
     signalFlags: QualitySignalFlag[]
@@ -112,16 +124,12 @@ export function screenSubmission(input: QualitySignalInput): {
 
     if (input.submittedAt !== null) {
         const startedAt = input.startedAt ?? input.createdAt
-        const actualSeconds = Math.max(
-            0,
-            Math.round((input.submittedAt.getTime() - startedAt.getTime()) / 1000),
-        )
+        const actualSeconds = Math.max(0, Math.round((input.submittedAt.getTime() - startedAt.getTime()) / 1000))
 
-        if (isTooFast(actualSeconds, input.estimatedDurationMinutes * 60))
-            signalFlags.push('SPEEDING')
+        if (isTooFast(actualSeconds, input.estimatedDurationMinutes * 60)) signalFlags.push("SPEEDING")
     }
 
-    if (detectStraightLining(input.answers, input.questions)) signalFlags.push('STRAIGHT_LINING')
+    if (detectStraightLining(input.answers, input.questions)) signalFlags.push("STRAIGHT_LINING")
 
     return { signalFlags, autoScore: computeAutoScore(signalFlags) }
 }

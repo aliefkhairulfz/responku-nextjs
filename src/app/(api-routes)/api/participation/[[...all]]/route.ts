@@ -4,13 +4,7 @@ import { PARTICIPATION_STATUSES } from "@/lib/participation-status"
 import { exceptionResponse, handleRouteError, parseBody, readJsonBody, readOptionalJsonBody, successResponse } from "@/lib/server/api"
 import { requireRole } from "@/lib/server/roles"
 import { requireSession, type Session } from "@/service/auth"
-import {
-    getParticipationService,
-    listParticipationsService,
-    reviewParticipationService,
-    saveAnswersService,
-    submitParticipationService,
-} from "@/service/participation"
+import { getParticipationService, listParticipationsService, saveAnswersService, submitParticipationService } from "@/service/participation"
 
 /* ========== Validasi ========== */
 
@@ -36,11 +30,6 @@ const submitSchema = z.object({
     answers: z.array(answerSchema).optional(),
 })
 
-/** An admin decides a submission one way or the other; nothing else is a decision. */
-const reviewSchema = z.object({
-    decision: z.enum(["APPROVED", "REJECTED"]),
-})
-
 /**
  * Query string of the respondent's own list, validated with the same helper as a body:
  * a bad `status` or `take` comes back as a 422 naming the key.
@@ -57,9 +46,6 @@ const ANSWERS_PATH = "answers"
 
 /** The action path that sends a participation in. */
 const SUBMIT_PATH = "submit"
-
-/** The action path an admin decides a submitted participation on. */
-const REVIEW_PATH = "review"
 
 /** Path segments below `/api/participation`, e.g. `["abc", "submit"]`. */
 function getParticipationSegments(req: NextRequest) {
@@ -84,25 +70,6 @@ function withRespondentGuard(handler: (user: Session["user"], req: NextRequest) 
         try {
             const { user } = await requireSession()
             requireRole(user.roles, "respondent")
-
-            return await handler(user, req)
-        } catch (error) {
-            return handleRouteError(error)
-        }
-    }
-}
-
-/**
- * Wraps a verb so it can only run for a signed-in admin.
- *
- * Reviewing is the one action in this route that is not the respondent's own work, so it
- * gets its own guard rather than the one above.
- */
-function withAdminGuard(handler: (user: Session["user"], req: NextRequest) => Promise<NextResponse>) {
-    return async (req: NextRequest) => {
-        try {
-            const { user } = await requireSession()
-            requireRole(user.roles, "admin")
 
             return await handler(user, req)
         } catch (error) {
@@ -146,17 +113,6 @@ async function submitHandler(user: Session["user"], req: NextRequest, id: string
     return successResponse({ message: "Research submitted", data: { participation } })
 }
 
-/** approve or reject a submitted participation, which is what pays it */
-async function reviewHandler(user: Session["user"], req: NextRequest, id: string) {
-    const body = parseBody(reviewSchema, await readJsonBody(req))
-    const participation = await reviewParticipationService({ id, reviewerId: user.id, decision: body.decision })
-
-    return successResponse({
-        message: body.decision === "APPROVED" ? "Participation approved and reward paid" : "Participation rejected",
-        data: { participation },
-    })
-}
-
 /* ========== Routing ========== */
 
 export const GET = withRespondentGuard(async (user, req) => {
@@ -169,21 +125,13 @@ export const GET = withRespondentGuard(async (user, req) => {
     return notFound()
 })
 
-export const POST = async (req: NextRequest) => {
+export const POST = withRespondentGuard(async (user, req) => {
     const segments = getParticipationSegments(req)
 
-    // Deciding somebody else's submission is an admin action; everything else here is the
-    // respondent's own work.
-    if (segments.length === 2 && segments[1] === REVIEW_PATH) {
-        return withAdminGuard((user, req) => reviewHandler(user, req, segments[0]))(req)
-    }
+    if (segments.length !== 2) return notFound()
 
-    return withRespondentGuard(async (user, req) => {
-        if (segments.length !== 2) return notFound()
+    if (segments[1] === ANSWERS_PATH) return saveAnswersHandler(user, req, segments[0])
+    if (segments[1] === SUBMIT_PATH) return submitHandler(user, req, segments[0])
 
-        if (segments[1] === ANSWERS_PATH) return saveAnswersHandler(user, req, segments[0])
-        if (segments[1] === SUBMIT_PATH) return submitHandler(user, req, segments[0])
-
-        return notFound()
-    })(req)
-}
+    return notFound()
+})

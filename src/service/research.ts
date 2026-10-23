@@ -52,6 +52,14 @@ function daysUntil(deadline: Date): number {
 /** Criteria operators the API accepts, mirroring the Prisma enum. */
 export const CRITERIA_OPERATORS = ["EQ", "NEQ", "IN", "NOT_IN", "GT", "GTE", "LT", "LTE", "BETWEEN"] as const
 
+/**
+ * The criterion the editor stores the respondent's domicile region under, and the value it
+ * uses when a research targets everyone. Kept here so the feed can surface the region a
+ * card should show without the client having to dig through the whole rule list.
+ */
+const REGION_CRITERION_FIELD = "region"
+const REGION_CRITERION_ALL = "all"
+
 /* ========== Tipe ========== */
 
 export type ResearchCriterionInput = {
@@ -351,6 +359,13 @@ const AVAILABLE_RESEARCH_SELECT = {
     deadline: true,
     targetRespondentCount: true,
     researcher: { select: { name: true } },
+    // The domicile region the feed shows on a card, read straight off the screening rules.
+    // Only this one criterion is needed here; the detail page asks for the whole list.
+    criteria: {
+        where: { field: REGION_CRITERION_FIELD },
+        select: { field: true, value: true },
+        take: 1,
+    },
     _count: {
         select: {
             // Same rule as the researcher's list: only answers actually sent in.
@@ -392,6 +407,8 @@ function toAvailableResearchResponse(research: AvailableResearchRow) {
         daysLeft: daysUntil(research.deadline),
         respondentCount: research._count.participations,
         targetRespondentCount: research.targetRespondentCount,
+        // A research with no region rule targets everyone; the client turns the key into a label.
+        region: research.criteria.find((criterion) => criterion.field === REGION_CRITERION_FIELD)?.value ?? REGION_CRITERION_ALL,
     }
 }
 

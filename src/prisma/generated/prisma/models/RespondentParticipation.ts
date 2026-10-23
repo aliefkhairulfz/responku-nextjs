@@ -45,7 +45,6 @@ export type RespondentParticipationMinAggregateOutputType = {
   submittedAt: Date | null
   adminReviewedBy: string | null
   adminReviewedAt: Date | null
-  holdReleaseAt: Date | null
   rewardedAt: Date | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -63,7 +62,6 @@ export type RespondentParticipationMaxAggregateOutputType = {
   submittedAt: Date | null
   adminReviewedBy: string | null
   adminReviewedAt: Date | null
-  holdReleaseAt: Date | null
   rewardedAt: Date | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -81,7 +79,6 @@ export type RespondentParticipationCountAggregateOutputType = {
   submittedAt: number
   adminReviewedBy: number
   adminReviewedAt: number
-  holdReleaseAt: number
   rewardedAt: number
   createdAt: number
   updatedAt: number
@@ -109,7 +106,6 @@ export type RespondentParticipationMinAggregateInputType = {
   submittedAt?: true
   adminReviewedBy?: true
   adminReviewedAt?: true
-  holdReleaseAt?: true
   rewardedAt?: true
   createdAt?: true
   updatedAt?: true
@@ -127,7 +123,6 @@ export type RespondentParticipationMaxAggregateInputType = {
   submittedAt?: true
   adminReviewedBy?: true
   adminReviewedAt?: true
-  holdReleaseAt?: true
   rewardedAt?: true
   createdAt?: true
   updatedAt?: true
@@ -145,7 +140,6 @@ export type RespondentParticipationCountAggregateInputType = {
   submittedAt?: true
   adminReviewedBy?: true
   adminReviewedAt?: true
-  holdReleaseAt?: true
   rewardedAt?: true
   createdAt?: true
   updatedAt?: true
@@ -250,7 +244,6 @@ export type RespondentParticipationGroupByOutputType = {
   submittedAt: Date | null
   adminReviewedBy: string | null
   adminReviewedAt: Date | null
-  holdReleaseAt: Date | null
   rewardedAt: Date | null
   createdAt: Date
   updatedAt: Date
@@ -291,7 +284,6 @@ export type RespondentParticipationWhereInput = {
   submittedAt?: Prisma.DateTimeNullableFilter<"RespondentParticipation"> | Date | string | null
   adminReviewedBy?: Prisma.StringNullableFilter<"RespondentParticipation"> | string | null
   adminReviewedAt?: Prisma.DateTimeNullableFilter<"RespondentParticipation"> | Date | string | null
-  holdReleaseAt?: Prisma.DateTimeNullableFilter<"RespondentParticipation"> | Date | string | null
   rewardedAt?: Prisma.DateTimeNullableFilter<"RespondentParticipation"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"RespondentParticipation"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"RespondentParticipation"> | Date | string
@@ -316,7 +308,6 @@ export type RespondentParticipationOrderByWithRelationInput = {
   submittedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   adminReviewedBy?: Prisma.SortOrderInput | Prisma.SortOrder
   adminReviewedAt?: Prisma.SortOrderInput | Prisma.SortOrder
-  holdReleaseAt?: Prisma.SortOrderInput | Prisma.SortOrder
   rewardedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -346,7 +337,6 @@ export type RespondentParticipationWhereUniqueInput = Prisma.AtLeast<{
   submittedAt?: Prisma.DateTimeNullableFilter<"RespondentParticipation"> | Date | string | null
   adminReviewedBy?: Prisma.StringNullableFilter<"RespondentParticipation"> | string | null
   adminReviewedAt?: Prisma.DateTimeNullableFilter<"RespondentParticipation"> | Date | string | null
-  holdReleaseAt?: Prisma.DateTimeNullableFilter<"RespondentParticipation"> | Date | string | null
   rewardedAt?: Prisma.DateTimeNullableFilter<"RespondentParticipation"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"RespondentParticipation"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"RespondentParticipation"> | Date | string
@@ -371,7 +361,6 @@ export type RespondentParticipationOrderByWithAggregationInput = {
   submittedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   adminReviewedBy?: Prisma.SortOrderInput | Prisma.SortOrder
   adminReviewedAt?: Prisma.SortOrderInput | Prisma.SortOrder
-  holdReleaseAt?: Prisma.SortOrderInput | Prisma.SortOrder
   rewardedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -397,7 +386,6 @@ export type RespondentParticipationScalarWhereWithAggregatesInput = {
   submittedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"RespondentParticipation"> | Date | string | null
   adminReviewedBy?: Prisma.StringNullableWithAggregatesFilter<"RespondentParticipation"> | string | null
   adminReviewedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"RespondentParticipation"> | Date | string | null
-  holdReleaseAt?: Prisma.DateTimeNullableWithAggregatesFilter<"RespondentParticipation"> | Date | string | null
   rewardedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"RespondentParticipation"> | Date | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"RespondentParticipation"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"RespondentParticipation"> | Date | string
@@ -412,7 +400,6 @@ export type RespondentParticipationCreateInput = {
   startedAt?: Date | string | null
   submittedAt?: Date | string | null
   adminReviewedAt?: Date | string | null
-  holdReleaseAt?: Date | string | null
   rewardedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -437,7 +424,6 @@ export type RespondentParticipationUncheckedCreateInput = {
   submittedAt?: Date | string | null
   adminReviewedBy?: string | null
   adminReviewedAt?: Date | string | null
-  holdReleaseAt?: Date | string | null
   rewardedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -456,7 +442,6 @@ export type RespondentParticipationUpdateInput = {
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   adminReviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  holdReleaseAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   rewardedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -481,7 +466,6 @@ export type RespondentParticipationUncheckedUpdateInput = {
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   adminReviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   adminReviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  holdReleaseAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   rewardedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -503,7 +487,6 @@ export type RespondentParticipationCreateManyInput = {
   submittedAt?: Date | string | null
   adminReviewedBy?: string | null
   adminReviewedAt?: Date | string | null
-  holdReleaseAt?: Date | string | null
   rewardedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -518,7 +501,6 @@ export type RespondentParticipationUpdateManyMutationInput = {
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   adminReviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  holdReleaseAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   rewardedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -536,7 +518,6 @@ export type RespondentParticipationUncheckedUpdateManyInput = {
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   adminReviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   adminReviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  holdReleaseAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   rewardedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -580,7 +561,6 @@ export type RespondentParticipationCountOrderByAggregateInput = {
   submittedAt?: Prisma.SortOrder
   adminReviewedBy?: Prisma.SortOrder
   adminReviewedAt?: Prisma.SortOrder
-  holdReleaseAt?: Prisma.SortOrder
   rewardedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -602,7 +582,6 @@ export type RespondentParticipationMaxOrderByAggregateInput = {
   submittedAt?: Prisma.SortOrder
   adminReviewedBy?: Prisma.SortOrder
   adminReviewedAt?: Prisma.SortOrder
-  holdReleaseAt?: Prisma.SortOrder
   rewardedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -620,7 +599,6 @@ export type RespondentParticipationMinOrderByAggregateInput = {
   submittedAt?: Prisma.SortOrder
   adminReviewedBy?: Prisma.SortOrder
   adminReviewedAt?: Prisma.SortOrder
-  holdReleaseAt?: Prisma.SortOrder
   rewardedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -844,7 +822,6 @@ export type RespondentParticipationCreateWithoutRespondentInput = {
   startedAt?: Date | string | null
   submittedAt?: Date | string | null
   adminReviewedAt?: Date | string | null
-  holdReleaseAt?: Date | string | null
   rewardedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -867,7 +844,6 @@ export type RespondentParticipationUncheckedCreateWithoutRespondentInput = {
   submittedAt?: Date | string | null
   adminReviewedBy?: string | null
   adminReviewedAt?: Date | string | null
-  holdReleaseAt?: Date | string | null
   rewardedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -896,7 +872,6 @@ export type RespondentParticipationCreateWithoutAdminReviewerInput = {
   startedAt?: Date | string | null
   submittedAt?: Date | string | null
   adminReviewedAt?: Date | string | null
-  holdReleaseAt?: Date | string | null
   rewardedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -919,7 +894,6 @@ export type RespondentParticipationUncheckedCreateWithoutAdminReviewerInput = {
   startedAt?: Date | string | null
   submittedAt?: Date | string | null
   adminReviewedAt?: Date | string | null
-  holdReleaseAt?: Date | string | null
   rewardedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -970,7 +944,6 @@ export type RespondentParticipationScalarWhereInput = {
   submittedAt?: Prisma.DateTimeNullableFilter<"RespondentParticipation"> | Date | string | null
   adminReviewedBy?: Prisma.StringNullableFilter<"RespondentParticipation"> | string | null
   adminReviewedAt?: Prisma.DateTimeNullableFilter<"RespondentParticipation"> | Date | string | null
-  holdReleaseAt?: Prisma.DateTimeNullableFilter<"RespondentParticipation"> | Date | string | null
   rewardedAt?: Prisma.DateTimeNullableFilter<"RespondentParticipation"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"RespondentParticipation"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"RespondentParticipation"> | Date | string
@@ -1001,7 +974,6 @@ export type RespondentParticipationCreateWithoutQualityChecksInput = {
   startedAt?: Date | string | null
   submittedAt?: Date | string | null
   adminReviewedAt?: Date | string | null
-  holdReleaseAt?: Date | string | null
   rewardedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1025,7 +997,6 @@ export type RespondentParticipationUncheckedCreateWithoutQualityChecksInput = {
   submittedAt?: Date | string | null
   adminReviewedBy?: string | null
   adminReviewedAt?: Date | string | null
-  holdReleaseAt?: Date | string | null
   rewardedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1059,7 +1030,6 @@ export type RespondentParticipationUpdateWithoutQualityChecksInput = {
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   adminReviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  holdReleaseAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   rewardedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1083,7 +1053,6 @@ export type RespondentParticipationUncheckedUpdateWithoutQualityChecksInput = {
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   adminReviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   adminReviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  holdReleaseAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   rewardedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1101,7 +1070,6 @@ export type RespondentParticipationCreateWithoutAnswersInput = {
   startedAt?: Date | string | null
   submittedAt?: Date | string | null
   adminReviewedAt?: Date | string | null
-  holdReleaseAt?: Date | string | null
   rewardedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1125,7 +1093,6 @@ export type RespondentParticipationUncheckedCreateWithoutAnswersInput = {
   submittedAt?: Date | string | null
   adminReviewedBy?: string | null
   adminReviewedAt?: Date | string | null
-  holdReleaseAt?: Date | string | null
   rewardedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1159,7 +1126,6 @@ export type RespondentParticipationUpdateWithoutAnswersInput = {
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   adminReviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  holdReleaseAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   rewardedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1183,7 +1149,6 @@ export type RespondentParticipationUncheckedUpdateWithoutAnswersInput = {
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   adminReviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   adminReviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  holdReleaseAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   rewardedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1201,7 +1166,6 @@ export type RespondentParticipationCreateWithoutResearchInput = {
   startedAt?: Date | string | null
   submittedAt?: Date | string | null
   adminReviewedAt?: Date | string | null
-  holdReleaseAt?: Date | string | null
   rewardedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1224,7 +1188,6 @@ export type RespondentParticipationUncheckedCreateWithoutResearchInput = {
   submittedAt?: Date | string | null
   adminReviewedBy?: string | null
   adminReviewedAt?: Date | string | null
-  holdReleaseAt?: Date | string | null
   rewardedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1269,7 +1232,6 @@ export type RespondentParticipationCreateWithoutRewardInput = {
   startedAt?: Date | string | null
   submittedAt?: Date | string | null
   adminReviewedAt?: Date | string | null
-  holdReleaseAt?: Date | string | null
   rewardedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1293,7 +1255,6 @@ export type RespondentParticipationUncheckedCreateWithoutRewardInput = {
   submittedAt?: Date | string | null
   adminReviewedBy?: string | null
   adminReviewedAt?: Date | string | null
-  holdReleaseAt?: Date | string | null
   rewardedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1327,7 +1288,6 @@ export type RespondentParticipationUpdateWithoutRewardInput = {
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   adminReviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  holdReleaseAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   rewardedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1351,7 +1311,6 @@ export type RespondentParticipationUncheckedUpdateWithoutRewardInput = {
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   adminReviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   adminReviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  holdReleaseAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   rewardedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1369,7 +1328,6 @@ export type RespondentParticipationCreateWithoutTransactionsInput = {
   startedAt?: Date | string | null
   submittedAt?: Date | string | null
   adminReviewedAt?: Date | string | null
-  holdReleaseAt?: Date | string | null
   rewardedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1393,7 +1351,6 @@ export type RespondentParticipationUncheckedCreateWithoutTransactionsInput = {
   submittedAt?: Date | string | null
   adminReviewedBy?: string | null
   adminReviewedAt?: Date | string | null
-  holdReleaseAt?: Date | string | null
   rewardedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1427,7 +1384,6 @@ export type RespondentParticipationUpdateWithoutTransactionsInput = {
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   adminReviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  holdReleaseAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   rewardedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1451,7 +1407,6 @@ export type RespondentParticipationUncheckedUpdateWithoutTransactionsInput = {
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   adminReviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   adminReviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  holdReleaseAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   rewardedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1471,7 +1426,6 @@ export type RespondentParticipationCreateManyRespondentInput = {
   submittedAt?: Date | string | null
   adminReviewedBy?: string | null
   adminReviewedAt?: Date | string | null
-  holdReleaseAt?: Date | string | null
   rewardedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1488,7 +1442,6 @@ export type RespondentParticipationCreateManyAdminReviewerInput = {
   startedAt?: Date | string | null
   submittedAt?: Date | string | null
   adminReviewedAt?: Date | string | null
-  holdReleaseAt?: Date | string | null
   rewardedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1503,7 +1456,6 @@ export type RespondentParticipationUpdateWithoutRespondentInput = {
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   adminReviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  holdReleaseAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   rewardedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1526,7 +1478,6 @@ export type RespondentParticipationUncheckedUpdateWithoutRespondentInput = {
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   adminReviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   adminReviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  holdReleaseAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   rewardedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1547,7 +1498,6 @@ export type RespondentParticipationUncheckedUpdateManyWithoutRespondentInput = {
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   adminReviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   adminReviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  holdReleaseAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   rewardedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1562,7 +1512,6 @@ export type RespondentParticipationUpdateWithoutAdminReviewerInput = {
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   adminReviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  holdReleaseAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   rewardedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1585,7 +1534,6 @@ export type RespondentParticipationUncheckedUpdateWithoutAdminReviewerInput = {
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   adminReviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  holdReleaseAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   rewardedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1606,7 +1554,6 @@ export type RespondentParticipationUncheckedUpdateManyWithoutAdminReviewerInput 
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   adminReviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  holdReleaseAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   rewardedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1623,7 +1570,6 @@ export type RespondentParticipationCreateManyResearchInput = {
   submittedAt?: Date | string | null
   adminReviewedBy?: string | null
   adminReviewedAt?: Date | string | null
-  holdReleaseAt?: Date | string | null
   rewardedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1638,7 +1584,6 @@ export type RespondentParticipationUpdateWithoutResearchInput = {
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   adminReviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  holdReleaseAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   rewardedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1661,7 +1606,6 @@ export type RespondentParticipationUncheckedUpdateWithoutResearchInput = {
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   adminReviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   adminReviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  holdReleaseAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   rewardedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1682,7 +1626,6 @@ export type RespondentParticipationUncheckedUpdateManyWithoutResearchInput = {
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   adminReviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   adminReviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  holdReleaseAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   rewardedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1749,7 +1692,6 @@ export type RespondentParticipationSelect<ExtArgs extends runtime.Types.Extensio
   submittedAt?: boolean
   adminReviewedBy?: boolean
   adminReviewedAt?: boolean
-  holdReleaseAt?: boolean
   rewardedAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -1777,14 +1719,13 @@ export type RespondentParticipationSelectScalar = {
   submittedAt?: boolean
   adminReviewedBy?: boolean
   adminReviewedAt?: boolean
-  holdReleaseAt?: boolean
   rewardedAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   deletedAt?: boolean
 }
 
-export type RespondentParticipationOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "researchId" | "respondentId" | "status" | "screeningScore" | "autoScreeningResult" | "startedAt" | "submittedAt" | "adminReviewedBy" | "adminReviewedAt" | "holdReleaseAt" | "rewardedAt" | "createdAt" | "updatedAt" | "deletedAt", ExtArgs["result"]["respondentParticipation"]>
+export type RespondentParticipationOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "researchId" | "respondentId" | "status" | "screeningScore" | "autoScreeningResult" | "startedAt" | "submittedAt" | "adminReviewedBy" | "adminReviewedAt" | "rewardedAt" | "createdAt" | "updatedAt" | "deletedAt", ExtArgs["result"]["respondentParticipation"]>
 export type RespondentParticipationInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   research?: boolean | Prisma.ResearchDefaultArgs<ExtArgs>
   respondent?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -1818,7 +1759,6 @@ export type $RespondentParticipationPayload<ExtArgs extends runtime.Types.Extens
     submittedAt: Date | null
     adminReviewedBy: string | null
     adminReviewedAt: Date | null
-    holdReleaseAt: Date | null
     rewardedAt: Date | null
     createdAt: Date
     updatedAt: Date
@@ -2209,7 +2149,6 @@ export interface RespondentParticipationFieldRefs {
   readonly submittedAt: Prisma.FieldRef<"RespondentParticipation", 'DateTime'>
   readonly adminReviewedBy: Prisma.FieldRef<"RespondentParticipation", 'String'>
   readonly adminReviewedAt: Prisma.FieldRef<"RespondentParticipation", 'DateTime'>
-  readonly holdReleaseAt: Prisma.FieldRef<"RespondentParticipation", 'DateTime'>
   readonly rewardedAt: Prisma.FieldRef<"RespondentParticipation", 'DateTime'>
   readonly createdAt: Prisma.FieldRef<"RespondentParticipation", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"RespondentParticipation", 'DateTime'>

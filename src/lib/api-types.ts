@@ -65,6 +65,11 @@ export type AvailableResearch = {
     daysLeft: number
     respondentCount: number
     targetRespondentCount: number
+    /**
+     * The domicile region the research screens for — one of the editor's region keys, or
+     * `"all"` when it targets the whole country. The label is the card's to look up.
+     */
+    region: string
 }
 
 /** A screening rule stored on a research. */
@@ -163,8 +168,12 @@ export type Participation = {
     id: string
     researchId: string
     status: string
-    /** Percentage of the criteria the profile met, or `null` when there were none. */
+    /**
+     * Automatic answer-quality score, 0–100 (`autoScore` as a percentage), or `null` before the
+     * questionnaire is sent in. It is the same value the quality check stores.
+     */
     screeningScore: number | null
+    /** `CLEAN` when no quality signal fired, `FLAGGED` when at least one did, or `null` before submit. */
     screeningResult: string | null
     /** When the questionnaire was first opened — where the timing clock starts. */
     startedAt: string | null
@@ -452,12 +461,17 @@ export type QualityCheck = {
         researchTitle: string
         submittedAt: string | null
         /**
+         * Automatic quality screening, carried on both the queue and the detail. It summarises
+         * the same `signalFlags`/`autoScore` above — `CLEAN`/`FLAGGED` plus a 0–100 score — and
+         * is supporting information, not the decision: the admin still decides.
+         */
+        screeningScore: number | null
+        screeningResult: string | null
+        /**
          * Everything below is present on `GET /api/quality-check/{id}` and omitted from the
          * queue, which only needs the summary.
          */
         respondentEmail?: string
-        screeningScore?: number | null
-        screeningResult?: string | null
         /** When the questionnaire was first opened — where the timing clock starts. */
         startedAt?: string | null
         /** When the respondent joined. */
