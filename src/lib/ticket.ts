@@ -49,6 +49,16 @@ export const TICKET_STATUSES = ["REVIEW", "RESOLVED", "REJECTED"] as const
 
 export type TicketStatus = (typeof TICKET_STATUSES)[number]
 
+/**
+ * The two outcomes an admin can decide a ticket with.
+ *
+ * `REVIEW` is the state a ticket opens in; only these two close it, so they are the only
+ * values the review endpoint accepts.
+ */
+export const TICKET_DECISIONS = ["RESOLVED", "REJECTED"] as const
+
+export type TicketDecision = (typeof TICKET_DECISIONS)[number]
+
 const STATUS_LABELS: Record<TicketStatus, string> = {
     REVIEW: "Direview, estimasi maks 48 jam",
     RESOLVED: "Selesai",

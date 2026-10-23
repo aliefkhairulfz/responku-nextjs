@@ -9,6 +9,7 @@ import {
     MenuIcon,
     Microscope,
     SettingsIcon,
+    ShieldCheckIcon,
     UserCheckIcon,
     Wallet,
     XIcon,
@@ -72,6 +73,19 @@ const menus2nd: MenuItem[] = [
         url: "help-center",
     },
 ]
+
+/** The back office, shown only to an account that holds the admin role. */
+const ADMIN_MENU_ITEM: MenuItem = {
+    label: "Panel Admin",
+    icon: ShieldCheckIcon,
+    highlight: true,
+    url: "admin",
+}
+
+/** The second menu block, with the admin entry appended for an admin. */
+function secondaryMenus(isAdmin: boolean): MenuItem[] {
+    return isAdmin ? [...menus2nd, ADMIN_MENU_ITEM] : menus2nd
+}
 
 function MenuList({ items, open, onItemClick, pathnames }: { items: MenuItem[]; open: boolean; onItemClick?: () => void; pathnames: string[] }) {
     const hideOnCollapse = open ? "opacity-100" : "md:opacity-0"
@@ -215,7 +229,7 @@ function LayoutChildren({ pathname, children }: { pathname: string; children: Re
                     <div className="my-3 border-t" />
 
                     <MenuList
-                        items={menus2nd}
+                        items={secondaryMenus(user?.roles.includes("admin") ?? false)}
                         open={open}
                         onItemClick={() => setMobileOpen(false)}
                         pathnames={pathname.split("/").filter((c) => c !== "")}

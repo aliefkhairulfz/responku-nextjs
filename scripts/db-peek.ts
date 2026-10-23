@@ -52,7 +52,7 @@ if (command === "wallet") {
                   balance: true,
                   transactions: {
                       orderBy: { createdAt: "asc" },
-                      select: { type: true, amount: true, researchId: true, idempotencyKey: true },
+                      select: { type: true, amount: true, researchId: true, paymentId: true, idempotencyKey: true },
                   },
               },
           })
@@ -61,7 +61,10 @@ if (command === "wallet") {
     console.log(`balance=${wallet?.balance ?? "no wallet"}`)
 
     for (const transaction of wallet?.transactions ?? []) {
-        console.log(`  ${transaction.type} ${transaction.amount} research=${transaction.researchId ?? "-"} key=${transaction.idempotencyKey}`)
+        console.log(
+            `  ${transaction.type} ${transaction.amount} research=${transaction.researchId ?? "-"} ` +
+                `payment=${transaction.paymentId ?? "-"} key=${transaction.idempotencyKey}`,
+        )
     }
 }
 

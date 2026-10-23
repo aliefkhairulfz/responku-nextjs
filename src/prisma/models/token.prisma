@@ -33,6 +33,9 @@ model TokenTransaction {
   walletId                  String  @db.VarChar(36)
   researchId                String? @db.VarChar(36)
   respondentParticipationId String? @db.VarChar(36)
+  // Order yang menyebabkan baris ini — terisi untuk kredit top-up, null untuk pergerakan
+  // lain. Tanpa kolom ini satu-satunya jejak ke payment-nya adalah teks idempotencyKey.
+  paymentId                 String? @db.VarChar(36)
 
   type   TokenTransactionType
   amount Int
@@ -46,9 +49,11 @@ model TokenTransaction {
   wallet        TokenWallet              @relation(fields: [walletId], references: [id])
   research      Research?                @relation(fields: [researchId], references: [id])
   participation RespondentParticipation? @relation(fields: [respondentParticipationId], references: [id])
+  payment       Payment?                 @relation(fields: [paymentId], references: [id])
 
   @@index([walletId, createdAt])
   @@index([researchId])
   @@index([respondentParticipationId])
+  @@index([paymentId])
   @@map("token_transactions")
 }

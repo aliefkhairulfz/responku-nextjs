@@ -2,7 +2,14 @@ import type { ResearchCategory } from "@/lib/research-category"
 import { BadRequestException, ConflictException, NotFoundException } from "@/lib/server/http-exception"
 import { IDR_PER_TOKEN } from "@/lib/server/token-price"
 import type { Prisma } from "@/prisma/generated/prisma/client"
-import { type CriteriaOperator, QuestionType, ResearchStatus, TokenTransactionType } from "@/prisma/generated/prisma/enums"
+import {
+    type CriteriaOperator,
+    ParticipationStatus,
+    QuestionType,
+    ResearchStatus,
+    RewardStatus,
+    TokenTransactionType,
+} from "@/prisma/generated/prisma/enums"
 import type { ResearchModel } from "@/prisma/generated/prisma/models/Research"
 import { prisma } from "@/prisma/prisma"
 
@@ -148,11 +155,27 @@ async function writeCriteria(tx: Prisma.TransactionClient, researchId: string, c
  * asking for respondents the share nobody consumed must not stay in limbo. The
  * ledger row is keyed by the research, which makes a second release — closing and
  * then archiving — a no-op rather than a double refund.
+ *
+ * Submissions still waiting for a review are closed out here as well. Their reward would
+ * have been paid from the very budget this hands back, so leaving them `PENDING` would
+ * promise tokens that no longer exist — and an approval after the fact would mint them.
+ * `EXPIRED` is the honest status for the participation: the research ended before the work
+ * was decided.
  */
 async function releaseReservation(
     tx: Prisma.TransactionClient,
     research: { id: string; researcherId: string; tokensReserved: number; tokensConsumed: number },
 ) {
+    await tx.reward.updateMany({
+        where: { participation: { researchId: research.id }, status: RewardStatus.PENDING },
+        data: { status: RewardStatus.CANCELLED },
+    })
+
+    await tx.respondentParticipation.updateMany({
+        where: { researchId: research.id, status: { in: [ParticipationStatus.SUBMITTED, ParticipationStatus.UNDER_REVIEW] } },
+        data: { status: ParticipationStatus.EXPIRED },
+    })
+
     const amount = research.tokensReserved - research.tokensConsumed
     if (amount <= 0) return 0
 

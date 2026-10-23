@@ -155,11 +155,16 @@ call PATCH /api/user/profile '{"religion":"islam","religionConsent":true}'
 
 step "3b. Support tickets"
 call POST /api/ticket '{"category":"DISPUTE","subject":"Permohonan banding penolakan","description":"Pengisian kuesioner sudah selesai dengan cermat sesuai instruksi, mohon review manual."}'
+TICKET_ID=$(printf '%s' "$LAST" | json_field '.data.ticket.id')
 call POST /api/ticket '{"category":"dispute","subject":"kategori huruf kecil","description":"Nilai enum tersimpan huruf besar, jadi ini harus ditolak 422."}'
 call POST /api/ticket '{"category":"LAIN","subject":"x","description":"pendek"}'
 call GET  /api/ticket
 call GET  "/api/ticket?status=REVIEW"
 call GET  "/api/ticket?status=bogus"
+call GET  "/api/ticket/$TICKET_ID"
+# The queue and the review are admin-only, and this account is not one yet.
+call GET  /api/ticket/admin
+call POST "/api/ticket/$TICKET_ID/review" '{"status":"RESOLVED"}'
 call POST /api/ticket/whatever '{"category":"OTHER","subject":"Salah path","description":"Ini seharusnya dijawab 404 bukan dibuat."}'
 
 step "4. Research: create, get, update"
@@ -199,7 +204,7 @@ call POST "/api/research/$RID/create-questions" '{"questions":[{"pos":1,"questio
 call PATCH "/api/research/$RID" '{"criteria":[]}'
 call PATCH "/api/research/$RID" '{"title":"Judul setelah publish"}'
 
-step "6a. Participation: a respondent joins, answers, and is paid"
+step "6a. Participation: a respondent joins, answers, and sends it in for review"
 RESPONDENT="curl-respondent-$STAMP@example.com"
 JAR_P=tmp-cookies-respondent.txt
 signin_as "$RESPONDENT" "$JAR_P"
@@ -237,10 +242,11 @@ printf 'timing: actual=%ss estimated=%ss perQuestion=%ss tooFast=%s\n' \
     "$(printf '%s' "$LAST" | json_field '.data.participation.timing.estimatedSeconds')" \
     "$(printf '%s' "$LAST" | json_field '.data.participation.timing.estimatedSecondsPerQuestion')" \
     "$(printf '%s' "$LAST" | json_field '.data.participation.timing.tooFast')"
-# The reward is already credited, so the second send is refused instead of paying twice.
+# The reward is recorded but not paid, so the second send is refused instead of paying twice.
 call_as POST "/api/participation/$PID/submit" "$JAR_P"
 call_as POST "/api/participation/$PID/answers" "$JAR_P" '{"answers":[]}'
 call_as GET  /api/participation "$JAR_P"
+printf 'reward after submit: %s\n' "$(printf '%s' "$LAST" | json_field '.data.participations.0.reward.status')"
 call_as GET  /api/payment/wallet "$JAR_P"
 # Once it is sent in it leaves the feed again.
 call_as GET  "/api/research/available?take=100" "$JAR_P"
@@ -251,13 +257,75 @@ call_as POST "/api/participation/$PID" "$JAR_P"
 call_as POST "/api/research/$RID/participate" "$JAR"
 call GET "/api/research/$RID"
 
-step "6b. Close returns the unused budget, archiving a closed research releases nothing more"
+step "6b. Review: quality check first, then the decision that pays"
+# The respondent cannot decide their own submission, and neither can the researcher yet.
+call_as POST "/api/participation/$PID/review" "$JAR_P" '{"decision":"APPROVED"}'
+call POST "/api/participation/$PID/review" '{"decision":"APPROVED"}'
+bun run scripts/db-peek.ts roles "$EMAIL" '["researcher","respondent","admin"]' >/dev/null
+# The reward cannot be decided while the screening is still open.
+call POST "/api/participation/$PID/review" '{"decision":"APPROVED"}'
+call GET  /api/quality-check
+QC_ID=$(printf '%s' "$LAST" | json_field '.data.qualityChecks.0.id')
+# The detail carries the research, the timestamps, and every answer.
+call GET  "/api/quality-check/$QC_ID"
+call POST "/api/quality-check/$QC_ID/review" '{"decision":"APPROVED"}'
+# A second decision on the check is refused rather than overwriting the first.
+call POST "/api/quality-check/$QC_ID/review" '{"decision":"REJECTED"}'
+# Now the decision goes through, and approving is what pays.
+call POST "/api/participation/$PID/review" '{"decision":"APPROVED"}'
+call_as GET  /api/payment/wallet "$JAR_P"
+# A second decision is refused instead of paying twice, and so is a decision nobody knows.
+call POST "/api/participation/$PID/review" '{"decision":"APPROVED"}'
+call POST "/api/participation/$PID/review" '{"decision":"MUNGKIN"}'
+
+step "6b2. Content report: file, queue, decide"
+# The research is still open here, so it can be reported; it is archived in 6c.
+call POST /api/report "{\"researchId\":\"$RID\",\"reason\":\"Pertanyaan memaksa jawaban pribadi yang tidak relevan dengan tujuan riset.\"}"
+REPORT_ID=$(printf '%s' "$LAST" | json_field '.data.report.id')
+call POST /api/report "{\"researchId\":\"$RID\",\"reason\":\"Laporan kedua saat yang pertama masih terbuka harus ditolak 409.\"}"
+call POST /api/report '{"researchId":"tidak-ada","reason":"Riset yang tidak ada harus dijawab 404, bukan dibuat."}'
+call GET  /api/report
+call GET  "/api/report?status=OPEN"
+call GET  "/api/report/$REPORT_ID"
+call POST "/api/report/$REPORT_ID/review" '{"status":"RESOLVED","actionTaken":"WARNING"}'
+# A second decision is refused rather than overwriting the first.
+call POST "/api/report/$REPORT_ID/review" '{"status":"DISMISSED"}'
+
+step "6c. Close returns the unused budget, archiving a closed research releases nothing more"
 call POST "/api/research/$RID/close"
 call GET  /api/payment/wallet
 call POST "/api/research/$RID/close"
 call DELETE "/api/research/$RID"
 call GET "/api/research/$RID"
 call GET "/api/payment/$PAYMENT_ID"
+
+step "6d. Withdrawal: debits the wallet and records a pending order"
+call POST /api/payment/withdraw '{"tokenAmount":0}'
+call POST /api/payment/withdraw '{"tokenAmount":1000000}'
+call POST /api/payment/withdraw '{"tokenAmount":1}'
+WITHDRAWAL_ID=$(printf '%s' "$LAST" | json_field '.data.payment.id')
+call GET  /api/payment/wallet
+
+step "6e. Admin ticket review"
+call GET  /api/ticket/admin
+call GET  "/api/ticket/admin/$TICKET_ID"
+call POST "/api/ticket/$TICKET_ID/review" '{"status":"RESOLVED","resolutionNote":"Banding diterima, reward dibayarkan ulang."}'
+call POST "/api/ticket/$TICKET_ID/review" '{"status":"REJECTED"}'
+
+step "6f. Admin back office"
+# The respondent account is not an admin, so the whole back office is closed to it.
+call_as GET /api/admin/overview "$JAR_P"
+call GET  /api/admin/overview
+call GET  /api/admin/participations
+call GET  /api/admin/withdrawals
+call GET  /api/admin/users
+call GET  /api/auth/me
+ME_ID=$(printf '%s' "$LAST" | json_field '.data.user.id')
+call PATCH "/api/admin/users/$ME_ID/roles" '{"roles":["researcher","respondent","admin"]}'
+call PATCH "/api/admin/users/$ME_ID/roles" '{"roles":["bukan-peran"]}'
+call POST "/api/admin/withdrawals/$WITHDRAWAL_ID/settle" '{"decision":"PAID"}'
+# A second settlement is refused rather than paying twice.
+call POST "/api/admin/withdrawals/$WITHDRAWAL_ID/settle" '{"decision":"FAILED"}'
 
 step "7. Email change"
 call POST /api/auth/change-email "{\"email\":\"$NEW_EMAIL\",\"password\":\"salah\"}"
@@ -269,6 +337,9 @@ printf 'email-change otp: %s\n' "$CHANGE_OTP"
 call POST /api/auth/confirm-email-change "{\"code\":\"$CHANGE_OTP\"}"
 call POST /api/auth/login "{\"email\":\"$NEW_EMAIL\",\"password\":\"supersecret1\"}"
 call GET /api/auth/me
+
+step "7b. Account data export"
+call GET /api/user/export
 
 step "8. Role gate and logout"
 bun run scripts/db-peek.ts roles "$NEW_EMAIL" '["respondent"]'

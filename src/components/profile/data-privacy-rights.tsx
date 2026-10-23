@@ -1,7 +1,8 @@
-"use client";
+"use client"
 
-import { Download, ShieldCheck, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { Download, ShieldCheck, Trash2 } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { useState } from "react"
 import {
     AlertDialog,
     AlertDialogAction,
@@ -12,35 +13,76 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
     AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
+} from "@/components/ui/alert-dialog"
+import { Button } from "@/components/ui/button"
+import { Separator } from "@/components/ui/separator"
+import { toast } from "@/components/ui/toast"
+import { deleteJson, getJson } from "@/lib/api-client"
+import type { AccountExport } from "@/lib/api-types"
 
 export default function DataPrivacyRights() {
-    const [withdrawingConsent, setWithdrawingConsent] = useState(false);
-    const [deletingAccount, setDeletingAccount] = useState(false);
+    const router = useRouter()
+    const [exporting, setExporting] = useState(false)
+    const [withdrawingConsent, setWithdrawingConsent] = useState(false)
+    const [deletingAccount, setDeletingAccount] = useState(false)
 
+    /**
+     * Downloads the account's data as a JSON file.
+     *
+     * The archive is built in the browser from the API's answer rather than streamed from the
+     * server, so the same endpoint can back a future "email me a copy" flow without changing
+     * shape.
+     */
     const handleExportData = async () => {
-        console.log("Export data requested");
-    };
+        setExporting(true)
+        const result = await getJson<{ export: AccountExport }>("/api/user/export")
+        setExporting(false)
+
+        if (!result.ok || result.data === null) {
+            toast.add({ type: "error", title: "Gagal mengekspor data", description: result.message })
+            return
+        }
+
+        const blob = new Blob([JSON.stringify(result.data.export, null, 2)], { type: "application/json" })
+        const url = URL.createObjectURL(blob)
+        const link = document.createElement("a")
+        link.href = url
+        link.download = `responku-data-${new Date().toISOString().slice(0, 10)}.json`
+        link.click()
+        URL.revokeObjectURL(url)
+
+        toast.add({ type: "success", title: "Data diekspor", description: "Arsip data akun sudah diunduh." })
+    }
 
     const handleWithdrawConsent = async () => {
-        setWithdrawingConsent(true);
+        setWithdrawingConsent(true)
         try {
-            console.log("Withdraw consent requested");
+            console.log("Withdraw consent requested")
         } finally {
-            setWithdrawingConsent(false);
+            setWithdrawingConsent(false)
         }
-    };
+    }
 
+    /**
+     * Erases the account, then sends the visitor to sign in.
+     *
+     * The API clears the session cookie as part of the deletion, so there is nothing left to
+     * sign out of — the redirect is what stops the page from sitting on a session that no
+     * longer resolves.
+     */
     const handleDeleteAccount = async () => {
-        setDeletingAccount(true);
-        try {
-            console.log("Delete account requested");
-        } finally {
-            setDeletingAccount(false);
+        setDeletingAccount(true)
+        const result = await deleteJson("/api/user")
+        setDeletingAccount(false)
+
+        if (!result.ok) {
+            toast.add({ type: "error", title: "Gagal menghapus akun", description: result.message })
+            return
         }
-    };
+
+        toast.add({ type: "success", title: "Akun dihapus", description: "Akun Anda sudah dihapus permanen." })
+        router.replace("/login")
+    }
 
     return (
         <div className="space-y-6">
@@ -54,9 +96,9 @@ export default function DataPrivacyRights() {
             <section className="space-y-2">
                 <h3 className="font-medium">Ekspor Salinan Data</h3>
                 <p className="text-muted-foreground">Unduh arsip lengkap profil, riwayat riset, dan mutasi token.</p>
-                <Button type="button" variant="outline" onClick={handleExportData}>
+                <Button type="button" variant="outline" disabled={exporting} onClick={handleExportData}>
                     <Download />
-                    Ekspor Data
+                    {exporting ? "Menyiapkan..." : "Ekspor Data"}
                 </Button>
             </section>
 
@@ -126,5 +168,5 @@ export default function DataPrivacyRights() {
                 </AlertDialog>
             </section>
         </div>
-    );
+    )
 }

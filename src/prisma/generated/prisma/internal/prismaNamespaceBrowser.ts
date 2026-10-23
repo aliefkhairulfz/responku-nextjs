@@ -245,6 +245,7 @@ export const PaymentScalarFieldEnum = {
   provider: 'provider',
   providerRef: 'providerRef',
   amountIdr: 'amountIdr',
+  tokenAmount: 'tokenAmount',
   status: 'status',
   idempotencyKey: 'idempotencyKey',
   createdAt: 'createdAt',
@@ -394,6 +395,7 @@ export const TokenTransactionScalarFieldEnum = {
   walletId: 'walletId',
   researchId: 'researchId',
   respondentParticipationId: 'respondentParticipationId',
+  paymentId: 'paymentId',
   type: 'type',
   amount: 'amount',
   idempotencyKey: 'idempotencyKey',
@@ -646,6 +648,7 @@ export const TokenTransactionOrderByRelevanceFieldEnum = {
   walletId: 'walletId',
   researchId: 'researchId',
   respondentParticipationId: 'respondentParticipationId',
+  paymentId: 'paymentId',
   idempotencyKey: 'idempotencyKey'
 } as const
 

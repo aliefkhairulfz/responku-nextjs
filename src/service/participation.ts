@@ -1,9 +1,18 @@
-import { BadRequestException, ConflictException, NotFoundException } from "@/lib/server/http-exception"
 import { PARTICIPATION_DONE_STATUSES } from "@/lib/participation-status"
+import { BadRequestException, ConflictException, NotFoundException } from "@/lib/server/http-exception"
 import { type ScreenableField, screenCriteria } from "@/lib/server/screening"
+import { toTiming } from "@/lib/server/timing"
 import type { Prisma } from "@/prisma/generated/prisma/client"
-import { AutoScreeningResult, ParticipationStatus, ResearchStatus, RewardStatus, TokenTransactionType } from "@/prisma/generated/prisma/enums"
+import {
+    AutoScreeningResult,
+    ParticipationStatus,
+    QualityDecision,
+    ResearchStatus,
+    RewardStatus,
+    TokenTransactionType,
+} from "@/prisma/generated/prisma/enums"
 import { prisma } from "@/prisma/prisma"
+import { createQualityCheckService } from "@/service/quality-check"
 
 /**
  * The respondent side of a research: joining one, answering it, and sending it in.
@@ -13,11 +22,12 @@ import { prisma } from "@/prisma/prisma"
  * `ParticipationAnswer`, one row per question, replaced as a whole whenever the client
  * sends its form (the same shape the questionnaire itself is written with).
  *
- * Sending a research in is the only place a respondent is paid, and it is the mirror of
- * publishing: publishing reserved `target × tokenPerRespondent` from the researcher's
- * wallet, and each submission consumes exactly `tokenPerRespondent` of that reservation.
- * The two together are why `tokensConsumed` may never exceed `tokensReserved` — past
- * that point the payout would be minting tokens nobody funded.
+ * A submission is not paid on its own: it records the work and the reward it is worth,
+ * and an admin's approval is what moves the tokens (`reviewParticipationService`). Paying
+ * is the mirror of publishing — publishing reserved `target × tokenPerRespondent` from the
+ * researcher's wallet, and each approval consumes exactly `tokenPerRespondent` of that
+ * reservation. The two together are why `tokensConsumed` may never exceed
+ * `tokensReserved` — past that point the payout would be minting tokens nobody funded.
  */
 
 /* ========== Konstanta ========== */
@@ -32,15 +42,13 @@ const DEFAULT_PARTICIPATION_LIMIT = 50
 const ANSWERED_STATUSES: ParticipationStatus[] = [...PARTICIPATION_DONE_STATUSES]
 
 /**
- * How much of the estimated time a submission has to use up before it stops being
- * flagged as too fast — see `toTiming`.
+ * Statuses an admin can still decide.
  *
- * A third, deliberately generous: the estimate is a rule of thumb from the questionnaire's
- * length, and people are routinely quicker than a rule of thumb, so the flag has to mean
- * "implausibly quick" rather than "quicker than expected". It is a heuristic to tune, not a
- * verdict.
+ * Anything already approved or rejected is past reviewing, so this doubles as the
+ * idempotency guard: a second decision on the same submission is refused rather than
+ * paying it twice.
  */
-const TOO_FAST_PACE_PERCENT = 33
+const REVIEWABLE_STATUSES: ParticipationStatus[] = [ParticipationStatus.SUBMITTED, ParticipationStatus.UNDER_REVIEW]
 
 /* ========== Tipe ========== */
 
@@ -69,7 +77,12 @@ const RESEARCH_SUMMARY_SELECT = {
     researcher: { select: { name: true } },
 } satisfies Prisma.ResearchSelect
 
-const REWARD_SELECT = { respondentTokenAmount: true, platformTokenAmount: true, status: true, paidAt: true } satisfies Prisma.RewardSelect
+const REWARD_SELECT = {
+    respondentTokenAmount: true,
+    platformTokenAmount: true,
+    status: true,
+    paidAt: true,
+} satisfies Prisma.RewardSelect
 
 /** What the list needs: the research as a card, plus what it paid. */
 const LIST_INCLUDE = {
@@ -92,66 +105,15 @@ const DETAIL_INCLUDE = {
     reward: { select: REWARD_SELECT },
 } satisfies Prisma.RespondentParticipationInclude
 
-type ParticipationListRow = Prisma.RespondentParticipationGetPayload<{ include: typeof LIST_INCLUDE }>
-type ParticipationDetailRow = Prisma.RespondentParticipationGetPayload<{ include: typeof DETAIL_INCLUDE }>
+type ParticipationListRow = Prisma.RespondentParticipationGetPayload<{
+    include: typeof LIST_INCLUDE
+}>
+type ParticipationDetailRow = Prisma.RespondentParticipationGetPayload<{
+    include: typeof DETAIL_INCLUDE
+}>
 type QuestionWithChoices = ParticipationDetailRow["research"]["questions"][number]
 
 /* ========== Helper ========== */
-
-/**
- * How long the questionnaire took, measured against how long it was expected to take.
- *
- * The clock runs between the two server timestamps the participation already carries:
- * `createdAt`, set when the respondent joined, and `submittedAt`, set when they sent it
- * in. Neither is written by a client, and nothing derived is stored — these numbers are
- * recomputed on every read, so a duration can never drift from the timestamps it came
- * from.
- *
- * The estimate is spread evenly over the questions: `estimatedDurationMinutes * 60 /
- * totalQuestions`, in seconds per question. A questionnaire with no questions has no
- * per-question estimate at all, which is a `null` rather than a division by zero.
- *
- * `tooFast` is the initial indicator, and no more than that: `createdAt` is when the
- * respondent *joined*, so the window includes any time they spent away from the page,
- * which makes it a conservative test — it only fires on a submission finished almost
- * immediately. A flagged submission is one worth reading, not one to reject.
- */
-function toTiming({
-    startedAt,
-    completedAt,
-    estimatedDurationMinutes,
-    totalQuestions,
-}: {
-    startedAt: Date
-    completedAt: Date | null
-    estimatedDurationMinutes: number
-    totalQuestions: number
-}) {
-    const estimatedSeconds = estimatedDurationMinutes * 60
-    const estimatedSecondsPerQuestion = totalQuestions > 0 ? Math.round(estimatedSeconds / totalQuestions) : null
-
-    if (completedAt === null) {
-        return {
-            actualSeconds: null,
-            actualSecondsPerQuestion: null,
-            estimatedSeconds,
-            estimatedSecondsPerQuestion,
-            tooFast: null,
-        }
-    }
-
-    // Clamped at zero: a clock change between the two stamps must not read as negative
-    // work.
-    const actualSeconds = Math.max(0, Math.round((completedAt.getTime() - startedAt.getTime()) / 1000))
-
-    return {
-        actualSeconds,
-        actualSecondsPerQuestion: totalQuestions > 0 ? Math.round(actualSeconds / totalQuestions) : null,
-        estimatedSeconds,
-        estimatedSecondsPerQuestion,
-        tooFast: estimatedSeconds > 0 && actualSeconds < (estimatedSeconds * TOO_FAST_PACE_PERCENT) / 100,
-    }
-}
 
 /** The choice ids of a stored answer, or an empty list for a free-text one. */
 function toChoiceIds(value: unknown): string[] {
@@ -176,7 +138,13 @@ function toResearchSummary(research: ParticipationListRow["research"] | Particip
 
 /** What was paid for a participation, or `null` while there is nothing to show. */
 function toRewardResponse(reward: ParticipationListRow["reward"]) {
-    return reward === null ? null : { tokenAmount: Number(reward.respondentTokenAmount), status: reward.status, paidAt: reward.paidAt }
+    return reward === null
+        ? null
+        : {
+              tokenAmount: Number(reward.respondentTokenAmount),
+              status: reward.status,
+              paidAt: reward.paidAt,
+          }
 }
 
 /** Public view of a participation, without the soft-delete bookkeeping. */
@@ -246,9 +214,11 @@ function toParticipationDetail(participation: ParticipationDetailRow) {
 }
 
 /** Reads one participation of the caller's, or throws a 404. */
-async function findParticipation(id: string, respondentId: string) {
+async function findParticipation(id: string, respondentId?: string) {
     const participation = await prisma.respondentParticipation.findFirst({
-        where: { id, respondentId, deletedAt: null },
+        // The respondent's own screens scope the read to them; the admin review does not,
+        // because the work being reviewed belongs to somebody else.
+        where: respondentId === undefined ? { id, deletedAt: null } : { id, respondentId, deletedAt: null },
         include: DETAIL_INCLUDE,
     })
 
@@ -261,7 +231,14 @@ async function findParticipation(id: string, respondentId: string) {
 async function readScreenableProfile(userId: string): Promise<Record<ScreenableField, string> | null> {
     const profile = await prisma.userProfile.findUnique({
         where: { userId },
-        select: { gender: true, domicileProvince: true, domicileCity: true, occupation: true, education: true, religion: true },
+        select: {
+            gender: true,
+            domicileProvince: true,
+            domicileCity: true,
+            occupation: true,
+            education: true,
+            religion: true,
+        },
     })
 
     if (profile === null) return null
@@ -348,7 +325,9 @@ function assertRequiredAnswered(
  * against the questionnaire first.
  */
 async function writeAnswers(tx: Prisma.TransactionClient, participationId: string, answers: ParticipationAnswerInput[]) {
-    await tx.participationAnswer.deleteMany({ where: { respondentParticipationId: participationId } })
+    await tx.participationAnswer.deleteMany({
+        where: { respondentParticipationId: participationId },
+    })
 
     if (answers.length === 0) return
 
@@ -384,7 +363,11 @@ export async function joinResearchService({ researchId, respondentId }: { resear
             deadline: true,
             targetRespondentCount: true,
             criteria: { select: { field: true, operator: true, value: true } },
-            _count: { select: { participations: { where: { submittedAt: { not: null }, deletedAt: null } } } },
+            _count: {
+                select: {
+                    participations: { where: { submittedAt: { not: null }, deletedAt: null } },
+                },
+            },
         },
     })
 
@@ -405,7 +388,10 @@ export async function joinResearchService({ researchId, respondentId }: { resear
         // Opening the questionnaire is what starts the clock, and only ever once: coming back
         // to a half-filled form continues the same measurement instead of restarting it.
         if (existing.startedAt === null) {
-            await prisma.respondentParticipation.update({ where: { id: existing.id }, data: { startedAt: new Date() } })
+            await prisma.respondentParticipation.update({
+                where: { id: existing.id },
+                data: { startedAt: new Date() },
+            })
         }
 
         return toParticipationDetail(await findParticipation(existing.id, respondentId))
@@ -442,7 +428,11 @@ export async function joinResearchService({ researchId, respondentId }: { resear
             where: { id: existing.id },
             // A row that was withdrawn keeps the start it already had: reviving continues the
             // same attempt rather than pretending it began now.
-            data: { ...joinData, startedAt: existing.startedAt ?? joinData.startedAt, deletedAt: null },
+            data: {
+                ...joinData,
+                startedAt: existing.startedAt ?? joinData.startedAt,
+                deletedAt: null,
+            },
             include: DETAIL_INCLUDE,
         })
 
@@ -515,7 +505,10 @@ export async function saveAnswersService({ id, respondentId, answers }: { id: st
 
     await prisma.$transaction(async (tx) => {
         await writeAnswers(tx, id, answers)
-        await tx.respondentParticipation.update({ where: { id }, data: { status: ParticipationStatus.IN_PROGRESS } })
+        await tx.respondentParticipation.update({
+            where: { id },
+            data: { status: ParticipationStatus.IN_PROGRESS },
+        })
     })
 
     return toParticipationDetail(await findParticipation(id, respondentId))
@@ -524,17 +517,17 @@ export async function saveAnswersService({ id, respondentId, answers }: { id: st
 /* ========== Kirim ========== */
 
 /**
- * Sends a research in and pays the respondent.
+ * Sends a research in for review.
  *
  * `answers` is optional: sending them here saves the client a round trip and makes sure
  * the last page of a form cannot be lost between a save and a submit. Whatever ends up
  * stored is what gets validated, so a submit without a body still refuses a blank
  * required question.
  *
- * Everything moves in one transaction — the answers, the status, the reward, the wallet
- * credit, and the researcher's consumed counter — so a failure leaves the participation
- * exactly as it was rather than half submitted and half paid. The ledger row is keyed by
- * the participation, which is the second lock against a double credit.
+ * No tokens move here. The submission records the answers, the status, the reward the work
+ * is worth — created `PENDING`, waiting for an admin — and the automatic quality signals,
+ * and the payout happens in `reviewParticipationService`. All of it is one transaction, so
+ * a failure leaves the participation exactly as it was rather than half submitted.
  */
 export async function submitParticipationService({
     id,
@@ -585,18 +578,139 @@ export async function submitParticipationService({
 
         assertRequiredAnswered(research.questions, saved)
 
-        const amount = research.tokenPerRespondent
-        const remaining = research.tokensReserved - research.tokensConsumed
+        // The reward is recorded, but nothing is paid and nothing is consumed: an admin
+        // approves the work first, and `reviewParticipationService` is what moves the
+        // tokens. A submission that is never approved therefore leaves the researcher's
+        // reservation exactly as it was.
+        await tx.reward.create({
+            data: {
+                participationId: id,
+                respondentTokenAmount: research.tokenPerRespondent,
+                platformTokenAmount: 0,
+                status: RewardStatus.PENDING,
+            },
+        })
 
-        // The reservation is the ceiling. Paying past it would credit tokens the
-        // researcher never funded, so the payout is refused instead.
-        if (amount > remaining) {
-            throw new ConflictException("This research's reward budget is used up")
+        const submittedAt = new Date()
+
+        // The automatic quality signals are recorded with the submission, in the same
+        // transaction: the pace and the answer pattern are read from what was just stored,
+        // and a check that is never written is one an admin would have to remember to run by
+        // hand.
+        await createQualityCheckService(tx, {
+            participationId: id,
+            startedAt: participation.startedAt,
+            createdAt: participation.createdAt,
+            submittedAt,
+            estimatedDurationMinutes: research.estimatedDurationMinutes,
+            questions: research.questions,
+            answers: saved.map((answer) => ({
+                researchQuestionId: answer.researchQuestionId,
+                choiceIds: toChoiceIds(answer.choiceIds),
+            })),
+        })
+
+        await tx.respondentParticipation.update({
+            where: { id },
+            data: { status: ParticipationStatus.SUBMITTED, submittedAt },
+        })
+    })
+
+    return toParticipationDetail(await findParticipation(id, respondentId))
+}
+
+/* ========== Tinjau ========== */
+
+/** The two decisions an admin can make on a submitted participation. */
+export type ReviewDecision = "APPROVED" | "REJECTED"
+
+/**
+ * Decides a submitted participation, and pays it when it is approved.
+ *
+ * This is where a respondent is paid. Submitting only records the work and what it is
+ * worth; approving moves the tokens — the wallet credit, the ledger row, the reward marked
+ * paid, and the researcher's consumed counter — all in one transaction, so the balance and
+ * the ledger cannot end up disagreeing. The ledger row is keyed by the participation,
+ * which is the second lock against paying the same work twice.
+ *
+ * The quality check has to be decided first. A submission is screened when it is sent in,
+ * and the check is the note that says "read this one" — so paying before reading it would
+ * be paying blind. The gate only applies when a check exists: a row submitted before the
+ * screening existed has none, and refusing it would strand it forever.
+ *
+ * A rejection cancels the reward and pays nothing. The reservation is left alone: it was
+ * never consumed, so the researcher's unused budget is still released when the research
+ * closes.
+ */
+export async function reviewParticipationService({ id, reviewerId, decision }: { id: string; reviewerId: string; decision: ReviewDecision }) {
+    await prisma.$transaction(async (tx) => {
+        const participation = await tx.respondentParticipation.findFirst({
+            where: { id, deletedAt: null },
+            select: {
+                id: true,
+                respondentId: true,
+                status: true,
+                researchId: true,
+                reward: { select: { status: true } },
+                qualityChecks: { where: { deletedAt: null }, select: { decision: true } },
+                research: {
+                    select: {
+                        tokenPerRespondent: true,
+                        tokensReserved: true,
+                        tokensConsumed: true,
+                    },
+                },
+            },
+        })
+
+        if (participation === null) throw new NotFoundException("Participation not found")
+
+        if (!REVIEWABLE_STATUSES.includes(participation.status)) {
+            throw new ConflictException(`This participation is ${participation.status} and is no longer awaiting review`)
         }
 
+        // Review first, decide after: a submission whose screening is still open is one
+        // nobody has read yet.
+        if (participation.qualityChecks.some((check) => check.decision === QualityDecision.PENDING)) {
+            throw new ConflictException("Selesaikan quality check dulu sebelum memutuskan reward")
+        }
+
+        // A reward that is no longer pending was either cancelled by an earlier decision or
+        // paid back when submitting was what paid — nothing either way for this to settle.
+        if (participation.reward !== null && participation.reward.status !== RewardStatus.PENDING) {
+            throw new ConflictException(`This participation's reward is ${participation.reward.status}`)
+        }
+
+        const reviewedAt = new Date()
+
+        if (decision === "REJECTED") {
+            await tx.reward.updateMany({
+                where: { participationId: id, status: RewardStatus.PENDING },
+                data: { status: RewardStatus.CANCELLED },
+            })
+
+            await tx.respondentParticipation.update({
+                where: { id },
+                data: {
+                    status: ParticipationStatus.REJECTED,
+                    adminReviewedBy: reviewerId,
+                    adminReviewedAt: reviewedAt,
+                },
+            })
+
+            return
+        }
+
+        const amount = participation.research.tokenPerRespondent
+        const remaining = participation.research.tokensReserved - participation.research.tokensConsumed
+
+        // The reservation is the ceiling. Paying past it would credit tokens the researcher
+        // never funded, so the approval is refused instead.
+        if (amount > remaining) throw new ConflictException("This research's reward budget is used up")
+
         const wallet = await tx.tokenWallet.upsert({
-            where: { userId: respondentId },
-            create: { userId: respondentId, balance: amount },
+            where: { userId: participation.respondentId },
+            create: { userId: participation.respondentId, balance: amount },
             update: { balance: { increment: amount } },
             select: { id: true },
         })
@@ -604,7 +718,7 @@ export async function submitParticipationService({
         await tx.tokenTransaction.create({
             data: {
                 walletId: wallet.id,
-                researchId: research.id,
+                researchId: participation.researchId,
                 respondentParticipationId: id,
                 type: TokenTransactionType.REWARD,
                 // Credits are positive, the mirror of the reserve's negative debit.
@@ -613,26 +727,31 @@ export async function submitParticipationService({
             },
         })
 
-        // The platform's cut is recorded as zero: the token split has no account to
-        // land in, and inventing a balance for it would move tokens out of the ledger.
-        // The whole `tokenPerRespondent` the researcher reserved is what gets paid out.
-        await tx.reward.create({
-            data: {
-                participationId: id,
-                respondentTokenAmount: amount,
-                platformTokenAmount: 0,
-                status: RewardStatus.PAID,
-                paidAt: new Date(),
-            },
+        // The platform's cut is recorded as zero: the token split has no account to land in,
+        // and inventing a balance for it would move tokens out of the ledger. The whole
+        // `tokenPerRespondent` the researcher reserved is what gets paid out.
+        await tx.reward.updateMany({
+            where: { participationId: id, status: RewardStatus.PENDING },
+            data: { status: RewardStatus.PAID, paidAt: reviewedAt },
         })
 
-        await tx.research.update({ where: { id: research.id }, data: { tokensConsumed: { increment: amount } } })
+        await tx.research.update({
+            where: { id: participation.researchId },
+            data: { tokensConsumed: { increment: amount } },
+        })
 
         await tx.respondentParticipation.update({
             where: { id },
-            data: { status: ParticipationStatus.SUBMITTED, submittedAt: new Date() },
+            data: {
+                status: ParticipationStatus.APPROVED,
+                adminReviewedBy: reviewerId,
+                adminReviewedAt: reviewedAt,
+                rewardedAt: reviewedAt,
+            },
         })
     })
 
-    return toParticipationDetail(await findParticipation(id, respondentId))
+    // Read back unscoped: the work being reviewed belongs to somebody else, so the
+    // respondent-scoped lookup the rest of this file uses would not find it.
+    return toParticipationDetail(await findParticipation(id))
 }

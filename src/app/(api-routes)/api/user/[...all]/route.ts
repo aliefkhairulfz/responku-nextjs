@@ -6,7 +6,8 @@ import { BadRequestException, ServiceUnavailableException } from "@/lib/server/h
 import { PHONE_MAX_LENGTH, isPhoneNumber } from "@/lib/profile-schema"
 import { EDUCATIONS, GENDERS, RELIGIONS } from "@/lib/profile-vocabulary"
 import { exceptionResponse, handleRouteError, parseBody, readFormData, readJsonBody, successResponse } from "@/lib/server/api"
-import { requireSession, updateUserAvatarService } from "@/service/auth"
+import { requireSession, logoutService, updateUserAvatarService } from "@/service/auth"
+import { deleteAccountService, exportUserDataService } from "@/service/account"
 import { listSessionsService, revokeOtherSessionsService, revokeSessionService } from "@/service/session"
 import { getUserSettingsService, updateUserSettingsService } from "@/service/setting"
 import { getUserProfileService, updateUserProfileService } from "@/service/user"
@@ -91,6 +92,9 @@ const PROFILE_PATH = "profile"
 
 /** The collection of account preferences. */
 const SETTINGS_PATH = "settings"
+
+/** The action path that hands back a copy of the account's data. */
+const EXPORT_PATH = "export"
 
 /** The collection of live sessions, and the prefix for ending one by id. */
 const SESSIONS_PATH = "sessions"
@@ -221,6 +225,38 @@ async function revokeOtherSessionsHandler(_req: NextRequest) {
     }
 }
 
+/** hand back a copy of everything the caller's account holds */
+async function exportDataHandler(_req: NextRequest) {
+    try {
+        const { user } = await requireSession()
+        const data = await exportUserDataService({ userId: user.id })
+
+        return successResponse({ message: "Account data export", data: { export: data } })
+    } catch (error) {
+        return handleRouteError(error)
+    }
+}
+
+/**
+ * Erase the caller's account.
+ *
+ * The account is anonymised and locked out by the service; the cookie that pointed at it is
+ * cleared here, so the browser is signed out in the same breath rather than left holding a
+ * session that no longer resolves.
+ */
+async function deleteAccountHandler(_req: NextRequest) {
+    try {
+        const { user } = await requireSession()
+        const result = await deleteAccountService({ userId: user.id })
+
+        await logoutService()
+
+        return successResponse({ message: "Account deleted", data: result })
+    } catch (error) {
+        return handleRouteError(error)
+    }
+}
+
 export async function GET(req: NextRequest) {
     const pathname = req.nextUrl.pathname.replace(/^\/api\/user\/?/, "")
 
@@ -231,6 +267,8 @@ export async function GET(req: NextRequest) {
             return getSettingsHandler(req)
         case SESSIONS_PATH:
             return listSessionsHandler(req)
+        case EXPORT_PATH:
+            return exportDataHandler(req)
         default:
             return notFound()
     }
@@ -261,13 +299,16 @@ export async function POST(req: NextRequest) {
 }
 
 /**
- * Ends sessions: the collection for "everywhere else", or one by id.
+ * Ends sessions, or erases the account.
  *
- * Distinct from `logout`, which ends only the current one and clears the cookie.
+ * The bare collection is the account itself; `sessions` is the device list, where the
+ * collection means "everywhere else" and an id means one device. Distinct from `logout`,
+ * which ends only the current session and clears the cookie.
  */
 export async function DELETE(req: NextRequest) {
     const segments = getUserSegments(req)
 
+    if (segments.length === 0) return deleteAccountHandler(req)
     if (segments[0] !== SESSIONS_PATH) return notFound()
     if (segments.length === 1) return revokeOtherSessionsHandler(req)
 

@@ -39,6 +39,7 @@ export type TokenTransactionMinAggregateOutputType = {
   walletId: string | null
   researchId: string | null
   respondentParticipationId: string | null
+  paymentId: string | null
   type: $Enums.TokenTransactionType | null
   amount: number | null
   idempotencyKey: string | null
@@ -52,6 +53,7 @@ export type TokenTransactionMaxAggregateOutputType = {
   walletId: string | null
   researchId: string | null
   respondentParticipationId: string | null
+  paymentId: string | null
   type: $Enums.TokenTransactionType | null
   amount: number | null
   idempotencyKey: string | null
@@ -65,6 +67,7 @@ export type TokenTransactionCountAggregateOutputType = {
   walletId: number
   researchId: number
   respondentParticipationId: number
+  paymentId: number
   type: number
   amount: number
   idempotencyKey: number
@@ -88,6 +91,7 @@ export type TokenTransactionMinAggregateInputType = {
   walletId?: true
   researchId?: true
   respondentParticipationId?: true
+  paymentId?: true
   type?: true
   amount?: true
   idempotencyKey?: true
@@ -101,6 +105,7 @@ export type TokenTransactionMaxAggregateInputType = {
   walletId?: true
   researchId?: true
   respondentParticipationId?: true
+  paymentId?: true
   type?: true
   amount?: true
   idempotencyKey?: true
@@ -114,6 +119,7 @@ export type TokenTransactionCountAggregateInputType = {
   walletId?: true
   researchId?: true
   respondentParticipationId?: true
+  paymentId?: true
   type?: true
   amount?: true
   idempotencyKey?: true
@@ -214,6 +220,7 @@ export type TokenTransactionGroupByOutputType = {
   walletId: string
   researchId: string | null
   respondentParticipationId: string | null
+  paymentId: string | null
   type: $Enums.TokenTransactionType
   amount: number
   idempotencyKey: string
@@ -250,6 +257,7 @@ export type TokenTransactionWhereInput = {
   walletId?: Prisma.StringFilter<"TokenTransaction"> | string
   researchId?: Prisma.StringNullableFilter<"TokenTransaction"> | string | null
   respondentParticipationId?: Prisma.StringNullableFilter<"TokenTransaction"> | string | null
+  paymentId?: Prisma.StringNullableFilter<"TokenTransaction"> | string | null
   type?: Prisma.EnumTokenTransactionTypeFilter<"TokenTransaction"> | $Enums.TokenTransactionType
   amount?: Prisma.IntFilter<"TokenTransaction"> | number
   idempotencyKey?: Prisma.StringFilter<"TokenTransaction"> | string
@@ -259,6 +267,7 @@ export type TokenTransactionWhereInput = {
   wallet?: Prisma.XOR<Prisma.TokenWalletScalarRelationFilter, Prisma.TokenWalletWhereInput>
   research?: Prisma.XOR<Prisma.ResearchNullableScalarRelationFilter, Prisma.ResearchWhereInput> | null
   participation?: Prisma.XOR<Prisma.RespondentParticipationNullableScalarRelationFilter, Prisma.RespondentParticipationWhereInput> | null
+  payment?: Prisma.XOR<Prisma.PaymentNullableScalarRelationFilter, Prisma.PaymentWhereInput> | null
 }
 
 export type TokenTransactionOrderByWithRelationInput = {
@@ -266,6 +275,7 @@ export type TokenTransactionOrderByWithRelationInput = {
   walletId?: Prisma.SortOrder
   researchId?: Prisma.SortOrderInput | Prisma.SortOrder
   respondentParticipationId?: Prisma.SortOrderInput | Prisma.SortOrder
+  paymentId?: Prisma.SortOrderInput | Prisma.SortOrder
   type?: Prisma.SortOrder
   amount?: Prisma.SortOrder
   idempotencyKey?: Prisma.SortOrder
@@ -275,6 +285,7 @@ export type TokenTransactionOrderByWithRelationInput = {
   wallet?: Prisma.TokenWalletOrderByWithRelationInput
   research?: Prisma.ResearchOrderByWithRelationInput
   participation?: Prisma.RespondentParticipationOrderByWithRelationInput
+  payment?: Prisma.PaymentOrderByWithRelationInput
   _relevance?: Prisma.TokenTransactionOrderByRelevanceInput
 }
 
@@ -287,6 +298,7 @@ export type TokenTransactionWhereUniqueInput = Prisma.AtLeast<{
   walletId?: Prisma.StringFilter<"TokenTransaction"> | string
   researchId?: Prisma.StringNullableFilter<"TokenTransaction"> | string | null
   respondentParticipationId?: Prisma.StringNullableFilter<"TokenTransaction"> | string | null
+  paymentId?: Prisma.StringNullableFilter<"TokenTransaction"> | string | null
   type?: Prisma.EnumTokenTransactionTypeFilter<"TokenTransaction"> | $Enums.TokenTransactionType
   amount?: Prisma.IntFilter<"TokenTransaction"> | number
   createdAt?: Prisma.DateTimeFilter<"TokenTransaction"> | Date | string
@@ -295,6 +307,7 @@ export type TokenTransactionWhereUniqueInput = Prisma.AtLeast<{
   wallet?: Prisma.XOR<Prisma.TokenWalletScalarRelationFilter, Prisma.TokenWalletWhereInput>
   research?: Prisma.XOR<Prisma.ResearchNullableScalarRelationFilter, Prisma.ResearchWhereInput> | null
   participation?: Prisma.XOR<Prisma.RespondentParticipationNullableScalarRelationFilter, Prisma.RespondentParticipationWhereInput> | null
+  payment?: Prisma.XOR<Prisma.PaymentNullableScalarRelationFilter, Prisma.PaymentWhereInput> | null
 }, "id" | "idempotencyKey">
 
 export type TokenTransactionOrderByWithAggregationInput = {
@@ -302,6 +315,7 @@ export type TokenTransactionOrderByWithAggregationInput = {
   walletId?: Prisma.SortOrder
   researchId?: Prisma.SortOrderInput | Prisma.SortOrder
   respondentParticipationId?: Prisma.SortOrderInput | Prisma.SortOrder
+  paymentId?: Prisma.SortOrderInput | Prisma.SortOrder
   type?: Prisma.SortOrder
   amount?: Prisma.SortOrder
   idempotencyKey?: Prisma.SortOrder
@@ -323,6 +337,7 @@ export type TokenTransactionScalarWhereWithAggregatesInput = {
   walletId?: Prisma.StringWithAggregatesFilter<"TokenTransaction"> | string
   researchId?: Prisma.StringNullableWithAggregatesFilter<"TokenTransaction"> | string | null
   respondentParticipationId?: Prisma.StringNullableWithAggregatesFilter<"TokenTransaction"> | string | null
+  paymentId?: Prisma.StringNullableWithAggregatesFilter<"TokenTransaction"> | string | null
   type?: Prisma.EnumTokenTransactionTypeWithAggregatesFilter<"TokenTransaction"> | $Enums.TokenTransactionType
   amount?: Prisma.IntWithAggregatesFilter<"TokenTransaction"> | number
   idempotencyKey?: Prisma.StringWithAggregatesFilter<"TokenTransaction"> | string
@@ -342,6 +357,7 @@ export type TokenTransactionCreateInput = {
   wallet: Prisma.TokenWalletCreateNestedOneWithoutTransactionsInput
   research?: Prisma.ResearchCreateNestedOneWithoutTransactionsInput
   participation?: Prisma.RespondentParticipationCreateNestedOneWithoutTransactionsInput
+  payment?: Prisma.PaymentCreateNestedOneWithoutTransactionsInput
 }
 
 export type TokenTransactionUncheckedCreateInput = {
@@ -349,6 +365,7 @@ export type TokenTransactionUncheckedCreateInput = {
   walletId: string
   researchId?: string | null
   respondentParticipationId?: string | null
+  paymentId?: string | null
   type: $Enums.TokenTransactionType
   amount: number
   idempotencyKey: string
@@ -368,6 +385,7 @@ export type TokenTransactionUpdateInput = {
   wallet?: Prisma.TokenWalletUpdateOneRequiredWithoutTransactionsNestedInput
   research?: Prisma.ResearchUpdateOneWithoutTransactionsNestedInput
   participation?: Prisma.RespondentParticipationUpdateOneWithoutTransactionsNestedInput
+  payment?: Prisma.PaymentUpdateOneWithoutTransactionsNestedInput
 }
 
 export type TokenTransactionUncheckedUpdateInput = {
@@ -375,6 +393,7 @@ export type TokenTransactionUncheckedUpdateInput = {
   walletId?: Prisma.StringFieldUpdateOperationsInput | string
   researchId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   respondentParticipationId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.EnumTokenTransactionTypeFieldUpdateOperationsInput | $Enums.TokenTransactionType
   amount?: Prisma.IntFieldUpdateOperationsInput | number
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string
@@ -388,6 +407,7 @@ export type TokenTransactionCreateManyInput = {
   walletId: string
   researchId?: string | null
   respondentParticipationId?: string | null
+  paymentId?: string | null
   type: $Enums.TokenTransactionType
   amount: number
   idempotencyKey: string
@@ -411,6 +431,7 @@ export type TokenTransactionUncheckedUpdateManyInput = {
   walletId?: Prisma.StringFieldUpdateOperationsInput | string
   researchId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   respondentParticipationId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.EnumTokenTransactionTypeFieldUpdateOperationsInput | $Enums.TokenTransactionType
   amount?: Prisma.IntFieldUpdateOperationsInput | number
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string
@@ -440,6 +461,7 @@ export type TokenTransactionCountOrderByAggregateInput = {
   walletId?: Prisma.SortOrder
   researchId?: Prisma.SortOrder
   respondentParticipationId?: Prisma.SortOrder
+  paymentId?: Prisma.SortOrder
   type?: Prisma.SortOrder
   amount?: Prisma.SortOrder
   idempotencyKey?: Prisma.SortOrder
@@ -457,6 +479,7 @@ export type TokenTransactionMaxOrderByAggregateInput = {
   walletId?: Prisma.SortOrder
   researchId?: Prisma.SortOrder
   respondentParticipationId?: Prisma.SortOrder
+  paymentId?: Prisma.SortOrder
   type?: Prisma.SortOrder
   amount?: Prisma.SortOrder
   idempotencyKey?: Prisma.SortOrder
@@ -470,6 +493,7 @@ export type TokenTransactionMinOrderByAggregateInput = {
   walletId?: Prisma.SortOrder
   researchId?: Prisma.SortOrder
   respondentParticipationId?: Prisma.SortOrder
+  paymentId?: Prisma.SortOrder
   type?: Prisma.SortOrder
   amount?: Prisma.SortOrder
   idempotencyKey?: Prisma.SortOrder
@@ -521,6 +545,48 @@ export type TokenTransactionUncheckedUpdateManyWithoutParticipationNestedInput =
   connect?: Prisma.TokenTransactionWhereUniqueInput | Prisma.TokenTransactionWhereUniqueInput[]
   update?: Prisma.TokenTransactionUpdateWithWhereUniqueWithoutParticipationInput | Prisma.TokenTransactionUpdateWithWhereUniqueWithoutParticipationInput[]
   updateMany?: Prisma.TokenTransactionUpdateManyWithWhereWithoutParticipationInput | Prisma.TokenTransactionUpdateManyWithWhereWithoutParticipationInput[]
+  deleteMany?: Prisma.TokenTransactionScalarWhereInput | Prisma.TokenTransactionScalarWhereInput[]
+}
+
+export type TokenTransactionCreateNestedManyWithoutPaymentInput = {
+  create?: Prisma.XOR<Prisma.TokenTransactionCreateWithoutPaymentInput, Prisma.TokenTransactionUncheckedCreateWithoutPaymentInput> | Prisma.TokenTransactionCreateWithoutPaymentInput[] | Prisma.TokenTransactionUncheckedCreateWithoutPaymentInput[]
+  connectOrCreate?: Prisma.TokenTransactionCreateOrConnectWithoutPaymentInput | Prisma.TokenTransactionCreateOrConnectWithoutPaymentInput[]
+  createMany?: Prisma.TokenTransactionCreateManyPaymentInputEnvelope
+  connect?: Prisma.TokenTransactionWhereUniqueInput | Prisma.TokenTransactionWhereUniqueInput[]
+}
+
+export type TokenTransactionUncheckedCreateNestedManyWithoutPaymentInput = {
+  create?: Prisma.XOR<Prisma.TokenTransactionCreateWithoutPaymentInput, Prisma.TokenTransactionUncheckedCreateWithoutPaymentInput> | Prisma.TokenTransactionCreateWithoutPaymentInput[] | Prisma.TokenTransactionUncheckedCreateWithoutPaymentInput[]
+  connectOrCreate?: Prisma.TokenTransactionCreateOrConnectWithoutPaymentInput | Prisma.TokenTransactionCreateOrConnectWithoutPaymentInput[]
+  createMany?: Prisma.TokenTransactionCreateManyPaymentInputEnvelope
+  connect?: Prisma.TokenTransactionWhereUniqueInput | Prisma.TokenTransactionWhereUniqueInput[]
+}
+
+export type TokenTransactionUpdateManyWithoutPaymentNestedInput = {
+  create?: Prisma.XOR<Prisma.TokenTransactionCreateWithoutPaymentInput, Prisma.TokenTransactionUncheckedCreateWithoutPaymentInput> | Prisma.TokenTransactionCreateWithoutPaymentInput[] | Prisma.TokenTransactionUncheckedCreateWithoutPaymentInput[]
+  connectOrCreate?: Prisma.TokenTransactionCreateOrConnectWithoutPaymentInput | Prisma.TokenTransactionCreateOrConnectWithoutPaymentInput[]
+  upsert?: Prisma.TokenTransactionUpsertWithWhereUniqueWithoutPaymentInput | Prisma.TokenTransactionUpsertWithWhereUniqueWithoutPaymentInput[]
+  createMany?: Prisma.TokenTransactionCreateManyPaymentInputEnvelope
+  set?: Prisma.TokenTransactionWhereUniqueInput | Prisma.TokenTransactionWhereUniqueInput[]
+  disconnect?: Prisma.TokenTransactionWhereUniqueInput | Prisma.TokenTransactionWhereUniqueInput[]
+  delete?: Prisma.TokenTransactionWhereUniqueInput | Prisma.TokenTransactionWhereUniqueInput[]
+  connect?: Prisma.TokenTransactionWhereUniqueInput | Prisma.TokenTransactionWhereUniqueInput[]
+  update?: Prisma.TokenTransactionUpdateWithWhereUniqueWithoutPaymentInput | Prisma.TokenTransactionUpdateWithWhereUniqueWithoutPaymentInput[]
+  updateMany?: Prisma.TokenTransactionUpdateManyWithWhereWithoutPaymentInput | Prisma.TokenTransactionUpdateManyWithWhereWithoutPaymentInput[]
+  deleteMany?: Prisma.TokenTransactionScalarWhereInput | Prisma.TokenTransactionScalarWhereInput[]
+}
+
+export type TokenTransactionUncheckedUpdateManyWithoutPaymentNestedInput = {
+  create?: Prisma.XOR<Prisma.TokenTransactionCreateWithoutPaymentInput, Prisma.TokenTransactionUncheckedCreateWithoutPaymentInput> | Prisma.TokenTransactionCreateWithoutPaymentInput[] | Prisma.TokenTransactionUncheckedCreateWithoutPaymentInput[]
+  connectOrCreate?: Prisma.TokenTransactionCreateOrConnectWithoutPaymentInput | Prisma.TokenTransactionCreateOrConnectWithoutPaymentInput[]
+  upsert?: Prisma.TokenTransactionUpsertWithWhereUniqueWithoutPaymentInput | Prisma.TokenTransactionUpsertWithWhereUniqueWithoutPaymentInput[]
+  createMany?: Prisma.TokenTransactionCreateManyPaymentInputEnvelope
+  set?: Prisma.TokenTransactionWhereUniqueInput | Prisma.TokenTransactionWhereUniqueInput[]
+  disconnect?: Prisma.TokenTransactionWhereUniqueInput | Prisma.TokenTransactionWhereUniqueInput[]
+  delete?: Prisma.TokenTransactionWhereUniqueInput | Prisma.TokenTransactionWhereUniqueInput[]
+  connect?: Prisma.TokenTransactionWhereUniqueInput | Prisma.TokenTransactionWhereUniqueInput[]
+  update?: Prisma.TokenTransactionUpdateWithWhereUniqueWithoutPaymentInput | Prisma.TokenTransactionUpdateWithWhereUniqueWithoutPaymentInput[]
+  updateMany?: Prisma.TokenTransactionUpdateManyWithWhereWithoutPaymentInput | Prisma.TokenTransactionUpdateManyWithWhereWithoutPaymentInput[]
   deleteMany?: Prisma.TokenTransactionScalarWhereInput | Prisma.TokenTransactionScalarWhereInput[]
 }
 
@@ -622,12 +688,14 @@ export type TokenTransactionCreateWithoutParticipationInput = {
   deletedAt?: Date | string | null
   wallet: Prisma.TokenWalletCreateNestedOneWithoutTransactionsInput
   research?: Prisma.ResearchCreateNestedOneWithoutTransactionsInput
+  payment?: Prisma.PaymentCreateNestedOneWithoutTransactionsInput
 }
 
 export type TokenTransactionUncheckedCreateWithoutParticipationInput = {
   id?: string
   walletId: string
   researchId?: string | null
+  paymentId?: string | null
   type: $Enums.TokenTransactionType
   amount: number
   idempotencyKey: string
@@ -670,12 +738,65 @@ export type TokenTransactionScalarWhereInput = {
   walletId?: Prisma.StringFilter<"TokenTransaction"> | string
   researchId?: Prisma.StringNullableFilter<"TokenTransaction"> | string | null
   respondentParticipationId?: Prisma.StringNullableFilter<"TokenTransaction"> | string | null
+  paymentId?: Prisma.StringNullableFilter<"TokenTransaction"> | string | null
   type?: Prisma.EnumTokenTransactionTypeFilter<"TokenTransaction"> | $Enums.TokenTransactionType
   amount?: Prisma.IntFilter<"TokenTransaction"> | number
   idempotencyKey?: Prisma.StringFilter<"TokenTransaction"> | string
   createdAt?: Prisma.DateTimeFilter<"TokenTransaction"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"TokenTransaction"> | Date | string
   deletedAt?: Prisma.DateTimeNullableFilter<"TokenTransaction"> | Date | string | null
+}
+
+export type TokenTransactionCreateWithoutPaymentInput = {
+  id?: string
+  type: $Enums.TokenTransactionType
+  amount: number
+  idempotencyKey: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  deletedAt?: Date | string | null
+  wallet: Prisma.TokenWalletCreateNestedOneWithoutTransactionsInput
+  research?: Prisma.ResearchCreateNestedOneWithoutTransactionsInput
+  participation?: Prisma.RespondentParticipationCreateNestedOneWithoutTransactionsInput
+}
+
+export type TokenTransactionUncheckedCreateWithoutPaymentInput = {
+  id?: string
+  walletId: string
+  researchId?: string | null
+  respondentParticipationId?: string | null
+  type: $Enums.TokenTransactionType
+  amount: number
+  idempotencyKey: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  deletedAt?: Date | string | null
+}
+
+export type TokenTransactionCreateOrConnectWithoutPaymentInput = {
+  where: Prisma.TokenTransactionWhereUniqueInput
+  create: Prisma.XOR<Prisma.TokenTransactionCreateWithoutPaymentInput, Prisma.TokenTransactionUncheckedCreateWithoutPaymentInput>
+}
+
+export type TokenTransactionCreateManyPaymentInputEnvelope = {
+  data: Prisma.TokenTransactionCreateManyPaymentInput | Prisma.TokenTransactionCreateManyPaymentInput[]
+  skipDuplicates?: boolean
+}
+
+export type TokenTransactionUpsertWithWhereUniqueWithoutPaymentInput = {
+  where: Prisma.TokenTransactionWhereUniqueInput
+  update: Prisma.XOR<Prisma.TokenTransactionUpdateWithoutPaymentInput, Prisma.TokenTransactionUncheckedUpdateWithoutPaymentInput>
+  create: Prisma.XOR<Prisma.TokenTransactionCreateWithoutPaymentInput, Prisma.TokenTransactionUncheckedCreateWithoutPaymentInput>
+}
+
+export type TokenTransactionUpdateWithWhereUniqueWithoutPaymentInput = {
+  where: Prisma.TokenTransactionWhereUniqueInput
+  data: Prisma.XOR<Prisma.TokenTransactionUpdateWithoutPaymentInput, Prisma.TokenTransactionUncheckedUpdateWithoutPaymentInput>
+}
+
+export type TokenTransactionUpdateManyWithWhereWithoutPaymentInput = {
+  where: Prisma.TokenTransactionScalarWhereInput
+  data: Prisma.XOR<Prisma.TokenTransactionUpdateManyMutationInput, Prisma.TokenTransactionUncheckedUpdateManyWithoutPaymentInput>
 }
 
 export type TokenTransactionCreateWithoutResearchInput = {
@@ -688,12 +809,14 @@ export type TokenTransactionCreateWithoutResearchInput = {
   deletedAt?: Date | string | null
   wallet: Prisma.TokenWalletCreateNestedOneWithoutTransactionsInput
   participation?: Prisma.RespondentParticipationCreateNestedOneWithoutTransactionsInput
+  payment?: Prisma.PaymentCreateNestedOneWithoutTransactionsInput
 }
 
 export type TokenTransactionUncheckedCreateWithoutResearchInput = {
   id?: string
   walletId: string
   respondentParticipationId?: string | null
+  paymentId?: string | null
   type: $Enums.TokenTransactionType
   amount: number
   idempotencyKey: string
@@ -738,12 +861,14 @@ export type TokenTransactionCreateWithoutWalletInput = {
   deletedAt?: Date | string | null
   research?: Prisma.ResearchCreateNestedOneWithoutTransactionsInput
   participation?: Prisma.RespondentParticipationCreateNestedOneWithoutTransactionsInput
+  payment?: Prisma.PaymentCreateNestedOneWithoutTransactionsInput
 }
 
 export type TokenTransactionUncheckedCreateWithoutWalletInput = {
   id?: string
   researchId?: string | null
   respondentParticipationId?: string | null
+  paymentId?: string | null
   type: $Enums.TokenTransactionType
   amount: number
   idempotencyKey: string
@@ -782,6 +907,7 @@ export type TokenTransactionCreateManyParticipationInput = {
   id?: string
   walletId: string
   researchId?: string | null
+  paymentId?: string | null
   type: $Enums.TokenTransactionType
   amount: number
   idempotencyKey: string
@@ -800,12 +926,14 @@ export type TokenTransactionUpdateWithoutParticipationInput = {
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   wallet?: Prisma.TokenWalletUpdateOneRequiredWithoutTransactionsNestedInput
   research?: Prisma.ResearchUpdateOneWithoutTransactionsNestedInput
+  payment?: Prisma.PaymentUpdateOneWithoutTransactionsNestedInput
 }
 
 export type TokenTransactionUncheckedUpdateWithoutParticipationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   walletId?: Prisma.StringFieldUpdateOperationsInput | string
   researchId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.EnumTokenTransactionTypeFieldUpdateOperationsInput | $Enums.TokenTransactionType
   amount?: Prisma.IntFieldUpdateOperationsInput | number
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string
@@ -818,6 +946,59 @@ export type TokenTransactionUncheckedUpdateManyWithoutParticipationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   walletId?: Prisma.StringFieldUpdateOperationsInput | string
   researchId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.EnumTokenTransactionTypeFieldUpdateOperationsInput | $Enums.TokenTransactionType
+  amount?: Prisma.IntFieldUpdateOperationsInput | number
+  idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+}
+
+export type TokenTransactionCreateManyPaymentInput = {
+  id?: string
+  walletId: string
+  researchId?: string | null
+  respondentParticipationId?: string | null
+  type: $Enums.TokenTransactionType
+  amount: number
+  idempotencyKey: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  deletedAt?: Date | string | null
+}
+
+export type TokenTransactionUpdateWithoutPaymentInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  type?: Prisma.EnumTokenTransactionTypeFieldUpdateOperationsInput | $Enums.TokenTransactionType
+  amount?: Prisma.IntFieldUpdateOperationsInput | number
+  idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  wallet?: Prisma.TokenWalletUpdateOneRequiredWithoutTransactionsNestedInput
+  research?: Prisma.ResearchUpdateOneWithoutTransactionsNestedInput
+  participation?: Prisma.RespondentParticipationUpdateOneWithoutTransactionsNestedInput
+}
+
+export type TokenTransactionUncheckedUpdateWithoutPaymentInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  walletId?: Prisma.StringFieldUpdateOperationsInput | string
+  researchId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  respondentParticipationId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.EnumTokenTransactionTypeFieldUpdateOperationsInput | $Enums.TokenTransactionType
+  amount?: Prisma.IntFieldUpdateOperationsInput | number
+  idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+}
+
+export type TokenTransactionUncheckedUpdateManyWithoutPaymentInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  walletId?: Prisma.StringFieldUpdateOperationsInput | string
+  researchId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  respondentParticipationId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.EnumTokenTransactionTypeFieldUpdateOperationsInput | $Enums.TokenTransactionType
   amount?: Prisma.IntFieldUpdateOperationsInput | number
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string
@@ -830,6 +1011,7 @@ export type TokenTransactionCreateManyResearchInput = {
   id?: string
   walletId: string
   respondentParticipationId?: string | null
+  paymentId?: string | null
   type: $Enums.TokenTransactionType
   amount: number
   idempotencyKey: string
@@ -848,12 +1030,14 @@ export type TokenTransactionUpdateWithoutResearchInput = {
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   wallet?: Prisma.TokenWalletUpdateOneRequiredWithoutTransactionsNestedInput
   participation?: Prisma.RespondentParticipationUpdateOneWithoutTransactionsNestedInput
+  payment?: Prisma.PaymentUpdateOneWithoutTransactionsNestedInput
 }
 
 export type TokenTransactionUncheckedUpdateWithoutResearchInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   walletId?: Prisma.StringFieldUpdateOperationsInput | string
   respondentParticipationId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.EnumTokenTransactionTypeFieldUpdateOperationsInput | $Enums.TokenTransactionType
   amount?: Prisma.IntFieldUpdateOperationsInput | number
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string
@@ -866,6 +1050,7 @@ export type TokenTransactionUncheckedUpdateManyWithoutResearchInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   walletId?: Prisma.StringFieldUpdateOperationsInput | string
   respondentParticipationId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.EnumTokenTransactionTypeFieldUpdateOperationsInput | $Enums.TokenTransactionType
   amount?: Prisma.IntFieldUpdateOperationsInput | number
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string
@@ -878,6 +1063,7 @@ export type TokenTransactionCreateManyWalletInput = {
   id?: string
   researchId?: string | null
   respondentParticipationId?: string | null
+  paymentId?: string | null
   type: $Enums.TokenTransactionType
   amount: number
   idempotencyKey: string
@@ -896,12 +1082,14 @@ export type TokenTransactionUpdateWithoutWalletInput = {
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   research?: Prisma.ResearchUpdateOneWithoutTransactionsNestedInput
   participation?: Prisma.RespondentParticipationUpdateOneWithoutTransactionsNestedInput
+  payment?: Prisma.PaymentUpdateOneWithoutTransactionsNestedInput
 }
 
 export type TokenTransactionUncheckedUpdateWithoutWalletInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   researchId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   respondentParticipationId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.EnumTokenTransactionTypeFieldUpdateOperationsInput | $Enums.TokenTransactionType
   amount?: Prisma.IntFieldUpdateOperationsInput | number
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string
@@ -914,6 +1102,7 @@ export type TokenTransactionUncheckedUpdateManyWithoutWalletInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   researchId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   respondentParticipationId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.EnumTokenTransactionTypeFieldUpdateOperationsInput | $Enums.TokenTransactionType
   amount?: Prisma.IntFieldUpdateOperationsInput | number
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string
@@ -929,6 +1118,7 @@ export type TokenTransactionSelect<ExtArgs extends runtime.Types.Extensions.Inte
   walletId?: boolean
   researchId?: boolean
   respondentParticipationId?: boolean
+  paymentId?: boolean
   type?: boolean
   amount?: boolean
   idempotencyKey?: boolean
@@ -938,6 +1128,7 @@ export type TokenTransactionSelect<ExtArgs extends runtime.Types.Extensions.Inte
   wallet?: boolean | Prisma.TokenWalletDefaultArgs<ExtArgs>
   research?: boolean | Prisma.TokenTransaction$researchArgs<ExtArgs>
   participation?: boolean | Prisma.TokenTransaction$participationArgs<ExtArgs>
+  payment?: boolean | Prisma.TokenTransaction$paymentArgs<ExtArgs>
 }, ExtArgs["result"]["tokenTransaction"]>
 
 
@@ -947,6 +1138,7 @@ export type TokenTransactionSelectScalar = {
   walletId?: boolean
   researchId?: boolean
   respondentParticipationId?: boolean
+  paymentId?: boolean
   type?: boolean
   amount?: boolean
   idempotencyKey?: boolean
@@ -955,11 +1147,12 @@ export type TokenTransactionSelectScalar = {
   deletedAt?: boolean
 }
 
-export type TokenTransactionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "walletId" | "researchId" | "respondentParticipationId" | "type" | "amount" | "idempotencyKey" | "createdAt" | "updatedAt" | "deletedAt", ExtArgs["result"]["tokenTransaction"]>
+export type TokenTransactionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "walletId" | "researchId" | "respondentParticipationId" | "paymentId" | "type" | "amount" | "idempotencyKey" | "createdAt" | "updatedAt" | "deletedAt", ExtArgs["result"]["tokenTransaction"]>
 export type TokenTransactionInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   wallet?: boolean | Prisma.TokenWalletDefaultArgs<ExtArgs>
   research?: boolean | Prisma.TokenTransaction$researchArgs<ExtArgs>
   participation?: boolean | Prisma.TokenTransaction$participationArgs<ExtArgs>
+  payment?: boolean | Prisma.TokenTransaction$paymentArgs<ExtArgs>
 }
 
 export type $TokenTransactionPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -968,12 +1161,14 @@ export type $TokenTransactionPayload<ExtArgs extends runtime.Types.Extensions.In
     wallet: Prisma.$TokenWalletPayload<ExtArgs>
     research: Prisma.$ResearchPayload<ExtArgs> | null
     participation: Prisma.$RespondentParticipationPayload<ExtArgs> | null
+    payment: Prisma.$PaymentPayload<ExtArgs> | null
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     walletId: string
     researchId: string | null
     respondentParticipationId: string | null
+    paymentId: string | null
     type: $Enums.TokenTransactionType
     amount: number
     idempotencyKey: string
@@ -1323,6 +1518,7 @@ export interface Prisma__TokenTransactionClient<T, Null = never, ExtArgs extends
   wallet<T extends Prisma.TokenWalletDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.TokenWalletDefaultArgs<ExtArgs>>): Prisma.Prisma__TokenWalletClient<runtime.Types.Result.GetResult<Prisma.$TokenWalletPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   research<T extends Prisma.TokenTransaction$researchArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.TokenTransaction$researchArgs<ExtArgs>>): Prisma.Prisma__ResearchClient<runtime.Types.Result.GetResult<Prisma.$ResearchPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   participation<T extends Prisma.TokenTransaction$participationArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.TokenTransaction$participationArgs<ExtArgs>>): Prisma.Prisma__RespondentParticipationClient<runtime.Types.Result.GetResult<Prisma.$RespondentParticipationPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  payment<T extends Prisma.TokenTransaction$paymentArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.TokenTransaction$paymentArgs<ExtArgs>>): Prisma.Prisma__PaymentClient<runtime.Types.Result.GetResult<Prisma.$PaymentPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1356,6 +1552,7 @@ export interface TokenTransactionFieldRefs {
   readonly walletId: Prisma.FieldRef<"TokenTransaction", 'String'>
   readonly researchId: Prisma.FieldRef<"TokenTransaction", 'String'>
   readonly respondentParticipationId: Prisma.FieldRef<"TokenTransaction", 'String'>
+  readonly paymentId: Prisma.FieldRef<"TokenTransaction", 'String'>
   readonly type: Prisma.FieldRef<"TokenTransaction", 'TokenTransactionType'>
   readonly amount: Prisma.FieldRef<"TokenTransaction", 'Int'>
   readonly idempotencyKey: Prisma.FieldRef<"TokenTransaction", 'String'>
@@ -1745,6 +1942,25 @@ export type TokenTransaction$participationArgs<ExtArgs extends runtime.Types.Ext
    */
   include?: Prisma.RespondentParticipationInclude<ExtArgs> | null
   where?: Prisma.RespondentParticipationWhereInput
+}
+
+/**
+ * TokenTransaction.payment
+ */
+export type TokenTransaction$paymentArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Payment
+   */
+  select?: Prisma.PaymentSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Payment
+   */
+  omit?: Prisma.PaymentOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.PaymentInclude<ExtArgs> | null
+  where?: Prisma.PaymentWhereInput
 }
 
 /**

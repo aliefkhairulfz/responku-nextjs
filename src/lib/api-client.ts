@@ -55,8 +55,15 @@ function json(method: string, body?: unknown): RequestInit {
     }
 }
 
+/**
+ * A `GET`, read fresh every time.
+ *
+ * `no-store` because every read here is user-scoped and can change from another session — a
+ * reward credited by an admin, a research published by its owner — so a cached answer would
+ * be a stale one.
+ */
 export function getJson<T = unknown>(path: string) {
-    return request<T>(path, { method: "GET" })
+    return request<T>(path, { method: "GET", cache: "no-store" })
 }
 
 export function postJson<T = unknown>(path: string, body?: unknown) {

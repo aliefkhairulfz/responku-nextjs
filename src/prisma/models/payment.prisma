@@ -26,6 +26,10 @@ model Payment {
   providerRef String @unique @map("provider_ref") @db.VarChar(255)
 
   amountIdr Decimal       @map("amount_idr") @db.Decimal(12, 2)
+  // Berapa token yang dibeli order ini, dibekukan saat order dibuat. Harga token ada di
+  // env, jadi menghitungnya ulang dari amountIdr saat dibaca akan mengubah nilai order
+  // lama begitu harganya berubah — dan kredit yang sudah masuk tidak ikut berubah.
+  tokenAmount Int
   status    PaymentStatus @default(PENDING)
 
   // Mencegah pembayaran ganda saat retry / webhook berulang
@@ -35,6 +39,9 @@ model Payment {
   updatedAt DateTime @updatedAt @map("updated_at") @db.DateTime(3)
 
   user User @relation(fields: [userId], references: [id])
+
+  // Baris ledger yang lahir dari order ini — kredit top-up-nya.
+  transactions TokenTransaction[]
 
   @@index([userId, createdAt])
   @@index([status])

@@ -189,7 +189,10 @@ export type ParticipationQuestion = {
  * `GET /api/participation/{id}` → `data.participation`, and the shape the join, save,
  * and submit endpoints answer with as well.
  */
-export type ParticipationDetail = Participation & { timing: ParticipationTiming; questions: ParticipationQuestion[] }
+export type ParticipationDetail = Participation & {
+    timing: ParticipationTiming
+    questions: ParticipationQuestion[]
+}
 
 /**
  * How long a participation took, against how long the research was expected to take.
@@ -233,4 +236,253 @@ export type AvailableResearchDetail = AvailableResearch & { criteria: ResearchCr
 export type AvailableResearchDetailPayload = {
     research: AvailableResearchDetail
     participation: ParticipationRef | null
+}
+
+/**
+ * One row of the token ledger.
+ *
+ * `amount` is signed: credits are positive, debits negative. `researchId` and
+ * `participationId` say what the row was for, and are `null` when it was neither —
+ * a top-up, for instance.
+ */
+export type WalletTransaction = {
+    id: string
+    type: string
+    amount: number
+    researchId: string | null
+    participationId: string | null
+    /** The order behind a top-up credit; `null` for movements that are not a payment. */
+    paymentId: string | null
+    createdAt: string
+}
+
+/** `GET /api/payment/wallet` → `data.wallet`. */
+export type Wallet = {
+    balance: number
+    /** Priced on the server, where the token price lives. */
+    balanceIdr: number
+    transactions: WalletTransaction[]
+}
+
+/** `POST /api/payment/topup` → `data.payment`, and `GET /api/payment` → `data.payments[]`. */
+export type Payment = {
+    id: string
+    type: string
+    provider: string
+    /** The `order_id` the gateway knows this order by. */
+    providerRef: string
+    amountIdr: number
+    /** Worked back out of `amountIdr` on the server. */
+    tokenAmount: number
+    status: string
+    createdAt: string
+    updatedAt: string
+}
+
+/**
+ * `POST /api/payment/topup` → `data`.
+ *
+ * `token` and `redirectUrl` are the hosted payment page, and are `null` when no
+ * gateway is configured — the order is recorded locally either way.
+ */
+export type TopupResult = {
+    payment: Payment
+    token: string | null
+    redirectUrl: string | null
+}
+
+/**
+ * `POST /api/payment/withdraw` → `data`.
+ *
+ * The tokens leave the wallet when the request is made, so `payment` is the order an admin
+ * settles. `feeTokens` is what the platform kept and `amountIdr` is the net the caller is
+ * owed — both worked out on the server, so the client does not recompute the fee.
+ */
+export type WithdrawResult = {
+    payment: Payment
+    feeTokens: number
+    netTokens: number
+    amountIdr: number
+}
+
+/**
+ * `GET /api/user/export` → `data.export`.
+ *
+ * A copy of the account's own data, shaped like the stored rows rather than like a screen.
+ * Only the account header is typed; the collections are passed through as-is, because the
+ * point is to hand back whatever the account holds.
+ */
+export type AccountExport = {
+    exportedAt: string
+    account: {
+        id: string
+        name: string
+        email: string
+        image: string | null
+        roles: string[]
+        verifiedAt: string | null
+        createdAt: string
+        updatedAt: string
+    }
+    profile: unknown
+    settings: unknown
+    researches: unknown[]
+    participations: unknown[]
+    payments: unknown[]
+    wallet: unknown
+    supportTickets: unknown[]
+    contentReports: unknown[]
+}
+
+/**
+ * `GET /api/report` → `data.reports[]` and `GET /api/report/{id}` → `data.report`.
+ *
+ * A content report is a respondent flagging a research, plus an admin's decision on it.
+ * `actionTaken` records what was done; it is not enforced by the API.
+ */
+export type ContentReport = {
+    id: string
+    researchId: string
+    reportedBy: string
+    reason: string
+    status: string
+    actionTaken: string | null
+    reviewedBy: string | null
+    createdAt: string
+    /** The last write, which for a decided report is when the decision was made. */
+    updatedAt: string
+    research: { id: string; title: string; researcherName: string }
+    reporter: { id: string; name: string }
+}
+
+/** `GET /api/ticket/admin` → `data.tickets[]`, with the requester and the review trail. */
+export type AdminTicket = SupportTicket & {
+    userId: string
+    requester: { id: string; name: string; email: string }
+    reviewedBy: string | null
+    reviewedAt: string | null
+    resolutionNote: string | null
+}
+
+/** `GET /api/admin/overview` → `data.overview`. */
+export type AdminOverview = {
+    pendingParticipations: number
+    pendingQualityChecks: number
+    openReports: number
+    openTickets: number
+    pendingWithdrawals: number
+    totalUsers: number
+    publishedResearches: number
+}
+
+/** `GET /api/admin/participations` → `data.participations[]`. */
+export type AdminParticipation = {
+    id: string
+    status: string
+    screeningScore: number | null
+    screeningResult: string | null
+    startedAt: string | null
+    submittedAt: string | null
+    createdAt: string
+    respondent: { id: string; name: string; email: string }
+    research: { id: string; title: string; tokenPerRespondent: number }
+    reward: { status: string; tokenAmount: number } | null
+    /**
+     * The screening that has to be decided before the reward can be. `null` for a row
+     * submitted before the screening existed.
+     */
+    qualityCheck: { id: string; decision: string } | null
+}
+
+/** `GET /api/admin/withdrawals` → `data.withdrawals[]`. */
+export type AdminWithdrawal = {
+    id: string
+    userId: string
+    providerRef: string
+    /** The gross that left the wallet. */
+    tokenAmount: number
+    /** The net owed after the platform fee. */
+    amountIdr: number
+    status: string
+    createdAt: string
+    updatedAt: string
+    user: { id: string; name: string; email: string }
+}
+
+/** `GET /api/admin/users` → `data.users[]`. */
+export type AdminUser = {
+    id: string
+    name: string
+    email: string
+    image: string | null
+    roles: string[]
+    verifiedAt: string | null
+    createdAt: string
+}
+
+/**
+ * `GET /api/quality-check` → `data.qualityChecks[]`,
+ * `GET /api/quality-check/{id}` → `data.qualityCheck`, and
+ * `POST /api/quality-check/{id}/review` decides the check.
+ *
+ * A quality check is the automatic screening of one submission, plus an admin's decision
+ * on it. The signals are heuristics, so `signalFlags` and `autoScore` are hints to read
+ * the answers rather than a verdict. Detail responses include the submission questions and
+ * answers; queue responses omit them.
+ */
+export type QualityCheck = {
+    id: string
+    participationId: string
+    decision: string
+    /** Automatic signals, e.g. `["SPEEDING", "STRAIGHT_LINING"]`. */
+    signalFlags: string[]
+    /** From one (clean) down to zero (every signal fired), or `null` when not scored. */
+    autoScore: number | null
+    /** The admin who decided it, or `null` while it is still `PENDING`. */
+    reviewedBy: string | null
+    createdAt: string
+    /** The last write, which for a decided check is when the decision was made. */
+    updatedAt: string
+    participation: {
+        id: string
+        status: string
+        respondentId: string
+        respondentName: string
+        researchId: string
+        researchTitle: string
+        submittedAt: string | null
+        /**
+         * Everything below is present on `GET /api/quality-check/{id}` and omitted from the
+         * queue, which only needs the summary.
+         */
+        respondentEmail?: string
+        screeningScore?: number | null
+        screeningResult?: string | null
+        /** When the questionnaire was first opened — where the timing clock starts. */
+        startedAt?: string | null
+        /** When the respondent joined. */
+        createdAt?: string
+        timing?: ParticipationTiming
+        reward?: { tokenAmount: number; status: string; paidAt: string | null } | null
+        research?: {
+            id: string
+            title: string
+            description: string
+            category: string | null
+            researcherName: string
+            tokenPerRespondent: number
+            estimatedDurationMinutes: number
+            deadline: string
+            status: string
+        }
+        questions?: Array<{
+            id: string
+            pos: number
+            question: string
+            questionType: string
+            mustFill: boolean
+            choices: Array<{ id: string; pos: number; n: string; choiceText: string | null }>
+            answer: { selected: string[]; text: string | null }
+        }>
+    }
 }

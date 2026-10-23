@@ -3,7 +3,14 @@ import { z } from "zod"
 import { exceptionResponse, handleRouteError, parseBody, readJsonBody, successResponse } from "@/lib/server/api"
 import { isMidtransConfigured } from "@/lib/server/midtrans"
 import { requireSession } from "@/service/auth"
-import { getPaymentService, getWalletService, listPaymentsService, settleMidtransNotificationService, topupService } from "@/service/payment"
+import {
+    getPaymentService,
+    getWalletService,
+    listPaymentsService,
+    settleMidtransNotificationService,
+    topupService,
+    withdrawService,
+} from "@/service/payment"
 
 /* ========== Validasi ========== */
 
@@ -17,6 +24,18 @@ const topupSchema = z.object({
         .int("Token amount must be a whole number")
         .min(1, "Top up at least 1 token")
         .max(1_000_000, "Top up at most 1.000.000 tokens at a time"),
+})
+
+/**
+ * A withdrawal also moves whole tokens, and the platform keeps a percentage of them as a
+ * fee — so the rupiah paid out is the net, which the service works out.
+ */
+const withdrawSchema = z.object({
+    tokenAmount: z
+        .number()
+        .int("Token amount must be a whole number")
+        .min(1, "Withdraw at least 1 token")
+        .max(1_000_000, "Withdraw at most 1.000.000 tokens at a time"),
 })
 
 /**
@@ -53,6 +72,9 @@ const paymentsQuerySchema = z.object({
 /** The action path that opens a top-up, as opposed to addressing one by id. */
 const TOPUP_PATH = "topup"
 
+/** The action path that opens a withdrawal. */
+const WITHDRAW_PATH = "withdraw"
+
 /** The action path a payment gateway calls back on. */
 const WEBHOOK_PATH = "webhook"
 
@@ -66,7 +88,7 @@ function getPaymentPath(req: NextRequest) {
 
 /** Whether a segment addresses a payment rather than being an action name. */
 function isPaymentId(segment: string): boolean {
-    return segment !== "" && ![TOPUP_PATH, WEBHOOK_PATH, WALLET_PATH].includes(segment)
+    return segment !== "" && ![TOPUP_PATH, WITHDRAW_PATH, WEBHOOK_PATH, WALLET_PATH].includes(segment)
 }
 
 function notFound() {
@@ -87,6 +109,25 @@ async function topupHandler(req: NextRequest) {
         })
 
         return successResponse({ message: "Top-up created", statusCode: 201, data: result })
+    } catch (error) {
+        return handleRouteError(error)
+    }
+}
+
+/**
+ * Open a token withdrawal.
+ *
+ * The tokens leave the wallet here, so the caller sees the reduced balance immediately; the
+ * order is recorded `PENDING` for an admin to settle. The fee the platform keeps is returned
+ * alongside, so the client can show what was deducted without recomputing it.
+ */
+async function withdrawHandler(req: NextRequest) {
+    try {
+        const { user } = await requireSession()
+        const body = parseBody(withdrawSchema, await readJsonBody(req))
+        const result = await withdrawService({ userId: user.id, tokenAmount: body.tokenAmount })
+
+        return successResponse({ message: "Withdrawal requested", statusCode: 201, data: result })
     } catch (error) {
         return handleRouteError(error)
     }
@@ -169,6 +210,8 @@ export async function POST(req: NextRequest) {
     switch (path) {
         case TOPUP_PATH:
             return topupHandler(req)
+        case WITHDRAW_PATH:
+            return withdrawHandler(req)
         case WEBHOOK_PATH:
             return webhookHandler(req)
         default:

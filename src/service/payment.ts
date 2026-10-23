@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto"
-import { BadRequestException, InternalServerErrorException, NotFoundException, UnauthorizedException } from "@/lib/server/http-exception"
+import { env } from "@/env"
+import { BadRequestException, NotFoundException, UnauthorizedException } from "@/lib/server/http-exception"
 import {
     createSnapTransaction,
     isMidtransConfigured,
@@ -25,17 +26,15 @@ const MANUAL_PROVIDER = "manual"
 
 /* ========== Helper ========== */
 
-/** Public view of a payment, with the token amount worked back out of the price. */
+/** Public view of a payment. */
 function toPaymentResponse(payment: PaymentModel) {
-    const amountIdr = Number(payment.amountIdr)
-
     return {
         id: payment.id,
         type: payment.type,
         provider: payment.provider,
         providerRef: payment.providerRef,
-        amountIdr,
-        tokenAmount: amountIdr / IDR_PER_TOKEN,
+        amountIdr: Number(payment.amountIdr),
+        tokenAmount: payment.tokenAmount,
         status: payment.status,
         createdAt: payment.createdAt,
         updatedAt: payment.updatedAt,
@@ -74,6 +73,9 @@ export async function topupService({
             provider: configured ? MIDTRANS_PROVIDER : MANUAL_PROVIDER,
             providerRef,
             amountIdr,
+            // Frozen at creation: the price lives in env, so an order has to remember what
+            // it bought rather than have it recomputed at settlement or on every read.
+            tokenAmount,
             status: PaymentStatus.PENDING,
             idempotencyKey: `topup:${providerRef}`,
         },
@@ -96,6 +98,87 @@ export async function topupService({
     }
 }
 
+/* ========== Tarik tunai ========== */
+
+/**
+ * Requests a withdrawal of tokens to cash.
+ *
+ * The tokens leave the wallet immediately: the request is a reservation, so the balance
+ * cannot be spent twice while the payout is processed, and a `WITHDRAWAL` payment row
+ * records the order for an admin to settle. The platform keeps
+ * `WITHDRAWAL_FEE_PERCENT` of the tokens, so the rupiah the caller is owed is the net of
+ * that fee — `amountIdr` is the net, while `tokenAmount` is the gross that left the wallet.
+ *
+ * The debit and the order share one transaction, and the ledger row is keyed by the
+ * payment, so a retry cannot debit twice. The balance check is a conditional update rather
+ * than a read-then-write, so two withdrawals racing cannot both pass it and overdraw.
+ */
+export async function withdrawService({ userId, tokenAmount }: { userId: string; tokenAmount: number }) {
+    const feeTokens = Math.floor((tokenAmount * env.WITHDRAWAL_FEE_PERCENT) / 100)
+    const netTokens = tokenAmount - feeTokens
+    const amountIdr = netTokens * IDR_PER_TOKEN
+    const providerRef = `withdraw-${randomUUID()}`
+
+    const result = await prisma.$transaction(async (tx) => {
+        const wallet = await tx.tokenWallet.findUnique({
+            where: { userId },
+            select: { id: true, balance: true },
+        })
+
+        if (wallet === null) {
+            throw new BadRequestException("Insufficient balance", {
+                tokenAmount: "This account has no token wallet yet.",
+            })
+        }
+
+        // Atomic guard: the balance is only decremented when it still covers the request,
+        // so a concurrent withdrawal cannot slip past a stale read.
+        const debited = await tx.tokenWallet.updateMany({
+            where: { id: wallet.id, balance: { gte: tokenAmount } },
+            data: { balance: { decrement: tokenAmount } },
+        })
+
+        if (debited.count === 0) {
+            throw new BadRequestException("Insufficient balance", {
+                tokenAmount: `You have ${wallet.balance} tokens, which is less than the ${tokenAmount} requested.`,
+            })
+        }
+
+        const payment = await tx.payment.create({
+            data: {
+                userId,
+                type: PaymentType.WITHDRAWAL,
+                provider: MANUAL_PROVIDER,
+                providerRef,
+                amountIdr,
+                tokenAmount,
+                status: PaymentStatus.PENDING,
+                idempotencyKey: `withdraw:${providerRef}`,
+            },
+        })
+
+        await tx.tokenTransaction.create({
+            data: {
+                walletId: wallet.id,
+                paymentId: payment.id,
+                type: TokenTransactionType.WITHDRAW,
+                // Debits are negative, the mirror of a top-up credit.
+                amount: -tokenAmount,
+                idempotencyKey: `withdraw-debit:${payment.id}`,
+            },
+        })
+
+        return { payment, feeTokens, netTokens, amountIdr }
+    })
+
+    return {
+        payment: toPaymentResponse(result.payment),
+        feeTokens: result.feeTokens,
+        netTokens: result.netTokens,
+        amountIdr: result.amountIdr,
+    }
+}
+
 /* ========== Settle ========== */
 
 /**
@@ -112,6 +195,12 @@ export async function topupService({
  * `topup-credit:{paymentId}`, so a gateway that calls back twice — or retries — can
  * never credit twice. Two callbacks racing past the status check would trip that
  * unique key instead, rolling the second one back.
+ *
+ * The credit is the `tokenAmount` the order was opened with, not a fresh division of
+ * `amountIdr`: the price can change between the order and its settlement, and the
+ * tokens that were quoted are the tokens that are owed. The ledger row also points
+ * back at the payment, so the chain from order to balance is walkable in both
+ * directions.
  *
  * `REFUNDED` is acknowledged without being applied: reversing a credit is a flow
  * of its own, and a status flip without it would leave the wallet lying.
@@ -142,34 +231,28 @@ export async function settlePaymentService({ providerRef, status }: { providerRe
     const credited = await prisma.$transaction(async (tx) => {
         const current = await tx.payment.findUniqueOrThrow({
             where: { id: payment.id },
-            select: { userId: true, amountIdr: true, status: true },
+            select: { userId: true, tokenAmount: true, status: true },
         })
 
         if (current.status === PaymentStatus.PAID) return false
-
-        const tokenAmount = Number(current.amountIdr) / IDR_PER_TOKEN
-
-        // The wallet holds whole tokens, so a half-token credit would corrupt it.
-        if (!Number.isInteger(tokenAmount)) {
-            throw new InternalServerErrorException(`Payment ${payment.id} does not settle to a whole number of tokens`)
-        }
 
         await tx.payment.update({ where: { id: payment.id }, data: { status: PaymentStatus.PAID } })
 
         const wallet = await tx.tokenWallet.upsert({
             where: { userId: current.userId },
             // Accounts created before wallets were made at registration have none.
-            create: { userId: current.userId, balance: tokenAmount },
-            update: { balance: { increment: tokenAmount } },
+            create: { userId: current.userId, balance: current.tokenAmount },
+            update: { balance: { increment: current.tokenAmount } },
             select: { id: true },
         })
 
         await tx.tokenTransaction.create({
             data: {
                 walletId: wallet.id,
+                paymentId: payment.id,
                 type: TokenTransactionType.TOPUP,
                 // Credits are positive; debits (like a research reserve) are negative.
-                amount: tokenAmount,
+                amount: current.tokenAmount,
                 idempotencyKey: `topup-credit:${payment.id}`,
             },
         })
@@ -257,6 +340,7 @@ export async function getWalletService({ userId }: { userId: string }) {
                     amount: true,
                     researchId: true,
                     respondentParticipationId: true,
+                    paymentId: true,
                     createdAt: true,
                 },
             },
@@ -274,6 +358,7 @@ export async function getWalletService({ userId }: { userId: string }) {
             amount: transaction.amount,
             researchId: transaction.researchId,
             participationId: transaction.respondentParticipationId,
+            paymentId: transaction.paymentId,
             createdAt: transaction.createdAt,
         })),
     }

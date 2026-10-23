@@ -7,11 +7,13 @@ import BasicStatisticsCard from "@/components/shared/basic-statistics-card"
 import { FilterBadge } from "@/components/shared/filter-badge"
 import MySurveysCard from "@/components/shared/my-surveys-card"
 import ResearcherTips from "@/components/shared/researcher-tips"
+import TokenBalanceCard from "@/components/shared/token-balance-card"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { getJson } from "@/lib/api-client"
 import type { ResearchSummary } from "@/lib/api-types"
 import { RESEARCH_FILTER_STATUSES, researchStatusLabel, type ResearchStatus } from "@/lib/research-status"
+import { useRefreshOnFocus } from "@/lib/use-refresh-on-focus"
 
 /** Longest page the list endpoint will hand back. */
 const LIST_LIMIT = 100
@@ -22,7 +24,7 @@ const LIST_LIMIT = 100
  */
 type DashboardState =
     | { status: "loading" }
-    | { status: "ready"; researches: ResearchSummary[]; balance: number | null }
+    | { status: "ready"; researches: ResearchSummary[] }
     | { status: "forbidden" }
     | { status: "unauthorized" }
     | { status: "error"; message: string }
@@ -30,29 +32,20 @@ type DashboardState =
 type Filter = ResearchStatus | "ALL"
 
 /**
- * Reads the list and the wallet and answers with the state to show.
+ * Reads the caller's researches and answers with the state to show.
  *
  * Returning the state rather than setting it keeps this free of React, and lets the
  * effect apply the answer in a callback — which is where an effect is allowed to put
  * state.
  */
 async function readDashboard(): Promise<DashboardState> {
-    const [researches, wallet] = await Promise.all([
-        getJson<{ researches: ResearchSummary[] }>(`/api/research?take=${LIST_LIMIT}`),
-        // The wallet needs no researcher role, so it is read alongside rather than after.
-        getJson<{ wallet: { balance: number } }>("/api/payment/wallet"),
-    ])
+    const researches = await getJson<{ researches: ResearchSummary[] }>(`/api/research?take=${LIST_LIMIT}`)
 
     if (researches.statusCode === 401) return { status: "unauthorized" }
     if (researches.statusCode === 403) return { status: "forbidden" }
     if (!researches.ok || researches.data === null) return { status: "error", message: researches.message }
 
-    return {
-        status: "ready",
-        researches: researches.data.researches,
-        // A wallet that could not be read reads as unknown, never as zero.
-        balance: wallet.ok ? (wallet.data?.wallet.balance ?? null) : null,
-    }
+    return { status: "ready", researches: researches.data.researches }
 }
 
 export default function DashboardMainColumnIndexResearcherPage() {
@@ -78,6 +71,22 @@ export default function DashboardMainColumnIndexResearcherPage() {
         setState({ status: "loading" })
         void readDashboard().then(setState)
     }, [])
+
+    /**
+     * Re-reads without the spinner, for when the page comes back into view.
+     *
+     * The list changes from elsewhere — a research published or closed, a respondent
+     * submitting — so a page left open would otherwise keep showing what it had when it
+     * mounted. A failed background read is ignored rather than replacing a page that is
+     * already showing data.
+     */
+    const refresh = useCallback(() => {
+        void readDashboard().then((next) => {
+            if (next.status === "ready" || next.status === "unauthorized") setState(next)
+        })
+    }, [])
+
+    useRefreshOnFocus(refresh)
 
     // An expired session belongs on the sign-in screen, not in an empty list.
     useEffect(() => {
@@ -105,11 +114,7 @@ export default function DashboardMainColumnIndexResearcherPage() {
                 </div>
 
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 lg:gap-4">
-                    <BasicStatisticsCard
-                        title="Saldo Token"
-                        statsNumber={state.status === "ready" && state.balance !== null ? state.balance.toLocaleString("id-ID") : "—"}
-                        footerTextContent="token tersedia"
-                    />
+                    <TokenBalanceCard />
                     <BasicStatisticsCard title="Riset Aktif" statsNumber={countOf("PUBLISHED")} footerTextContent="sedang berjalan" />
                     <BasicStatisticsCard
                         title="Total Responden"

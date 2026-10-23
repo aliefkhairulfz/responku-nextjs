@@ -7,6 +7,7 @@ import BasicStatisticsCard from "@/components/shared/basic-statistics-card"
 import BrowseSurveyCard from "@/components/shared/browse-survey-card"
 import { FilterBadge } from "@/components/shared/filter-badge"
 import RespondentTips from "@/components/shared/respondent-tips"
+import TokenBalanceCard from "@/components/shared/token-balance-card"
 import YourWalletBalanceCard from "@/components/shared/your-wallet-balance-card"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
@@ -14,6 +15,7 @@ import { getJson } from "@/lib/api-client"
 import type { AvailableResearchRow, CurrentUser } from "@/lib/api-types"
 import { formatIdr } from "@/lib/currency"
 import { RESEARCH_CATEGORY_ITEMS } from "@/lib/research-category"
+import { useRefreshOnFocus } from "@/lib/use-refresh-on-focus"
 
 /** Longest page the feed endpoint will hand back. */
 const LIST_LIMIT = 100
@@ -93,6 +95,21 @@ export default function DashboardMainColumnIndexRespondentPage() {
         void readFeed().then(setState)
     }, [])
 
+    /**
+     * Re-reads without the spinner, for when the page comes back into view.
+     *
+     * A reward is credited by an admin from another session, so a dashboard left open would
+     * otherwise keep showing the balance it had when it mounted. A failed background read is
+     * ignored rather than replacing a page that is already showing data.
+     */
+    const refresh = useCallback(() => {
+        void readFeed().then((next) => {
+            if (next.status === "ready" || next.status === "unauthorized") setState(next)
+        })
+    }, [])
+
+    useRefreshOnFocus(refresh)
+
     // An expired session belongs on the sign-in screen, not in an empty feed.
     useEffect(() => {
         if (state.status === "unauthorized") router.replace("/login")
@@ -132,11 +149,7 @@ export default function DashboardMainColumnIndexRespondentPage() {
                         statsNumber={researches.length === 0 ? "—" : `${averageMinutes} menit`}
                         footerTextContent="per pengisian"
                     />
-                    <BasicStatisticsCard
-                        title="Saldo Token"
-                        statsNumber={state.status === "ready" && state.balance !== null ? state.balance.toLocaleString("id-ID") : "—"}
-                        footerTextContent="token tersedia"
-                    />
+                    <TokenBalanceCard />
                 </div>
             </div>
 

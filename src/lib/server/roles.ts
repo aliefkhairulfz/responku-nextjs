@@ -1,3 +1,4 @@
+import { DEFAULT_ROLES, ROLES, type Role } from "@/lib/roles"
 import { ForbiddenException } from "./http-exception"
 
 /**
@@ -5,16 +6,11 @@ import { ForbiddenException } from "./http-exception"
  *
  * `User.roles` is a JSON list (e.g. `["researcher", "respondent"]`), so
  * membership is decided by `includes` rather than by matching a delimited
- * string.
+ * string. The vocabulary itself lives in `@/lib/roles`, which the browser can
+ * import too; this module adds the server-side checks on top.
  */
 
-/** Every role a user can hold. */
-export const ROLES = ["researcher", "respondent", "admin"] as const
-
-export type Role = (typeof ROLES)[number]
-
-/** Roles a freshly registered user starts with. */
-export const DEFAULT_ROLES: Role[] = ["researcher", "respondent"]
+export { DEFAULT_ROLES, ROLES, type Role }
 
 /**
  * Normalises the `roles` JSON column into a list of strings.
