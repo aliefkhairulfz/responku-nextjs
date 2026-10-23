@@ -26,7 +26,7 @@ export async function setSessionCookie({ token, cookieName, maxAge }: SetSession
     const cookieStore = await cookies()
     cookieStore.set(cookieName, token, {
         httpOnly: true,
-        secure: false,
+        secure: env.APP_ENV === "PRODUCTION",
         sameSite: "lax",
         maxAge,
         path: "/",
@@ -46,7 +46,7 @@ export async function clearSessionCookie({ cookieName }: ClearSessionCookie): Pr
     const cookieStore = await cookies()
     cookieStore.set(cookieName, "", {
         httpOnly: true,
-        secure: false,
+        secure: env.APP_ENV === "PRODUCTION",
         sameSite: "lax",
         maxAge: 0,
         path: "/",
