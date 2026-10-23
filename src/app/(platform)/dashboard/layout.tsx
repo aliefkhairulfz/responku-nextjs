@@ -196,9 +196,12 @@ function LayoutChildren({ pathname, children }: { pathname: string; children: Re
             >
                 {/* title */}
                 <div className="h-15 shrink-0 flex items-center justify-between px-6">
-                    <span className={`text-lg font-bold whitespace-nowrap transition-opacity duration-200 ${open ? "opacity-100" : "md:opacity-0"}`}>
+                    <Link
+                        href="/"
+                        className={`text-lg font-semibold whitespace-nowrap transition-opacity duration-200 ${open ? "opacity-100" : "md:opacity-0"}`}
+                    >
                         {mobileOpen ? "R" : "Responku"}
-                    </span>
+                    </Link>
 
                     <div className="flex items-center space-x-2">
                         <div className={`items-center space-x-2 ${mobileOpen ? "flex" : "hidden"}`}>

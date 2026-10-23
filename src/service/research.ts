@@ -381,10 +381,16 @@ const AVAILABLE_RESEARCH_SELECT = {
  * it — the feed so its card can offer to carry on, the detail page so its button can say so.
  * Spread from the static base so Prisma keeps the literal types it needs to type the result.
  */
-function availableResearchSelect(respondentId: string) {
+function availableResearchSelect(respondentId: string | null) {
     return {
         ...AVAILABLE_RESEARCH_SELECT,
-        participations: { where: { respondentId, deletedAt: null }, select: { id: true, status: true }, take: 1 },
+        participations: {
+            // A signed-out visitor has no participation of their own; an empty `in` matches
+            // none, which keeps one select shape for the feed and the detail page alike.
+            where: respondentId === null ? { respondentId: { in: [] } } : { respondentId, deletedAt: null },
+            select: { id: true, status: true },
+            take: 1,
+        },
     } satisfies Prisma.ResearchSelect
 }
 
@@ -420,13 +426,16 @@ function toAvailableResearchResponse(research: AvailableResearchRow) {
  * instead of the work quietly becoming unreachable. A deadline that has passed drops out on
  * its own, since such a research is no longer taking answers even though its status is still
  * `PUBLISHED`.
+ *
+ * `respondentId` is `null` for a signed-out visitor: they own no research and have joined
+ * none, so the two filters that need an id are skipped and no participation is read.
  */
 export async function listAvailableResearchService({
     respondentId,
     category,
     take,
 }: {
-    respondentId: string
+    respondentId: string | null
     category?: ResearchCategory
     take?: number
 }) {
@@ -435,9 +444,9 @@ export async function listAvailableResearchService({
             status: ResearchStatus.PUBLISHED,
             deletedAt: null,
             deadline: { gt: new Date() },
-            researcherId: { not: respondentId },
+            ...(respondentId === null ? {} : { researcherId: { not: respondentId } }),
             ...(category === undefined ? {} : { category }),
-            participations: { none: { respondentId, deletedAt: null, submittedAt: { not: null } } },
+            ...(respondentId === null ? {} : { participations: { none: { respondentId, deletedAt: null, submittedAt: { not: null } } } }),
         },
         orderBy: { publishedAt: "desc" },
         take: take ?? DEFAULT_RESEARCH_LIMIT,

@@ -351,7 +351,7 @@ function LedgerRow({ transaction }: { transaction: WalletTransaction }) {
         <div className="flex flex-col gap-3 px-4 py-2 sm:flex-row sm:items-center sm:justify-between sm:px-6">
             <div className="flex min-w-0 items-start gap-2">
                 <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted">
-                    {credit ? <ArrowDownLeft className="size-4 text-emerald-600" /> : <Coins className="size-4 text-amber-600" />}
+                    {credit ? <ArrowDownLeft className="size-4 text-success" /> : <Coins className="size-4 text-warning" />}
                 </div>
 
                 <div className="min-w-0 space-y-1">
@@ -363,7 +363,7 @@ function LedgerRow({ transaction }: { transaction: WalletTransaction }) {
                 </div>
             </div>
 
-            <p className={`shrink-0 pl-12 font-semibold tabular-nums sm:pl-0 ${credit ? "text-emerald-600" : "text-foreground"}`}>
+            <p className={`shrink-0 pl-12 font-semibold tabular-nums sm:pl-0 ${credit ? "text-success" : "text-foreground"}`}>
                 {credit ? "+" : "-"}
                 {Math.abs(transaction.amount).toLocaleString("id-ID")} Token
             </p>
@@ -448,7 +448,7 @@ export default function WalletBalancePage({ tokenPriceIdr }: { tokenPriceIdr: nu
                         </div>
 
                         <div className="flex items-baseline gap-2">
-                            <span className="text-5xl font-bold tracking-tight text-emerald-600">
+                            <span className="text-5xl font-bold tracking-tight text-success">
                                 {wallet === null ? "—" : wallet.balance.toLocaleString("id-ID")}
                             </span>
                             <span className="text-xl font-semibold">Token</span>

@@ -5,7 +5,7 @@ import { QUESTION_TYPES } from "@/lib/research-question"
 import { RESEARCH_STATUSES } from "@/lib/research-status"
 import { exceptionResponse, handleRouteError, parseBody, readJsonBody, successResponse } from "@/lib/server/api"
 import { requireRole } from "@/lib/server/roles"
-import { requireSession, type Session } from "@/service/auth"
+import { getSession, requireSession, type Session } from "@/service/auth"
 import { joinResearchService } from "@/service/participation"
 import {
     CRITERIA_OPERATORS,
@@ -332,15 +332,17 @@ const getOwnResearch = withResearcherGuard(async (user, req) => {
 /**
  * The respondent feed.
  *
- * It lives on the same route because it is the same resource seen from the other side,
- * but it is served before the researcher guard: browsing other people's published
- * research only needs a session, not the role that managing research needs.
+ * It lives on the same route because it is the same resource seen from the other side, but it
+ * is served before the researcher guard, and unlike the researcher's own endpoints it needs no
+ * session at all: browsing other people's published research is open to anyone.
  */
 async function availableResearchHandler(req: NextRequest) {
     try {
-        const { user } = await requireSession()
+        // The session is read only to hide the caller's own research and the ones they have
+        // already sent in; a signed-out visitor simply has none.
+        const session = await getSession()
         const query = parseBody(listAvailableQuerySchema, Object.fromEntries(req.nextUrl.searchParams))
-        const researches = await listAvailableResearchService({ respondentId: user.id, ...query })
+        const researches = await listAvailableResearchService({ respondentId: session?.user.id ?? null, ...query })
 
         return successResponse({ message: "Available research", data: { researches } })
     } catch (error) {

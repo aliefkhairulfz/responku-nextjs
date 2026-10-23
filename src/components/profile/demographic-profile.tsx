@@ -387,7 +387,7 @@ export default function DemographicProfile({
                     {initialProfile && (
                         <p className="text-sm text-muted-foreground">
                             {initialProfile.domicileVerified ? (
-                                <span className="inline-flex items-center gap-1.5 font-medium text-emerald-600">
+                                <span className="inline-flex items-center gap-1.5 font-medium text-success">
                                     <BadgeCheck className="size-4" />
                                     Domisili sudah terverifikasi
                                 </span>

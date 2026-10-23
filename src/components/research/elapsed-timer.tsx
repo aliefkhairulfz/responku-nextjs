@@ -33,7 +33,7 @@ export function ElapsedTimer({ startedAt, estimatedMinutes }: { startedAt: strin
     const overEstimate = elapsedSeconds >= estimatedMinutes * 60
 
     return (
-        <span className={cn("flex items-center gap-1.5 text-sm font-medium tabular-nums", overEstimate ? "text-neutral-800" : "text-blue-500")}>
+        <span className={cn("flex items-center gap-1.5 text-sm font-medium tabular-nums", overEstimate ? "text-foreground" : "text-info")}>
             <Clock className="size-3.5" />
             {formatElapsed(elapsedSeconds)}
         </span>

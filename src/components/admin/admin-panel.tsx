@@ -1,8 +1,8 @@
-'use client'
+"use client"
 
-import { RefreshCw } from 'lucide-react'
-import type { ReactNode } from 'react'
-import { Button } from '@/components/ui/button'
+import { RefreshCw } from "lucide-react"
+import type { ReactNode } from "react"
+import { Button } from "@/components/ui/button"
 
 /**
  * The frame every admin queue shares: a title, a one-line description, and a refresh button.

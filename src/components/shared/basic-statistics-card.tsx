@@ -1,4 +1,4 @@
-import * as Card from '@/components/ui/card'
+import * as Card from "@/components/ui/card"
 
 type BasicStatisticsCardProps = {
     title: string
@@ -19,7 +19,7 @@ export default function BasicStatisticsCard(props: BasicStatisticsCardProps) {
                     {/* Bagian Bawah: Angka dan Deskripsi */}
                     <div className="flex flex-col">
                         <h3 className="text-xl font-semibold leading-snug">{props.statsNumber}</h3>
-                        <p className="text-sm text-slate-500">{props.footerTextContent}</p>
+                        <p className="text-sm text-muted-foreground">{props.footerTextContent}</p>
                     </div>
                 </Card.CardHeader>
             </Card.Card>

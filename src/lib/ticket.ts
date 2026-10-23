@@ -67,9 +67,9 @@ const STATUS_LABELS: Record<TicketStatus, string> = {
 
 /** Pill tone per status, so a rejected ticket does not read like one still waiting. */
 const STATUS_STYLES: Record<TicketStatus, string> = {
-    REVIEW: "border-amber-200 text-amber-700",
-    RESOLVED: "border-green-200 text-green-700",
-    REJECTED: "border-red-200 text-red-700",
+    REVIEW: "border-warning/30 text-warning",
+    RESOLVED: "border-success/30 text-success",
+    REJECTED: "border-destructive/30 text-destructive",
 }
 
 /** Label for a stored status, falling back to the raw value for anything unexpected. */

@@ -20,7 +20,7 @@ import { env } from "@/env"
  */
 
 /** Routes a signed-out visitor may see. Everything else is treated as protected. */
-const PUBLIC_PATHS = ["/", "/login", "/register", "/register/verify"]
+const PUBLIC_PATHS = ["/", "/feed", "/login", "/register", "/register/verify", "/terms", "/privacy"]
 
 const LOGIN_PATH = "/login"
 

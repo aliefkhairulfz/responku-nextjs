@@ -182,7 +182,7 @@ export default function ActiveSessions() {
                                         <div className="flex flex-wrap items-center gap-2">
                                             <p className="font-medium">{label}</p>
                                             {session.current && (
-                                                <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">
+                                                <span className="rounded-full bg-success/10 px-2 py-0.5 text-xs font-medium text-success">
                                                     Perangkat ini
                                                 </span>
                                             )}

@@ -8,7 +8,7 @@
 
 /* ========== Status ========== */
 
-export const REPORT_STATUSES = ['OPEN', 'UNDER_REVIEW', 'RESOLVED', 'DISMISSED'] as const
+export const REPORT_STATUSES = ["OPEN", "UNDER_REVIEW", "RESOLVED", "DISMISSED"] as const
 
 export type ReportStatus = (typeof REPORT_STATUSES)[number]
 
@@ -18,23 +18,23 @@ export type ReportStatus = (typeof REPORT_STATUSES)[number]
  * `OPEN` and `UNDER_REVIEW` are states a report passes through on its own; only these two
  * end it, so they are the only values the review endpoint accepts.
  */
-export const REPORT_DECISIONS = ['RESOLVED', 'DISMISSED'] as const
+export const REPORT_DECISIONS = ["RESOLVED", "DISMISSED"] as const
 
 export type ReportDecision = (typeof REPORT_DECISIONS)[number]
 
 const STATUS_LABELS: Record<ReportStatus, string> = {
-    OPEN: 'Terbuka',
-    UNDER_REVIEW: 'Sedang ditinjau',
-    RESOLVED: 'Selesai',
-    DISMISSED: 'Diabaikan',
+    OPEN: "Terbuka",
+    UNDER_REVIEW: "Sedang ditinjau",
+    RESOLVED: "Selesai",
+    DISMISSED: "Diabaikan",
 }
 
 /** Pill tone per status, so a dismissed report does not read like one still open. */
 const STATUS_STYLES: Record<ReportStatus, string> = {
-    OPEN: 'border-amber-200 text-amber-700',
-    UNDER_REVIEW: 'border-sky-200 text-sky-700',
-    RESOLVED: 'border-green-200 text-green-700',
-    DISMISSED: 'border-border text-muted-foreground',
+    OPEN: "border-warning/30 text-warning",
+    UNDER_REVIEW: "border-info/30 text-info",
+    RESOLVED: "border-success/30 text-success",
+    DISMISSED: "border-border text-muted-foreground",
 }
 
 /** Label for a stored status, falling back to the raw value for anything unexpected. */
@@ -44,27 +44,21 @@ export function reportStatusLabel(status: string): string {
 
 /** Pill classes for a stored status. */
 export function reportStatusStyle(status: string): string {
-    return STATUS_STYLES[status as ReportStatus] ?? 'border-border text-muted-foreground'
+    return STATUS_STYLES[status as ReportStatus] ?? "border-border text-muted-foreground"
 }
 
 /* ========== Tindakan ========== */
 
-export const REPORT_ACTIONS = [
-    'NONE',
-    'WARNING',
-    'CONTENT_REMOVED',
-    'RESEARCH_SUSPENDED',
-    'USER_BANNED',
-] as const
+export const REPORT_ACTIONS = ["NONE", "WARNING", "CONTENT_REMOVED", "RESEARCH_SUSPENDED", "USER_BANNED"] as const
 
 export type ReportAction = (typeof REPORT_ACTIONS)[number]
 
 const ACTION_LABELS: Record<ReportAction, string> = {
-    NONE: 'Tanpa tindakan',
-    WARNING: 'Peringatan',
-    CONTENT_REMOVED: 'Konten dihapus',
-    RESEARCH_SUSPENDED: 'Riset ditangguhkan',
-    USER_BANNED: 'Akun diblokir',
+    NONE: "Tanpa tindakan",
+    WARNING: "Peringatan",
+    CONTENT_REMOVED: "Konten dihapus",
+    RESEARCH_SUSPENDED: "Riset ditangguhkan",
+    USER_BANNED: "Akun diblokir",
 }
 
 /** Label for a stored action, falling back to the raw value for anything unexpected. */

@@ -1,8 +1,8 @@
-'use client'
+"use client"
 
-import { Loader2 } from 'lucide-react'
-import { useCallback, useEffect, useState } from 'react'
-import { QueueError, QueueLoading } from '@/components/admin/queue-states'
+import { Loader2 } from "lucide-react"
+import { useCallback, useEffect, useState } from "react"
+import { QueueError, QueueLoading } from "@/components/admin/queue-states"
 import {
     AlertDialog,
     AlertDialogAction,
@@ -13,59 +13,48 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
     AlertDialogTrigger,
-} from '@/components/ui/alert-dialog'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog'
-import { Separator } from '@/components/ui/separator'
-import { toast } from '@/components/ui/toast'
-import { getJson, postJson } from '@/lib/api-client'
-import type { QualityCheck } from '@/lib/api-types'
-import { participationStatusLabel } from '@/lib/participation-status'
-import { qualityDecisionLabel, qualitySignalLabel } from '@/lib/quality-check'
-import { researchStatusLabel } from '@/lib/research-status'
-import { rewardStatusLabel } from '@/lib/reward-status'
-import { screeningResultLabel } from '@/lib/screening'
+} from "@/components/ui/alert-dialog"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Separator } from "@/components/ui/separator"
+import { toast } from "@/components/ui/toast"
+import { getJson, postJson } from "@/lib/api-client"
+import type { QualityCheck } from "@/lib/api-types"
+import { participationStatusLabel } from "@/lib/participation-status"
+import { qualityDecisionLabel, qualitySignalLabel } from "@/lib/quality-check"
+import { researchStatusLabel } from "@/lib/research-status"
+import { rewardStatusLabel } from "@/lib/reward-status"
+import { screeningResultLabel } from "@/lib/screening"
 
-type DetailState =
-    | { status: 'idle' }
-    | { status: 'loading' }
-    | { status: 'ready'; check: QualityCheck }
-    | { status: 'error'; message: string }
+type DetailState = { status: "idle" } | { status: "loading" } | { status: "ready"; check: QualityCheck } | { status: "error"; message: string }
 
-type DetailQuestion = NonNullable<QualityCheck['participation']['questions']>[number]
+type DetailQuestion = NonNullable<QualityCheck["participation"]["questions"]>[number]
 
 async function readCheck(id: string): Promise<DetailState> {
     const result = await getJson<{ qualityCheck: QualityCheck }>(`/api/quality-check/${id}`)
 
-    if (!result.ok || result.data === null) return { status: 'error', message: result.message }
+    if (!result.ok || result.data === null) return { status: "error", message: result.message }
 
-    return { status: 'ready', check: result.data.qualityCheck }
+    return { status: "ready", check: result.data.qualityCheck }
 }
 
 /** A stored timestamp as a readable local date-time, or an em dash when there is none. */
 function formatDateTime(value: string | null | undefined): string {
-    if (value === null || value === undefined) return '—'
+    if (value === null || value === undefined) return "—"
 
-    return new Date(value).toLocaleString('id-ID', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
+    return new Date(value).toLocaleString("id-ID", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
     })
 }
 
 /** A duration in seconds as minutes and seconds, or an em dash when there is none. */
 function formatDuration(seconds: number | null | undefined): string {
-    if (seconds === null || seconds === undefined) return '—'
+    if (seconds === null || seconds === undefined) return "—"
 
     const minutes = Math.floor(seconds / 60)
     const rest = seconds % 60
@@ -89,12 +78,12 @@ function formatAnswer(question: DetailQuestion): string {
 
                 return choice ? choiceLabel(choice) : id
             })
-            .join(', ')
+            .join(", ")
     }
 
     const text = question.answer.text?.trim()
 
-    return text ? text : '—'
+    return text ? text : "—"
 }
 
 /** One labelled value in a detail grid. */
@@ -125,22 +114,22 @@ export function QualityCheckDetailDialog({
     onOpenChange: (open: boolean) => void
     onDecided: () => void
 }) {
-    const [state, setState] = useState<DetailState>({ status: 'idle' })
+    const [state, setState] = useState<DetailState>({ status: "idle" })
     const [busy, setBusy] = useState(false)
 
     const load = useCallback((id: string) => {
-        setState({ status: 'loading' })
+        setState({ status: "loading" })
         void readCheck(id).then(setState)
     }, [])
 
     useEffect(() => {
         if (checkId === null) {
-            setState({ status: 'idle' })
+            setState({ status: "idle" })
             return
         }
 
         let cancelled = false
-        setState({ status: 'loading' })
+        setState({ status: "loading" })
 
         void readCheck(checkId).then((next) => {
             if (!cancelled) setState(next)
@@ -151,7 +140,7 @@ export function QualityCheckDetailDialog({
         }
     }, [checkId])
 
-    async function decide(decision: 'APPROVED' | 'REJECTED') {
+    async function decide(decision: "APPROVED" | "REJECTED") {
         if (checkId === null || busy) return
 
         setBusy(true)
@@ -159,23 +148,21 @@ export function QualityCheckDetailDialog({
         setBusy(false)
 
         if (!result.ok) {
-            toast.add({ type: 'error', title: 'Gagal memutuskan', description: result.message })
+            toast.add({ type: "error", title: "Gagal memutuskan", description: result.message })
             return
         }
 
         toast.add({
-            type: 'success',
-            title: decision === 'APPROVED' ? 'Disetujui & dibayar' : 'Ditolak',
+            type: "success",
+            title: decision === "APPROVED" ? "Disetujui & dibayar" : "Ditolak",
             description:
-                decision === 'APPROVED'
-                    ? 'Reward responden sudah dikreditkan ke wallet-nya.'
-                    : 'Reward dibatalkan; tidak ada token yang berpindah.',
+                decision === "APPROVED" ? "Reward responden sudah dikreditkan ke wallet-nya." : "Reward dibatalkan; tidak ada token yang berpindah.",
         })
         onDecided()
         onOpenChange(false)
     }
 
-    const check = state.status === 'ready' ? state.check : null
+    const check = state.status === "ready" ? state.check : null
     const participation = check?.participation
     const timing = participation?.timing
 
@@ -183,39 +170,29 @@ export function QualityCheckDetailDialog({
         <Dialog open={checkId !== null} onOpenChange={onOpenChange}>
             <DialogContent className="max-h-[85dvh] overflow-y-auto sm:max-w-3xl">
                 <DialogHeader>
-                    <DialogTitle>{participation?.researchTitle ?? 'Detail kiriman'}</DialogTitle>
+                    <DialogTitle>{participation?.researchTitle ?? "Detail kiriman"}</DialogTitle>
                     <DialogDescription>
                         {participation
-                            ? `${participation.respondentName}${participation.respondentEmail ? ` · ${participation.respondentEmail}` : ''}`
-                            : 'Memuat detail kiriman…'}
+                            ? `${participation.respondentName}${participation.respondentEmail ? ` · ${participation.respondentEmail}` : ""}`
+                            : "Memuat detail kiriman…"}
                     </DialogDescription>
                 </DialogHeader>
 
-                {state.status === 'loading' && <QueueLoading label="Memuat detail kiriman…" />}
+                {state.status === "loading" && <QueueLoading label="Memuat detail kiriman…" />}
 
-                {state.status === 'error' && checkId !== null && (
-                    <QueueError message={state.message} onRetry={() => load(checkId)} />
-                )}
+                {state.status === "error" && checkId !== null && <QueueError message={state.message} onRetry={() => load(checkId)} />}
 
                 {check && participation && (
                     <div className="space-y-5">
                         <div className="flex flex-wrap items-center gap-2 text-sm">
-                            <Badge variant="secondary">
-                                {qualityDecisionLabel(check.decision)}
-                            </Badge>
-                            {check.autoScore !== null && (
-                                <span className="text-muted-foreground">
-                                    Skor otomatis {check.autoScore.toFixed(2)}
-                                </span>
-                            )}
+                            <Badge variant="secondary">{qualityDecisionLabel(check.decision)}</Badge>
+                            {check.autoScore !== null && <span className="text-muted-foreground">Skor otomatis {check.autoScore.toFixed(2)}</span>}
                             {check.signalFlags.map((flag) => (
                                 <Badge key={flag} variant="outline">
                                     {qualitySignalLabel(flag)}
                                 </Badge>
                             ))}
-                            {check.signalFlags.length === 0 && (
-                                <span className="text-muted-foreground">Tanpa sinyal</span>
-                            )}
+                            {check.signalFlags.length === 0 && <span className="text-muted-foreground">Tanpa sinyal</span>}
                         </div>
 
                         <Separator />
@@ -223,35 +200,15 @@ export function QualityCheckDetailDialog({
                         {participation.research && (
                             <section className="space-y-3">
                                 <h4 className="font-medium">Riset</h4>
-                                <p className="text-sm text-muted-foreground">
-                                    {participation.research.description}
-                                </p>
+                                <p className="text-sm text-muted-foreground">{participation.research.description}</p>
 
                                 <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                                    <Field
-                                        label="Peneliti"
-                                        value={participation.research.researcherName}
-                                    />
-                                    <Field
-                                        label="Kategori"
-                                        value={participation.research.category ?? '—'}
-                                    />
-                                    <Field
-                                        label="Status riset"
-                                        value={researchStatusLabel(participation.research.status)}
-                                    />
-                                    <Field
-                                        label="Reward"
-                                        value={`${participation.research.tokenPerRespondent} token`}
-                                    />
-                                    <Field
-                                        label="Estimasi pengerjaan"
-                                        value={`${participation.research.estimatedDurationMinutes} menit`}
-                                    />
-                                    <Field
-                                        label="Deadline"
-                                        value={formatDateTime(participation.research.deadline)}
-                                    />
+                                    <Field label="Peneliti" value={participation.research.researcherName} />
+                                    <Field label="Kategori" value={participation.research.category ?? "—"} />
+                                    <Field label="Status riset" value={researchStatusLabel(participation.research.status)} />
+                                    <Field label="Reward" value={`${participation.research.tokenPerRespondent} token`} />
+                                    <Field label="Estimasi pengerjaan" value={`${participation.research.estimatedDurationMinutes} menit`} />
+                                    <Field label="Deadline" value={formatDateTime(participation.research.deadline)} />
                                 </dl>
                             </section>
                         )}
@@ -262,54 +219,28 @@ export function QualityCheckDetailDialog({
                             <h4 className="font-medium">Kiriman</h4>
 
                             <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                                <Field
-                                    label="Status"
-                                    value={participationStatusLabel(participation.status)}
-                                />
-                                <Field
-                                    label="Mulai"
-                                    value={formatDateTime(participation.startedAt)}
-                                />
-                                <Field
-                                    label="Dikirim"
-                                    value={formatDateTime(participation.submittedAt)}
-                                />
-                                <Field
-                                    label="Durasi"
-                                    value={formatDuration(timing?.actualSeconds)}
-                                />
-                                <Field
-                                    label="Estimasi"
-                                    value={formatDuration(timing?.estimatedSeconds)}
-                                />
+                                <Field label="Status" value={participationStatusLabel(participation.status)} />
+                                <Field label="Mulai" value={formatDateTime(participation.startedAt)} />
+                                <Field label="Dikirim" value={formatDateTime(participation.submittedAt)} />
+                                <Field label="Durasi" value={formatDuration(timing?.actualSeconds)} />
+                                <Field label="Estimasi" value={formatDuration(timing?.estimatedSeconds)} />
                                 <Field
                                     label="Hasil screening"
-                                    value={
-                                        participation.screeningResult === null
-                                            ? '—'
-                                            : screeningResultLabel(participation.screeningResult)
-                                    }
+                                    value={participation.screeningResult === null ? "—" : screeningResultLabel(participation.screeningResult)}
                                 />
                                 <Field
                                     label="Skor screening"
-                                    value={
-                                        participation.screeningScore === null
-                                            ? '—'
-                                            : `${participation.screeningScore}%`
-                                    }
+                                    value={participation.screeningScore === null ? "—" : `${participation.screeningScore}%`}
                                 />
                             </dl>
 
                             {timing?.tooFast === true && (
-                                <p className="text-sm text-amber-600">
-                                    Dikerjakan jauh lebih cepat dari estimasi — periksa jawabannya.
-                                </p>
+                                <p className="text-sm text-warning">Dikerjakan jauh lebih cepat dari estimasi — periksa jawabannya.</p>
                             )}
 
                             {participation.reward && (
                                 <p className="text-sm text-muted-foreground">
-                                    Reward {participation.reward.tokenAmount} token ·{' '}
-                                    {rewardStatusLabel(participation.reward.status)}
+                                    Reward {participation.reward.tokenAmount} token · {rewardStatusLabel(participation.reward.status)}
                                 </p>
                             )}
                         </section>
@@ -317,9 +248,7 @@ export function QualityCheckDetailDialog({
                         <Separator />
 
                         <section className="space-y-3">
-                            <h4 className="font-medium">
-                                Jawaban ({participation.questions?.length ?? 0} pertanyaan)
-                            </h4>
+                            <h4 className="font-medium">Jawaban ({participation.questions?.length ?? 0} pertanyaan)</h4>
 
                             {participation.questions?.map((question) => (
                                 <div key={question.id} className="space-y-1 rounded-lg border p-3">
@@ -331,9 +260,7 @@ export function QualityCheckDetailDialog({
                             ))}
 
                             {(participation.questions?.length ?? 0) === 0 && (
-                                <p className="text-sm text-muted-foreground">
-                                    Riset ini tidak punya pertanyaan tersimpan.
-                                </p>
+                                <p className="text-sm text-muted-foreground">Riset ini tidak punya pertanyaan tersimpan.</p>
                             )}
                         </section>
                     </div>
@@ -344,7 +271,7 @@ export function QualityCheckDetailDialog({
                         Tutup
                     </Button>
 
-                    {check?.decision === 'PENDING' && (
+                    {check?.decision === "PENDING" && (
                         <>
                             <AlertDialog>
                                 <AlertDialogTrigger>
@@ -357,16 +284,13 @@ export function QualityCheckDetailDialog({
                                     <AlertDialogHeader>
                                         <AlertDialogTitle>Tolak kiriman ini?</AlertDialogTitle>
                                         <AlertDialogDescription>
-                                            Reward responden akan dibatalkan dan tidak ada token
-                                            yang berpindah. Tindakan ini tidak bisa dibatalkan.
+                                            Reward responden akan dibatalkan dan tidak ada token yang berpindah. Tindakan ini tidak bisa dibatalkan.
                                         </AlertDialogDescription>
                                     </AlertDialogHeader>
 
                                     <AlertDialogFooter>
                                         <AlertDialogCancel>Batal</AlertDialogCancel>
-                                        <AlertDialogAction onClick={() => decide('REJECTED')}>
-                                            Ya, tolak
-                                        </AlertDialogAction>
+                                        <AlertDialogAction onClick={() => decide("REJECTED")}>Ya, tolak</AlertDialogAction>
                                     </AlertDialogFooter>
                                 </AlertDialogContent>
                             </AlertDialog>
@@ -381,21 +305,17 @@ export function QualityCheckDetailDialog({
 
                                 <AlertDialogContent>
                                     <AlertDialogHeader>
-                                        <AlertDialogTitle>
-                                            Setujui dan bayar reward?
-                                        </AlertDialogTitle>
+                                        <AlertDialogTitle>Setujui dan bayar reward?</AlertDialogTitle>
                                         <AlertDialogDescription>
                                             {participation?.reward
                                                 ? `${participation.reward.tokenAmount} token akan dikreditkan ke wallet responden, dan reward ditandai sudah dibayar.`
-                                                : 'Reward responden akan dikreditkan ke wallet-nya.'}
+                                                : "Reward responden akan dikreditkan ke wallet-nya."}
                                         </AlertDialogDescription>
                                     </AlertDialogHeader>
 
                                     <AlertDialogFooter>
                                         <AlertDialogCancel>Batal</AlertDialogCancel>
-                                        <AlertDialogAction onClick={() => decide('APPROVED')}>
-                                            Ya, setujui & bayar
-                                        </AlertDialogAction>
+                                        <AlertDialogAction onClick={() => decide("APPROVED")}>Ya, setujui & bayar</AlertDialogAction>
                                     </AlertDialogFooter>
                                 </AlertDialogContent>
                             </AlertDialog>

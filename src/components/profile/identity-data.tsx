@@ -437,7 +437,7 @@ export default function IdentityData({
                                 <span className="text-sm">{label}</span>
                             </div>
 
-                            <p className={`text-base font-semibold ${highlight ? "flex items-center gap-1.5 text-emerald-600" : ""}`}>
+                            <p className={`text-base font-semibold ${highlight ? "flex items-center gap-1.5 text-success" : ""}`}>
                                 {highlight && <BadgeCheck className="size-4" />}
                                 {value}
                             </p>
@@ -464,7 +464,7 @@ export default function IdentityData({
                     <Mail className="size-4 shrink-0 text-muted-foreground" />
                     <span className="text-sm font-medium">{user.email}</span>
                     {verified ? (
-                        <span className="ml-auto inline-flex items-center gap-1.5 text-sm text-emerald-600">
+                        <span className="ml-auto inline-flex items-center gap-1.5 text-sm text-success">
                             <BadgeCheck className="size-4" />
                             Terverifikasi
                         </span>

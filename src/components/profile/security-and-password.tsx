@@ -1,14 +1,14 @@
-"use client";
+"use client"
 
-import { useForm } from "@tanstack/react-form";
-import { Eye, EyeOff } from "lucide-react";
-import { useState } from "react";
-import { z } from "zod";
+import { useForm } from "@tanstack/react-form"
+import { Eye, EyeOff } from "lucide-react"
+import { useState } from "react"
+import { z } from "zod"
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Separator } from "@/components/ui/separator"
 
 const passwordSchema = z
     .object({
@@ -28,20 +28,20 @@ const passwordSchema = z
     .refine((data) => data.currentPassword !== data.newPassword, {
         path: ["newPassword"],
         error: "Kata sandi baru harus berbeda dari kata sandi saat ini.",
-    });
+    })
 
-type PasswordFormValues = z.infer<typeof passwordSchema>;
+type PasswordFormValues = z.infer<typeof passwordSchema>
 
 function FieldErrors({ errors }: { errors: unknown[] }) {
     return errors.map((error, index) => (
-        <p className="text-sm text-red-500" key={index}>
+        <p className="text-sm text-destructive" key={index}>
             {typeof error === "string"
                 ? error
                 : error && typeof error === "object" && "message" in error
                   ? String(error.message)
                   : "Input tidak valid."}
         </p>
-    ));
+    ))
 }
 
 export default function SecurityAndPassword() {
@@ -49,7 +49,7 @@ export default function SecurityAndPassword() {
         current: false,
         new: false,
         confirm: false,
-    });
+    })
 
     const form = useForm({
         defaultValues: {
@@ -61,16 +61,16 @@ export default function SecurityAndPassword() {
             onSubmit: passwordSchema,
         },
         onSubmit: async ({ value }) => {
-            console.log(value);
+            console.log(value)
         },
-    });
+    })
 
     const toggleVisibility = (field: keyof typeof visiblePasswords) => {
         setVisiblePasswords((current) => ({
             ...current,
             [field]: !current[field],
-        }));
-    };
+        }))
+    }
 
     return (
         <div>
@@ -83,9 +83,9 @@ export default function SecurityAndPassword() {
 
             <form
                 onSubmit={(event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    form.handleSubmit();
+                    event.preventDefault()
+                    event.stopPropagation()
+                    form.handleSubmit()
                 }}
                 className="space-y-6"
             >
@@ -187,5 +187,5 @@ export default function SecurityAndPassword() {
                 </form.Subscribe>
             </form>
         </div>
-    );
+    )
 }
