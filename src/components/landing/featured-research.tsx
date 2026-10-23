@@ -270,19 +270,22 @@ export default function FeaturedResearch() {
         <section id="riset" className="scroll-mt-24 border-t">
             <div className="mx-auto w-full max-w-6xl px-4 py-24 sm:px-6 sm:py-32 lg:px-8">
                 <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
-                    <div className="max-w-2xl">
-                        <p className="font-mono text-xs font-medium tracking-[0.2em] text-muted-foreground uppercase">Riset Unggulan</p>
+                    <div className="max-w-2xl text-center sm:text-left">
+                        <p className="font-mono text-xs font-medium tracking-[0.2em] text-muted-foreground">Riset Unggulan</p>
                         <h2 className="mt-3 text-3xl font-bold tracking-tight text-balance sm:text-4xl">Jelajahi riset yang sedang berjalan</h2>
                         <p className="mt-4 leading-relaxed text-muted-foreground">Riset populer dari kampus, lembaga riset, dan perusahaan.</p>
                     </div>
 
-                    <Link href="/feed" className={cn(buttonVariants({ variant: "outline", size: "lg" }), "shrink-0 rounded-full px-5")}>
+                    <Link
+                        href="/feed"
+                        className={cn(buttonVariants({ variant: "outline", size: "lg" }), "mx-auto shrink-0 rounded-full px-5 sm:mx-0")}
+                    >
                         Lihat semua
                         <ArrowRight />
                     </Link>
                 </div>
 
-                <div className="mt-8 flex flex-wrap items-center gap-2">
+                <div className="mt-8 flex flex-wrap items-center justify-center gap-2 sm:justify-start">
                     {TABS.map((tab) => (
                         <button
                             key={tab.id}

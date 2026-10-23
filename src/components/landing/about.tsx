@@ -76,20 +76,22 @@ const PILLARS = [
 export default function About() {
     return (
         <section id="tentang" className="scroll-mt-24 border-t">
-            <div className="mx-auto w-full max-w-6xl px-4 py-24 sm:px-6 sm:py-32 lg:px-8">
-                <p className="font-mono text-xs font-medium tracking-[0.2em] text-muted-foreground uppercase">Tentang Responku</p>
+            <div className="mx-auto w-full max-w-6xl px-4 py-24 text-center sm:px-6 sm:py-32 sm:text-left lg:px-8">
+                <p className="font-mono text-xs font-medium tracking-[0.2em] text-muted-foreground">Tentang Responku</p>
 
                 <p className="mt-6 max-w-4xl text-xl leading-relaxed font-medium text-balance sm:text-2xl">
                     Responku adalah platform riset dan survei yang menghubungkan peneliti dengan responden terverifikasi. Peneliti menyusun kuesioner,
-                    menyaring responden lewat kriteria domisili dan usia, lalu membayar reward dengan token — transparan dan dapat diaudit. Kami
+                    menyaring responden lewat kriteria domisili dan usia, lalu membayar reward dengan token - transparan dan dapat diaudit. Kami
                     bekerja bersama kampus, lembaga riset, dan perusahaan untuk mengubah pertanyaan menjadi data yang bisa diandalkan.
                 </p>
 
                 <div className="mt-14 grid gap-10 sm:grid-cols-3 sm:gap-0">
                     {PILLARS.map((pillar, index) => (
                         <div key={pillar.title} className={cn("space-y-5 sm:px-8", index === 0 && "sm:pl-0", index > 0 && "sm:border-l")}>
-                            {pillar.icon}
-                            <h3 className="max-w-[16rem] text-xl leading-snug font-medium">{pillar.title}</h3>
+                            {/* `w-fit` + `mx-auto` centres the block-level svg on mobile, where the
+                                section's `text-center` cannot reach it. */}
+                            <div className="mx-auto w-fit sm:mx-0">{pillar.icon}</div>
+                            <h3 className="mx-auto max-w-[16rem] text-xl leading-snug font-medium sm:mx-0">{pillar.title}</h3>
                         </div>
                     ))}
                 </div>

@@ -18,7 +18,7 @@ export default function Founders() {
     return (
         <section className="border-t">
             <div className="mx-auto w-full max-w-6xl px-4 py-24 sm:px-6 sm:py-32 lg:px-8">
-                <div className="max-w-2xl">
+                <div className="max-w-2xl text-center sm:text-left">
                     <h2 className="text-3xl font-bold tracking-tight text-balance sm:text-4xl">Founder Responku</h2>
                     <p className="mt-4 leading-relaxed text-muted-foreground">Orang-orang yang membangun Responku dari awal.</p>
                 </div>

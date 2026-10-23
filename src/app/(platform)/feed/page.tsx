@@ -138,7 +138,7 @@ export default function Page() {
 
             {/* filters */}
             <div className="mt-8 flex items-start">
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-wrap w-3xl items-center gap-2">
                     <FeedFilterChip
                         icon={LayoutGrid}
                         label="Semua"

@@ -31,9 +31,14 @@ export default function LearnCommunity() {
         <section className="border-t">
             <div className="mx-auto w-full max-w-6xl px-4 py-24 sm:px-6 sm:py-32 lg:px-8">
                 <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-                    <h2 className="text-3xl font-bold tracking-tight text-balance sm:text-4xl">Belajar dari komunitas peneliti</h2>
+                    <h2 className="text-center text-3xl font-bold tracking-tight text-balance sm:text-left sm:text-4xl">
+                        Belajar dari komunitas peneliti
+                    </h2>
 
-                    <Link href="/help-center" className={cn(buttonVariants({ variant: "outline", size: "lg" }), "shrink-0 rounded-full px-5")}>
+                    <Link
+                        href="/help-center"
+                        className={cn(buttonVariants({ variant: "outline", size: "lg" }), "mx-auto shrink-0 rounded-full px-5 sm:mx-0")}
+                    >
                         Lihat semua
                         <ArrowRight />
                     </Link>

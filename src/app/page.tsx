@@ -4,6 +4,7 @@ import About from "@/components/landing/about"
 import BuildYourResearch from "@/components/landing/build-your-research"
 import FeaturedResearch from "@/components/landing/featured-research"
 import Founders from "@/components/landing/founders"
+import HeroTagline from "@/components/landing/hero-tagline"
 import LearnCommunity from "@/components/landing/learn-community"
 import SiteFooter from "@/components/landing/site-footer"
 import AuthNav from "@/components/shared/auth-nav"
@@ -101,7 +102,7 @@ export default function Page() {
             <main className="flex-1">
                 {/* hero */}
                 <section className="mx-auto w-full max-w-6xl px-4 pt-20 pb-12 text-center sm:px-6 sm:pt-28 lg:px-8">
-                    <p className="font-mono text-xs font-medium tracking-[0.2em] text-muted-foreground">Responku untuk peneliti &amp; responden</p>
+                    <HeroTagline />
 
                     <h1 className="mx-auto mt-6 max-w-5xl text-4xl leading-[1.05] font-semibold tracking-tight text-balance sm:text-5xl lg:text-5xl">
                         Menghubungkan riset dengan responden yang tepat
@@ -201,7 +202,7 @@ export default function Page() {
 
                 {/* features */}
                 <section id="fitur" className="scroll-mt-24 border-t">
-                    <div className="mx-auto w-full max-w-6xl px-4 py-24 sm:px-6 sm:py-32 lg:px-8">
+                    <div className="mx-auto w-full max-w-6xl px-4 py-24 text-center sm:px-6 sm:py-32 sm:text-left lg:px-8">
                         <div className="max-w-2xl">
                             <h2 className="text-3xl font-semibold tracking-tight text-balance sm:text-4xl">Semua yang dibutuhkan untuk satu riset</h2>
                             <p className="mt-4 leading-relaxed text-muted-foreground">
@@ -222,13 +223,13 @@ export default function Page() {
 
                 {/* how it works */}
                 <section id="cara-kerja" className="scroll-mt-24 border-t">
-                    <div className="mx-auto w-full max-w-6xl px-4 py-24 sm:px-6 sm:py-32 lg:px-8">
+                    <div className="mx-auto w-full max-w-6xl px-4 py-24 text-center sm:px-6 sm:py-32 sm:text-left lg:px-8">
                         <h2 className="text-3xl font-semibold tracking-tight text-balance sm:text-4xl">Tiga langkah, satu alur</h2>
 
                         <ol className="mt-10 grid gap-8 sm:grid-cols-3">
                             {STEPS.map((step, index) => (
                                 <li key={step.title} className="space-y-3">
-                                    <span className="flex size-9 items-center justify-center rounded-full bg-foreground text-sm font-semibold text-background">
+                                    <span className="mx-auto flex size-9 items-center justify-center rounded-full bg-foreground text-sm font-semibold text-background sm:mx-0">
                                         {index + 1}
                                     </span>
                                     <h3 className="font-semibold">{step.title}</h3>
